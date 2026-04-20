@@ -15,10 +15,16 @@ export default {
     extend: {
       colors: {
         border: "hsl(var(--border))",
+        hairline: "hsl(var(--hairline))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        ink: {
+          DEFAULT: "hsl(var(--ink))",
+          dim: "hsl(var(--ink-dim))",
+          faint: "hsl(var(--ink-faint))",
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
