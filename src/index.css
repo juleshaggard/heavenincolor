@@ -8,39 +8,44 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Deep dusk + chromatic — near-black canvas, color comes from the sky */
-    --background: 240 6% 4%;          /* #0A0A0B */
-    --foreground: 40 12% 92%;
+    /* Editorial cream paper + dusk ink. Color comes from the sky. */
+    --background: 36 28% 94%;          /* #F4ECDD warm cream */
+    --foreground: 240 18% 10%;         /* dusk ink */
 
-    --card: 240 5% 6%;
-    --card-foreground: 40 12% 92%;
+    --card: 36 30% 96%;
+    --card-foreground: 240 18% 10%;
 
-    --popover: 240 6% 5%;
-    --popover-foreground: 40 12% 92%;
+    --popover: 36 30% 97%;
+    --popover-foreground: 240 18% 10%;
 
-    --primary: 40 18% 90%;
-    --primary-foreground: 240 6% 4%;
+    --primary: 240 18% 10%;
+    --primary-foreground: 36 30% 96%;
 
-    --secondary: 240 5% 10%;
-    --secondary-foreground: 40 12% 88%;
+    --secondary: 36 22% 88%;
+    --secondary-foreground: 240 18% 14%;
 
-    --muted: 240 5% 9%;
-    --muted-foreground: 40 6% 55%;
+    --muted: 36 18% 90%;
+    --muted-foreground: 240 8% 38%;
 
-    --accent: 240 5% 12%;
-    --accent-foreground: 40 12% 92%;
+    --accent: 36 24% 86%;
+    --accent-foreground: 240 18% 12%;
 
     --destructive: 0 62% 45%;
-    --destructive-foreground: 40 12% 95%;
+    --destructive-foreground: 36 30% 96%;
 
-    --border: 240 5% 11%;             /* hairline #1A1A1D */
-    --hairline: 240 5% 11%;
-    --input: 240 5% 12%;
-    --ring: 40 12% 60%;
+    --border: 36 14% 78%;
+    --hairline: 240 14% 14%;            /* dark hairline on cream */
+    --input: 36 14% 80%;
+    --ring: 240 18% 30%;
 
-    --ink: 40 14% 95%;
-    --ink-dim: 40 6% 60%;
-    --ink-faint: 40 4% 38%;
+    --ink: 240 18% 10%;
+    --ink-dim: 240 10% 28%;
+    --ink-faint: 240 6% 48%;
+
+    /* Poster accent — Kaffeeform-ish dusty rose, used sparingly */
+    --paper: 36 28% 94%;
+    --paper-soft: 36 36% 90%;
+    --rose: 14 48% 82%;
 
     /* Sky-driven ambient tint, updated at runtime from the latest frame */
     --sky-h: 28;
@@ -120,20 +125,25 @@ All colors MUST be HSL.
     font-optical-sizing: auto;
     letter-spacing: -0.02em;
   }
+  .font-condensed {
+    font-family: 'Archivo Narrow', 'Inter', system-ui, sans-serif;
+    font-stretch: 75%;
+    letter-spacing: -0.01em;
+  }
   .font-mono {
     font-family: 'JetBrains Mono', ui-monospace, monospace;
     font-feature-settings: 'ss02', 'zero';
   }
 
-  /* Animated grain — generative texture overlay */
+  /* Paper grain — subtle, screen-blended for cream canvas */
   .grain::before {
     content: '';
     position: fixed;
     inset: -50%;
     pointer-events: none;
     z-index: 60;
-    opacity: 0.035;
-    mix-blend-mode: overlay;
+    opacity: 0.08;
+    mix-blend-mode: multiply;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
     animation: grainShift 1.2s steps(4) infinite;
   }
@@ -152,6 +162,17 @@ All colors MUST be HSL.
   }
   .ken-burns { animation: kenburns 28s ease-in-out infinite alternate; }
 
+  /* Oval mask — Halo poster-style organic frame */
+  .oval-mask {
+    -webkit-mask-image: radial-gradient(ellipse 62% 92% at 50% 50%, black 60%, transparent 78%);
+            mask-image: radial-gradient(ellipse 62% 92% at 50% 50%, black 60%, transparent 78%);
+  }
+  .oval-mask-tilt {
+    -webkit-mask-image: radial-gradient(ellipse 60% 94% at 52% 48%, black 60%, transparent 78%);
+            mask-image: radial-gradient(ellipse 60% 94% at 52% 48%, black 60%, transparent 78%);
+    transform: rotate(-8deg);
+  }
+
   @keyframes auroraShift {
     0%, 100% { transform: translate3d(-5%, 0, 0) scale(1.1); }
     50% { transform: translate3d(5%, -3%, 0) scale(1.2); }
@@ -159,7 +180,7 @@ All colors MUST be HSL.
   .aurora { animation: auroraShift 22s ease-in-out infinite; }
 
   ::selection {
-    background: hsl(var(--sky-h) var(--sky-s) var(--sky-l) / 0.35);
+    background: hsl(var(--sky-h) var(--sky-s) var(--sky-l) / 0.45);
     color: hsl(var(--ink));
   }
 }
