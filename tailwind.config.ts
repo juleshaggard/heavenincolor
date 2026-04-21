@@ -20,6 +20,11 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        paper: {
+          DEFAULT: "hsl(var(--paper))",
+          soft: "hsl(var(--paper-soft))",
+        },
+        rose: "hsl(var(--rose))",
         ink: {
           DEFAULT: "hsl(var(--ink))",
           dim: "hsl(var(--ink-dim))",
