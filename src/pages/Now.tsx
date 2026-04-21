@@ -19,6 +19,7 @@ export default function Now() {
   const [palette, setPalette] = useState<Palette | null>(null);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(4);
+  const [showOriginal, setShowOriginal] = useState(false);
 
   const subset = useMemo(() => {
     if (!images) return [];
