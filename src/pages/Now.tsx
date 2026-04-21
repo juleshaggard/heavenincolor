@@ -4,7 +4,7 @@ import { useAmbientTint } from "@/hooks/useAmbientTint";
 import { getPalette, type Palette } from "@/lib/palette";
 import { SkyThumb } from "@/components/sky/SkyThumb";
 import { Swatches } from "@/components/sky/Swatches";
-import { Filmstrip } from "@/components/sky/Filmstrip";
+import { ColorRibbon } from "@/components/sky/ColorRibbon";
 import { captionFor, fmtTime } from "@/lib/format";
 import { cldUrl, isDemo } from "@/lib/cloudinary";
 import { cn } from "@/lib/utils";
@@ -199,12 +199,12 @@ export default function Now() {
           </div>
         </div>
 
-        <Filmstrip
+        <ColorRibbon
           images={subset}
-          index={idx}
+          activeIndex={idx}
           onScrub={setIdx}
-          thumbWidth={range === "week" ? 56 : 28}
-          height={88}
+          height={32}
+          showTicks={range === "week"}
         />
 
         <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
