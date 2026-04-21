@@ -160,15 +160,13 @@ All colors MUST be HSL.
   }
   .ken-burns { animation: kenburns 28s ease-in-out infinite alternate; }
 
-  /* Oval mask — Halo poster-style organic frame */
-  .oval-mask {
-    -webkit-mask-image: radial-gradient(ellipse 62% 92% at 50% 50%, black 60%, transparent 78%);
-            mask-image: radial-gradient(ellipse 62% 92% at 50% 50%, black 60%, transparent 78%);
+  /* Soft feathered vignette — dreamy edges that melt into paper */
+  .feather-mask {
+    -webkit-mask-image: radial-gradient(ellipse 88% 96% at 50% 50%, black 55%, transparent 100%);
+            mask-image: radial-gradient(ellipse 88% 96% at 50% 50%, black 55%, transparent 100%);
   }
-  .oval-mask-tilt {
-    -webkit-mask-image: radial-gradient(ellipse 60% 94% at 52% 48%, black 60%, transparent 78%);
-            mask-image: radial-gradient(ellipse 60% 94% at 52% 48%, black 60%, transparent 78%);
-    transform: rotate(-8deg);
+  .dream-blur {
+    filter: blur(0.4px) saturate(1.05);
   }
 
   @keyframes auroraShift {
