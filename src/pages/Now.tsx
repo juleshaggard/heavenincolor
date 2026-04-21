@@ -3,6 +3,7 @@ import { useSkyImages, imagesInRange } from "@/hooks/useSkyImages";
 import { useAmbientTint } from "@/hooks/useAmbientTint";
 import { getPalette, type Palette } from "@/lib/palette";
 import { SkyThumb } from "@/components/sky/SkyThumb";
+import skyOriginal from "@/assets/sky-original.jpg";
 import { Swatches } from "@/components/sky/Swatches";
 import { ColorRibbon } from "@/components/sky/ColorRibbon";
 import { captionFor, fmtTime } from "@/lib/format";
@@ -18,6 +19,7 @@ export default function Now() {
   const [palette, setPalette] = useState<Palette | null>(null);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(4);
+  const [showOriginal, setShowOriginal] = useState(false);
 
   const subset = useMemo(() => {
     if (!images) return [];
@@ -102,12 +104,6 @@ export default function Now() {
     <div className="space-y-8">
       {/* === Soft horizontal hero === */}
       <section className="relative">
-        {/* tiny meta strip */}
-        <div className="mb-5 flex items-baseline justify-between font-mono text-[10px] uppercase tracking-[0.3em] text-ink-faint">
-          <span>{isLatest ? "live · latest" : "scrubbing"}</span>
-          <span>№ {String(idx + 1).padStart(4, "0")} / {subset.length}</span>
-        </div>
-
         {/* pill-shaped cinematic frame */}
         <div
           className="relative w-full overflow-hidden rounded-full"
@@ -122,13 +118,21 @@ export default function Now() {
                 "radial-gradient(60% 60% at 50% 50%, hsl(var(--sky-h) var(--sky-s) var(--sky-l) / 0.55), transparent 70%)",
             }}
           />
-          <SkyThumb
-            image={current}
-            width={1800}
-            hero={isLatest}
-            className="absolute inset-0 h-full w-full"
-            alt="Latest sky"
-          />
+          {showOriginal ? (
+            <img
+              src={skyOriginal}
+              alt="Original sky photograph"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          ) : (
+            <SkyThumb
+              image={current}
+              width={1800}
+              hero={isLatest}
+              className="absolute inset-0 h-full w-full"
+              alt="Latest sky"
+            />
+          )}
 
           {/* date info inside the pill */}
           <div className="absolute inset-0 flex items-center justify-between px-[6%] md:px-[8%] text-paper">
@@ -150,16 +154,28 @@ export default function Now() {
           </div>
         </div>
 
-        {/* palette beneath */}
+        {/* original-photo toggle */}
+        <div className="mt-6 flex justify-center">
+          <button
+            onClick={() => setShowOriginal((v) => !v)}
+            className={cn(
+              "flex items-center gap-2 rounded-full border border-hairline/30 px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.25em] transition-colors",
+              showOriginal ? "bg-ink text-paper" : "text-ink-dim hover:text-ink",
+            )}
+          >
+            <span className="h-1.5 w-1.5 rounded-full" style={{ background: showOriginal ? "currentColor" : "hsl(var(--ink-faint))" }} />
+            {showOriginal ? "showing original photo" : "show original photo"}
+          </button>
+        </div>
+
+        {/* centered palette */}
         {palette && (
-          <div className="mt-6 flex flex-wrap items-end justify-between gap-6">
-            <div className="min-w-[14rem] max-w-md flex-1 space-y-2">
-              <div className="flex items-baseline justify-between font-mono text-[10px] uppercase tracking-[0.28em] text-ink-faint">
-                <span>palette</span>
-                <span className="text-ink-dim">{palette.hex.toUpperCase()}</span>
-              </div>
-              <Swatches swatches={palette.swatches} size="md" />
+          <div className="mt-6 mx-auto max-w-md space-y-2">
+            <div className="flex items-baseline justify-between font-mono text-[10px] uppercase tracking-[0.28em] text-ink-faint">
+              <span>palette</span>
+              <span className="text-ink-dim">{palette.hex.toUpperCase()}</span>
             </div>
+            <Swatches swatches={palette.swatches} size="md" />
           </div>
         )}
       </section>
