@@ -3,7 +3,6 @@ import { cn } from "@/lib/utils";
 
 const links = [
   { to: "/", label: "Now" },
-  { to: "/timelapse", label: "Timelapse" },
   { to: "/calendar", label: "Calendar" },
   { to: "/compare", label: "Compare" },
   { to: "/archive", label: "Archive" },

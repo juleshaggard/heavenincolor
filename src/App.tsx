@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Layout from "./components/sky/Layout";
 import Now from "./pages/Now";
-import Timelapse from "./pages/Timelapse";
 import CalendarPage from "./pages/Calendar";
 import ComparePage from "./pages/Compare";
 import Archive from "./pages/Archive";
@@ -22,7 +21,6 @@ const App = () => (
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<Now />} />
-            <Route path="/timelapse" element={<Timelapse />} />
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/compare" element={<ComparePage />} />
             <Route path="/archive" element={<Archive />} />
