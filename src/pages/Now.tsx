@@ -108,8 +108,11 @@ export default function Now() {
           <span>№ {String(idx + 1).padStart(4, "0")} / {subset.length}</span>
         </div>
 
-        {/* wide cinematic frame, feathered into the paper */}
-        <div className="relative w-full overflow-hidden" style={{ aspectRatio: "21 / 9" }}>
+        {/* pill-shaped cinematic frame */}
+        <div
+          className="relative w-full overflow-hidden rounded-full"
+          style={{ aspectRatio: "21 / 9" }}
+        >
           {/* halo glow behind */}
           <div
             aria-hidden
@@ -119,41 +122,46 @@ export default function Now() {
                 "radial-gradient(60% 60% at 50% 50%, hsl(var(--sky-h) var(--sky-s) var(--sky-l) / 0.55), transparent 70%)",
             }}
           />
-          <div className="feather-mask h-full w-full">
-            <SkyThumb
-              image={current}
-              width={1800}
-              hero={isLatest}
-              className="h-full w-full dream-blur"
-              alt="Latest sky"
-            />
+          <SkyThumb
+            image={current}
+            width={1800}
+            hero={isLatest}
+            className="absolute inset-0 h-full w-full"
+            alt="Latest sky"
+          />
+
+          {/* date info inside the pill */}
+          <div className="absolute inset-0 flex items-center justify-between px-[6%] md:px-[8%] text-paper">
+            <div>
+              <div className="font-mono text-[10px] uppercase tracking-[0.3em] opacity-80">
+                {captionFor(current.capturedAt)}
+              </div>
+              <h1 className="font-display italic leading-[0.9] text-[clamp(3rem,11vw,9rem)] drop-shadow-[0_2px_24px_rgba(0,0,0,0.35)]">
+                {fmtTime(current.capturedAt)}
+              </h1>
+              <div className="mt-1 font-display italic text-[clamp(0.9rem,1.6vw,1.25rem)] opacity-90">
+                {current.capturedAt.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
+              </div>
+            </div>
+            <div className="hidden sm:block text-right font-mono text-[10px] uppercase tracking-[0.3em] opacity-80">
+              <div>{current.capturedAt.toLocaleDateString(undefined, { month: "short", day: "2-digit" })}</div>
+              <div>{current.capturedAt.getFullYear()}</div>
+            </div>
           </div>
         </div>
 
-        {/* caption beneath, airy and serif */}
-        <div className="mt-6 flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-ink-faint">
-              {captionFor(current.capturedAt)}
-            </div>
-            <h1 className="font-display italic leading-[0.95] text-ink text-[clamp(3.5rem,10vw,8rem)]">
-              {fmtTime(current.capturedAt)}
-            </h1>
-            <div className="mt-1 font-display italic text-ink-dim text-[clamp(1rem,2vw,1.5rem)]">
-              {current.capturedAt.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
-            </div>
-          </div>
-
-          {palette && (
-            <div className="min-w-[14rem] max-w-xs space-y-2">
+        {/* palette beneath */}
+        {palette && (
+          <div className="mt-6 flex flex-wrap items-end justify-between gap-6">
+            <div className="min-w-[14rem] max-w-md flex-1 space-y-2">
               <div className="flex items-baseline justify-between font-mono text-[10px] uppercase tracking-[0.28em] text-ink-faint">
                 <span>palette</span>
                 <span className="text-ink-dim">{palette.hex.toUpperCase()}</span>
               </div>
               <Swatches swatches={palette.swatches} size="md" />
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </section>
 
       {/* === Single timeline === */}
