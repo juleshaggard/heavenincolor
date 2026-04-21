@@ -1,0 +1,214 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useSkyImages } from "@/hooks/useSkyImages";
+import { SkyThumb } from "@/components/sky/SkyThumb";
+import { Swatches } from "@/components/sky/Swatches";
+import { getPalette, timeOfDay, type Palette } from "@/lib/palette";
+import { fmtDate, fmtTime, captionFor } from "@/lib/format";
+import { cldUrl, isDemo, type SkyImage } from "@/lib/cloudinary";
+import { cn } from "@/lib/utils";
+
+const TODS = ["all", "dawn", "day", "golden", "dusk", "night"] as const;
+const SORTS = ["chronological", "saturation", "warmth", "unusual"] as const;
+
+export default function Archive() {
+  const { images } = useSkyImages();
+  const [tod, setTod] = useState<(typeof TODS)[number]>("all");
+  const [sort, setSort] = useState<(typeof SORTS)[number]>("chronological");
+  const [palettes, setPalettes] = useState<Record<string, Palette>>({});
+  const [open, setOpen] = useState<SkyImage | null>(null);
+
+  const filtered = useMemo(() => {
+    if (!images) return [];
+    let out = images;
+    if (tod !== "all") out = out.filter((i) => timeOfDay(i.capturedAt) === tod);
+    if (sort === "chronological") out = [...out].reverse();
+    return out;
+  }, [images, tod, sort]);
+
+  // background-fetch palettes for visible-ish chunk
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      for (const img of filtered.slice(0, 200)) {
+        if (palettes[img.public_id]) continue;
+        const p = await getPalette(img);
+        if (cancel) return;
+        setPalettes((s) => ({ ...s, [img.public_id]: p }));
+      }
+    })();
+    return () => { cancel = true; };
+  }, [filtered]);
+
+  // sort post-palette
+  const sorted = useMemo(() => {
+    if (sort === "chronological") return filtered;
+    const score = (img: SkyImage) => {
+      const p = palettes[img.public_id];
+      if (!p) return 0;
+      if (sort === "saturation") return p.hsl[1];
+      if (sort === "warmth") {
+        const h = p.hsl[0];
+        return Math.cos(((h - 30) * Math.PI) / 180);
+      }
+      // unusual: distance from neutral grey
+      return Math.abs(p.hsl[1] - 30) + Math.abs(p.hsl[2] - 50);
+    };
+    return [...filtered].sort((a, b) => score(b) - score(a));
+  }, [filtered, sort, palettes]);
+
+  const parentRef = useRef<HTMLDivElement>(null);
+  const cols = 4;
+  const rows = Math.ceil(sorted.length / cols);
+  const rowVirtualizer = useVirtualizer({
+    count: rows,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 280,
+    overscan: 4,
+  });
+
+  return (
+    <div className="space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="font-display text-4xl text-ink md:text-5xl">Archive</h1>
+          <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+            {sorted.length} frames · {tod} · sort by {sort}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em]">
+          <Group>
+            {TODS.map((t) => (
+              <Chip key={t} active={tod === t} onClick={() => setTod(t)}>{t}</Chip>
+            ))}
+          </Group>
+          <Group>
+            {SORTS.map((s) => (
+              <Chip key={s} active={sort === s} onClick={() => setSort(s)}>{s}</Chip>
+            ))}
+          </Group>
+        </div>
+      </header>
+
+      <div ref={parentRef} className="h-[78vh] overflow-auto rounded-sm border border-hairline">
+        <div style={{ height: rowVirtualizer.getTotalSize(), position: "relative" }}>
+          {rowVirtualizer.getVirtualItems().map((vr) => {
+            const start = vr.index * cols;
+            const slice = sorted.slice(start, start + cols);
+            return (
+              <div
+                key={vr.key}
+                style={{ position: "absolute", top: 0, left: 0, width: "100%", transform: `translateY(${vr.start}px)`, height: vr.size }}
+                className="grid gap-px bg-hairline"
+              >
+                <div className="grid grid-cols-2 gap-px md:grid-cols-4">
+                  {slice.map((img) => (
+                    <button
+                      key={img.public_id}
+                      onClick={() => setOpen(img)}
+                      className="group relative block bg-background text-left"
+                    >
+                      <SkyThumb image={img} width={400} className="aspect-square" />
+                      {palettes[img.public_id] && (
+                        <div className="absolute inset-x-0 bottom-0 h-1.5">
+                          {palettes[img.public_id].swatches.map((c, i) => (
+                            <span key={i} className="inline-block h-full" style={{ width: `${100 / 5}%`, background: c }} />
+                          ))}
+                        </div>
+                      )}
+                      <div className="absolute left-2 top-2 font-mono text-[9px] uppercase tracking-[0.2em] text-white/85 mix-blend-difference">
+                        {fmtTime(img.capturedAt)}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {open && <Lightbox image={open} palette={palettes[open.public_id]} onClose={() => setOpen(null)} />}
+    </div>
+  );
+}
+
+function Group({ children }: { children: React.ReactNode }) {
+  return <div className="flex items-center gap-1 rounded-sm border border-hairline bg-card p-1">{children}</div>;
+}
+function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "rounded-sm px-2.5 py-1.5 transition-colors",
+        active ? "bg-secondary text-ink" : "text-ink-dim hover:text-ink",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Palette; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 p-4 backdrop-blur-md" onClick={onClose}>
+      <div className="relative grid w-full max-w-6xl gap-6 md:grid-cols-[3fr_1fr]" onClick={(e) => e.stopPropagation()}>
+        <div className="overflow-hidden rounded-sm border border-hairline">
+          <SkyThumb image={image} width={1600} className="aspect-[16/10] w-full" />
+        </div>
+        <aside className="space-y-4 font-mono text-[11px]">
+          <div>
+            <div className="text-ink-faint uppercase tracking-[0.22em]">date</div>
+            <div className="font-display text-2xl text-ink">{fmtDate(image.capturedAt)}</div>
+          </div>
+          <div className="flex justify-between text-ink-dim">
+            <span>{fmtTime(image.capturedAt)}</span>
+            <span>{captionFor(image.capturedAt)}</span>
+          </div>
+          {palette && (
+            <div className="space-y-2">
+              <Swatches swatches={palette.swatches} size="lg" />
+              <div className="space-y-1 text-ink-dim">
+                {palette.swatches.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => navigator.clipboard?.writeText(c)}
+                    className="flex w-full items-center justify-between rounded-sm px-1 py-0.5 text-[10px] uppercase tracking-[0.2em] hover:bg-secondary"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-sm" style={{ background: c }} />
+                      {c.toUpperCase()}
+                    </span>
+                    <span className="text-ink-faint">copy</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {!isDemo(image) && (
+            <a
+              href={cldUrl(image.public_id, { w: 2400 })}
+              target="_blank"
+              rel="noreferrer"
+              className="block rounded-sm border border-hairline bg-secondary px-3 py-2 text-center text-[10px] uppercase tracking-[0.22em] text-ink hover:bg-accent"
+            >
+              open original ↗
+            </a>
+          )}
+          <button
+            onClick={onClose}
+            className="block w-full rounded-sm px-3 py-2 text-[10px] uppercase tracking-[0.22em] text-ink-dim hover:text-ink"
+          >
+            close · esc
+          </button>
+        </aside>
+      </div>
+    </div>
+  );
+}
