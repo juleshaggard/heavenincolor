@@ -43,15 +43,29 @@ type RawResource = { public_id: string; format: string; version?: number; create
 async function fetchTagList(): Promise<RawResource[]> {
   const url = `https://res.cloudinary.com/${CLOUD_NAME}/image/list/${SKY_TAG}.json`;
   const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) throw new Error(`tag list ${res.status}`);
+  if (!res.ok) {
+    console.warn(
+      `[sky] Cloudinary tag list "${SKY_TAG}" → ${res.status}. ` +
+        `Enable Settings → Security → Resource list in Cloudinary, and tag uploads with "${SKY_TAG}".`,
+    );
+    throw new Error(`tag list ${res.status}`);
+  }
+  const ct = res.headers.get("content-type") ?? "";
+  if (!ct.includes("json")) throw new Error(`tag list non-json (${ct})`);
   const data = await res.json();
+  console.info(`[sky] Loaded ${data.resources?.length ?? 0} frames from Cloudinary tag "${SKY_TAG}"`);
   return data.resources ?? [];
 }
 
 async function fetchManifest(): Promise<RawResource[]> {
   const res = await fetch("/sky-manifest.json", { cache: "no-store" });
   if (!res.ok) throw new Error(`manifest ${res.status}`);
-  return await res.json();
+  const ct = res.headers.get("content-type") ?? "";
+  // Vite serves index.html (text/html) for missing files — reject that.
+  if (!ct.includes("json")) throw new Error("manifest missing");
+  const data = await res.json();
+  if (!Array.isArray(data)) throw new Error("manifest not array");
+  return data;
 }
 
 // Demo fallback — synthesises a day-long sequence using the one image you've uploaded
