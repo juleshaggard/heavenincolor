@@ -10,7 +10,10 @@ type Props = {
 
 export function TiltPill({ children, className, aspectRatio = "21 / 9", maxTilt = 8 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-  const [style, setStyle] = useState<React.CSSProperties>({});
+  const [style, setStyle] = useState<React.CSSProperties>({
+    transform: "perspective(1200px) rotateX(0deg) rotateY(0deg) scale(1)",
+    filter: "drop-shadow(0 18px 30px rgba(0,0,0,0.18))",
+  });
   const [glare, setGlare] = useState<{ x: number; y: number; on: boolean }>({ x: 50, y: 50, on: false });
 
   const onMove = (e: PointerEvent<HTMLDivElement>) => {
@@ -21,14 +24,22 @@ export function TiltPill({ children, className, aspectRatio = "21 / 9", maxTilt 
     const py = (e.clientY - r.top) / r.height;
     const rx = (0.5 - py) * maxTilt * 2;
     const ry = (px - 0.5) * maxTilt * 2;
+    // Drop shadow shifts opposite to tilt — light source stays fixed top-left.
+    const shX = (px - 0.5) * -40;
+    const shY = (py - 0.5) * -40 + 28;
+    const blur = 36;
     setStyle({
-      transform: `perspective(1200px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) scale(1.02)`,
+      transform: `perspective(1200px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) scale(1.03)`,
+      filter: `drop-shadow(${shX.toFixed(1)}px ${shY.toFixed(1)}px ${blur}px rgba(0,0,0,0.28))`,
     });
     setGlare({ x: px * 100, y: py * 100, on: true });
   };
 
   const onLeave = () => {
-    setStyle({ transform: "perspective(1200px) rotateX(0deg) rotateY(0deg) scale(1)" });
+    setStyle({
+      transform: "perspective(1200px) rotateX(0deg) rotateY(0deg) scale(1)",
+      filter: "drop-shadow(0 18px 30px rgba(0,0,0,0.18))",
+    });
     setGlare((g) => ({ ...g, on: false }));
   };
 
@@ -37,47 +48,21 @@ export function TiltPill({ children, className, aspectRatio = "21 / 9", maxTilt 
       ref={ref}
       onPointerMove={onMove}
       onPointerLeave={onLeave}
-      className={cn("relative w-full overflow-hidden rounded-full transition-transform duration-300 ease-out will-change-transform", className)}
+      className={cn(
+        "relative w-full overflow-hidden rounded-full transition-[transform,filter] duration-300 ease-out will-change-transform",
+        className,
+      )}
       style={{ aspectRatio, transformStyle: "preserve-3d", ...style }}
     >
       {children}
-      {/* glass layer — soft top sheen, always on */}
+      {/* subtle moving glare — original intensity */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "linear-gradient(180deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.05) 35%, rgba(255,255,255,0) 55%, rgba(0,0,0,0.10) 100%)",
-        }}
-      />
-      {/* big sun-glare following the cursor */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 transition-opacity duration-500"
+        className="pointer-events-none absolute inset-0 transition-opacity duration-300"
         style={{
           opacity: glare.on ? 1 : 0,
-          background: `radial-gradient(circle at ${glare.x}% ${glare.y}%, rgba(255,255,255,0.9) 0%, rgba(255,240,210,0.55) 14%, rgba(255,220,170,0.25) 32%, rgba(255,255,255,0.05) 55%, transparent 78%)`,
-          mixBlendMode: "screen",
-        }}
-      />
-      {/* soft outer bloom */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 transition-opacity duration-700"
-        style={{
-          opacity: glare.on ? 0.9 : 0,
-          background: `radial-gradient(70% 60% at ${glare.x}% ${glare.y}%, rgba(255,255,255,0.3), transparent 70%)`,
+          background: `radial-gradient(circle at ${glare.x}% ${glare.y}%, rgba(255,255,255,0.35), rgba(255,255,255,0.08) 25%, transparent 55%)`,
           mixBlendMode: "soft-light",
-          filter: "blur(10px)",
-        }}
-      />
-      {/* glass edge — inset highlight + shadow */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-full"
-        style={{
-          boxShadow:
-            "inset 0 2px 1px rgba(255,255,255,0.5), inset 0 -2px 2px rgba(0,0,0,0.18), inset 0 0 40px rgba(255,255,255,0.08)",
         }}
       />
     </div>
