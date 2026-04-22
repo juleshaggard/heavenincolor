@@ -100,7 +100,7 @@ export default function CalendarPage() {
       </header>
 
       {months.map(({ year, month, weeks }) => (
-        <section key={`${year}-${month}`} className="space-y-4">
+        <section key={`${year}-${month}`} className="space-y-4 rounded-2xl bg-paper p-6 shadow-neu">
           <div className="flex items-baseline justify-between border-b border-hairline/20 pb-2">
             <h2 className="font-display italic text-2xl text-ink md:text-3xl">{monthName(year, month)}</h2>
             <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-ink-faint">
