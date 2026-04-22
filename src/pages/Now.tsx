@@ -6,6 +6,7 @@ import { SkyThumb } from "@/components/sky/SkyThumb";
 import skyOriginal from "@/assets/sky-original.jpg";
 import { Swatches } from "@/components/sky/Swatches";
 import { ColorRibbon } from "@/components/sky/ColorRibbon";
+import { TiltPill } from "@/components/sky/TiltPill";
 import { captionFor, fmtTime } from "@/lib/format";
 import { cldUrl, isDemo } from "@/lib/cloudinary";
 import { useTimeFormat } from "@/hooks/useTimeFormat";
@@ -15,7 +16,7 @@ const SPEEDS = [1, 4, 16, 60] as const;
 
 export default function Now() {
   const { images } = useSkyImages();
-  const [range, setRange] = useState<"week" | "month">("week");
+  const [range, setRange] = useState<"today" | "week" | "month">("week");
   const [idx, setIdx] = useState(0);
   const [palette, setPalette] = useState<Palette | null>(null);
   const [playing, setPlaying] = useState(false);
@@ -27,7 +28,11 @@ export default function Now() {
     if (!images) return [];
     const end = images[images.length - 1]?.capturedAt ?? new Date();
     const start = new Date(end);
-    start.setDate(start.getDate() - (range === "week" ? 7 : 30));
+    if (range === "today") {
+      start.setHours(0, 0, 0, 0);
+    } else {
+      start.setDate(start.getDate() - (range === "week" ? 7 : 30));
+    }
     return imagesInRange(images, start, end);
   }, [images, range]);
 
@@ -106,11 +111,8 @@ export default function Now() {
     <div className="space-y-8">
       {/* === Soft horizontal hero === */}
       <section className="relative">
-        {/* pill-shaped cinematic frame */}
-        <div
-          className="relative w-full overflow-hidden rounded-full"
-          style={{ aspectRatio: "21 / 9" }}
-        >
+        {/* pill-shaped cinematic frame with Apple TV-style tilt + glare */}
+        <TiltPill aspectRatio="21 / 9">
           {/* halo glow behind */}
           <div
             aria-hidden
@@ -154,7 +156,7 @@ export default function Now() {
               <div>{current.capturedAt.getFullYear()}</div>
             </div>
           </div>
-        </div>
+        </TiltPill>
 
         {/* original-photo toggle */}
         <div className="mt-6 flex justify-center">
@@ -210,7 +212,7 @@ export default function Now() {
           </div>
 
           <div className="flex overflow-hidden rounded-full border border-hairline/30">
-            {(["week", "month"] as const).map((r) => (
+            {(["today", "week", "month"] as const).map((r) => (
               <button
                 key={r}
                 onClick={() => setRange(r)}
@@ -219,7 +221,7 @@ export default function Now() {
                   range === r ? "bg-ink text-paper" : "text-ink-dim hover:text-ink",
                 )}
               >
-                {r === "week" ? "7 days" : "30 days"}
+                {r === "today" ? "today" : r === "week" ? "7 days" : "30 days"}
               </button>
             ))}
           </div>
