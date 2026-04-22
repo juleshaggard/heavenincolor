@@ -68,27 +68,6 @@ async function fetchManifest(): Promise<RawResource[]> {
   return data;
 }
 
-// Demo fallback — synthesises a day-long sequence using the one image you've uploaded
-// plus Cloudinary color overlays so the UI is fully populated until the tag list works.
-function demoSet(): RawResource[] {
-  // 30 days × every 20 min = 2160 synthetic frames
-  const out: RawResource[] = [];
-  const end = new Date();
-  end.setMinutes(Math.floor(end.getMinutes() / 20) * 20, 0, 0);
-  const STEP = 20 * 60_000;
-  const COUNT = 30 * 24 * 3; // 2160
-  for (let i = COUNT - 1; i >= 0; i--) {
-    const d = new Date(end.getTime() - i * STEP);
-    const stamp = d.toISOString().replace(/[:.]/g, "-").slice(0, 19);
-    out.push({
-      public_id: `__demo__/${stamp}`,
-      format: "jpg",
-      created_at: d.toISOString(),
-    });
-  }
-  return out;
-}
-
 let cache: SkyImage[] | null = null;
 let inflight: Promise<SkyImage[]> | null = null;
 
@@ -96,8 +75,6 @@ export async function listSkyImages(force = false): Promise<SkyImage[]> {
   if (cache && !force) return cache;
   if (inflight) return inflight;
   inflight = (async () => {
-    // Always start with the rich synthetic set so the UI feels alive,
-    // then merge any real Cloudinary frames on top (real wins on dedupe by timestamp).
     let real: RawResource[] = [];
     try {
       real = await fetchTagList();
@@ -108,15 +85,7 @@ export async function listSkyImages(force = false): Promise<SkyImage[]> {
         real = [];
       }
     }
-    const synthetic = demoSet();
-    const byKey = new Map<string, RawResource>();
-    for (const r of synthetic) byKey.set(r.public_id.replace(/^__demo__\//, ""), r);
-    for (const r of real) {
-      const ts = parseCapturedAt(r.public_id, r.created_at).toISOString().slice(0, 19);
-      byKey.set(ts, r);
-    }
-    const raw = Array.from(byKey.values());
-    const mapped = raw
+    const mapped = real
       .map((r) => ({
         public_id: r.public_id,
         format: r.format ?? "jpg",
@@ -132,7 +101,7 @@ export async function listSkyImages(force = false): Promise<SkyImage[]> {
 }
 
 export function isDemo(img: SkyImage) {
-  return img.public_id.startsWith("__demo__/");
+  return false;
 }
 
 // Procedural sky color for demo images so the UI is alive without real photos.

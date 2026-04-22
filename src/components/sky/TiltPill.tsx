@@ -41,23 +41,43 @@ export function TiltPill({ children, className, aspectRatio = "21 / 9", maxTilt 
       style={{ aspectRatio, transformStyle: "preserve-3d", ...style }}
     >
       {children}
-      {/* glare layer */}
+      {/* glass layer — soft top sheen, always on */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 transition-opacity duration-300"
+        className="pointer-events-none absolute inset-0"
         style={{
-          opacity: glare.on ? 1 : 0,
-          background: `radial-gradient(circle at ${glare.x}% ${glare.y}%, rgba(255,255,255,0.35), rgba(255,255,255,0.08) 25%, transparent 55%)`,
-          mixBlendMode: "soft-light",
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.05) 35%, rgba(255,255,255,0) 55%, rgba(0,0,0,0.10) 100%)",
         }}
       />
-      {/* edge sheen */}
+      {/* big sun-glare following the cursor */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-full transition-opacity duration-300"
+        className="pointer-events-none absolute inset-0 transition-opacity duration-500"
         style={{
           opacity: glare.on ? 1 : 0,
-          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.15)",
+          background: `radial-gradient(circle at ${glare.x}% ${glare.y}%, rgba(255,255,255,0.9) 0%, rgba(255,240,210,0.55) 14%, rgba(255,220,170,0.25) 32%, rgba(255,255,255,0.05) 55%, transparent 78%)`,
+          mixBlendMode: "screen",
+        }}
+      />
+      {/* soft outer bloom */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 transition-opacity duration-700"
+        style={{
+          opacity: glare.on ? 0.9 : 0,
+          background: `radial-gradient(70% 60% at ${glare.x}% ${glare.y}%, rgba(255,255,255,0.3), transparent 70%)`,
+          mixBlendMode: "soft-light",
+          filter: "blur(10px)",
+        }}
+      />
+      {/* glass edge — inset highlight + shadow */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 rounded-full"
+        style={{
+          boxShadow:
+            "inset 0 2px 1px rgba(255,255,255,0.5), inset 0 -2px 2px rgba(0,0,0,0.18), inset 0 0 40px rgba(255,255,255,0.08)",
         }}
       />
     </div>

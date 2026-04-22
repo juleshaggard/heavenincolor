@@ -13,9 +13,9 @@ export function Swatches({
   copyable?: boolean;
 }) {
   const [copied, setCopied] = useState<string | null>(null);
-  const dim = size === "lg" ? "h-12" : size === "sm" ? "h-2" : "h-6";
+  const dim = size === "lg" ? "h-14" : size === "sm" ? "h-2" : "h-10";
   return (
-    <div className={cn("flex w-full overflow-hidden rounded-sm", dim, className)}>
+    <div className={cn("flex w-full overflow-hidden rounded-xl shadow-neu", dim, className)}>
       {swatches.map((c, i) => (
         <button
           key={i + c}
@@ -24,15 +24,20 @@ export function Swatches({
             if (!copyable) return;
             navigator.clipboard?.writeText(c);
             setCopied(c);
-            window.setTimeout(() => setCopied(null), 900);
+            window.setTimeout(() => setCopied(null), 1200);
           }}
           title={c.toUpperCase()}
-          className="group relative flex-1 transition-all duration-300 hover:flex-[1.6]"
+          className="group relative flex-1 transition-all duration-300 hover:flex-[1.6] focus:outline-none"
           style={{ background: c }}
         >
-          {size === "lg" && (
-            <span className="pointer-events-none absolute inset-x-0 bottom-1 text-center font-mono text-[10px] uppercase opacity-0 transition-opacity group-hover:opacity-90 mix-blend-difference text-white">
-              {copied === c ? "copied" : c}
+          {size !== "sm" && (
+            <span
+              className={cn(
+                "pointer-events-none absolute inset-0 grid place-items-center text-center font-mono text-[10px] uppercase tracking-[0.2em] mix-blend-difference text-white transition-opacity",
+                copied === c ? "opacity-100" : "opacity-0 group-hover:opacity-90",
+              )}
+            >
+              {copied === c ? "copied" : c.toUpperCase()}
             </span>
           )}
         </button>

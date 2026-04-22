@@ -159,12 +159,14 @@ export default function Now() {
         </TiltPill>
 
         {/* original-photo toggle */}
-        <div className="mt-6 flex justify-center">
+        <div className="mt-8 flex justify-center">
           <button
             onClick={() => setShowOriginal((v) => !v)}
             className={cn(
-              "flex items-center gap-2 rounded-full border border-hairline/30 px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.25em] transition-colors",
-              showOriginal ? "bg-ink text-paper" : "text-ink-dim hover:text-ink",
+              "flex items-center gap-2 rounded-full px-5 py-2 font-mono text-[10px] uppercase tracking-[0.25em] transition-all",
+              showOriginal
+                ? "bg-ink text-paper shadow-neu-pressed"
+                : "bg-paper text-ink-dim shadow-neu-sm hover:text-ink active:shadow-neu-pressed",
             )}
           >
             <span className="h-1.5 w-1.5 rounded-full" style={{ background: showOriginal ? "currentColor" : "hsl(var(--ink-faint))" }} />
@@ -174,35 +176,39 @@ export default function Now() {
 
         {/* centered palette */}
         {palette && (
-          <div className="mt-6 mx-auto max-w-md space-y-2">
-            <div className="flex items-baseline justify-between font-mono text-[10px] uppercase tracking-[0.28em] text-ink-faint">
+          <div className="mt-8 mx-auto max-w-md space-y-3 rounded-2xl bg-paper p-4 shadow-neu">
+            <div className="flex items-baseline justify-between px-1 font-mono text-[10px] uppercase tracking-[0.28em] text-ink-faint">
               <span>palette</span>
               <span className="text-ink-dim">{palette.hex.toUpperCase()}</span>
             </div>
             <Swatches swatches={palette.swatches} size="md" />
+            <div className="px-1 font-mono text-[9px] uppercase tracking-[0.25em] text-ink-faint">
+              click a swatch to copy
+            </div>
           </div>
         )}
       </section>
 
       {/* === Single timeline === */}
-      <section className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
+      <section className="space-y-4 rounded-2xl bg-paper p-5 shadow-neu">
+        {/* 3-col grid keeps the range pill perfectly centered */}
+        <div className="grid grid-cols-3 items-center gap-3">
+          <div className="flex items-center gap-2 justify-self-start">
             <button
               onClick={() => setPlaying((p) => !p)}
-              className="flex h-9 items-center gap-2 rounded-full bg-ink px-4 font-mono text-[10px] uppercase tracking-[0.25em] text-paper hover:opacity-90"
+              className="flex h-9 items-center gap-2 rounded-full bg-paper px-4 font-mono text-[10px] uppercase tracking-[0.25em] text-ink shadow-neu-sm transition-all active:shadow-neu-pressed"
             >
               <span className="text-sm leading-none">{playing ? "❚❚" : "▶"}</span>
               {playing ? "pause" : "play"}
             </button>
-            <div className="flex items-center gap-0.5 font-mono text-[10px] uppercase tracking-[0.22em]">
+            <div className="flex items-center gap-0.5 rounded-full bg-paper px-1 py-0.5 shadow-neu-inset font-mono text-[10px] uppercase tracking-[0.22em]">
               {SPEEDS.map((s) => (
                 <button
                   key={s}
                   onClick={() => setSpeed(s)}
                   className={cn(
                     "rounded-full px-2 py-1 transition-colors",
-                    speed === s ? "text-ink" : "text-ink-faint hover:text-ink",
+                    speed === s ? "bg-ink text-paper" : "text-ink-faint hover:text-ink",
                   )}
                 >
                   {s}×
@@ -211,14 +217,14 @@ export default function Now() {
             </div>
           </div>
 
-          <div className="flex overflow-hidden rounded-full border border-hairline/30">
+          <div className="flex justify-self-center rounded-full bg-paper p-1 shadow-neu-inset">
             {(["today", "week", "month"] as const).map((r) => (
               <button
                 key={r}
                 onClick={() => setRange(r)}
                 className={cn(
-                  "px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.22em] transition-colors",
-                  range === r ? "bg-ink text-paper" : "text-ink-dim hover:text-ink",
+                  "rounded-full px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.22em] transition-all",
+                  range === r ? "bg-ink text-paper shadow-sm" : "text-ink-dim hover:text-ink",
                 )}
               >
                 {r === "today" ? "today" : r === "week" ? "7 days" : "30 days"}
@@ -226,13 +232,13 @@ export default function Now() {
             ))}
           </div>
 
-          <div className="flex overflow-hidden rounded-full border border-hairline/30">
+          <div className="flex justify-self-end rounded-full bg-paper p-1 shadow-neu-inset">
             {(["12", "24"] as const).map((m) => (
               <button
                 key={m}
                 onClick={() => setMode(m)}
                 className={cn(
-                  "px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.22em] transition-colors",
+                  "rounded-full px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.22em] transition-all",
                   mode === m ? "bg-ink text-paper" : "text-ink-dim hover:text-ink",
                 )}
               >
