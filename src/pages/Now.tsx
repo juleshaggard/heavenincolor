@@ -8,6 +8,7 @@ import { Swatches } from "@/components/sky/Swatches";
 import { ColorRibbon } from "@/components/sky/ColorRibbon";
 import { captionFor, fmtTime } from "@/lib/format";
 import { cldUrl, isDemo } from "@/lib/cloudinary";
+import { useTimeFormat } from "@/hooks/useTimeFormat";
 import { cn } from "@/lib/utils";
 
 const SPEEDS = [1, 4, 16, 60] as const;
@@ -20,6 +21,7 @@ export default function Now() {
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(4);
   const [showOriginal, setShowOriginal] = useState(false);
+  const { mode, setMode, hour12 } = useTimeFormat();
 
   const subset = useMemo(() => {
     if (!images) return [];
@@ -128,9 +130,9 @@ export default function Now() {
             <SkyThumb
               image={current}
               width={1800}
-              hero={isLatest}
               className="absolute inset-0 h-full w-full"
               alt="Latest sky"
+              flatColor={palette?.hex}
             />
           )}
 
@@ -141,7 +143,7 @@ export default function Now() {
                 {captionFor(current.capturedAt)}
               </div>
               <h1 className="font-display italic leading-[0.9] text-[clamp(3rem,11vw,9rem)] drop-shadow-[0_2px_24px_rgba(0,0,0,0.35)]">
-                {fmtTime(current.capturedAt)}
+                {fmtTime(current.capturedAt, hour12)}
               </h1>
               <div className="mt-1 font-display italic text-[clamp(0.9rem,1.6vw,1.25rem)] opacity-90">
                 {current.capturedAt.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
