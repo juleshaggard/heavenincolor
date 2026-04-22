@@ -9,10 +9,21 @@ type Props = {
   rounded?: boolean;
   hero?: boolean;
   alt?: string;
+  flatColor?: string;
 };
 
-export function SkyThumb({ image, width = 320, className, rounded, hero, alt }: Props) {
+export function SkyThumb({ image, width = 320, className, rounded, hero, alt, flatColor }: Props) {
   const [loaded, setLoaded] = useState(false);
+
+  if (flatColor) {
+    return (
+      <div
+        className={cn("relative overflow-hidden", rounded && "rounded-sm", className)}
+        style={{ background: flatColor }}
+        aria-label={alt}
+      />
+    );
+  }
 
   if (isDemo(image)) {
     const { hex, palette } = demoSkyColor(image.capturedAt);

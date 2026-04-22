@@ -1,117 +1,174 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { useSkyImages, imagesByDay } from "@/hooks/useSkyImages";
 import { getPalette } from "@/lib/palette";
 import { cn } from "@/lib/utils";
 
-const WEEKS = 53;
+const MONTHS_BACK = 3; // show last N months including current
+
+type DayBand = {
+  key: string;
+  date: Date;
+  hasData: boolean;
+  // 12 hourly bins (every 2h) of hex
+  bins: string[];
+};
+
+const FALLBACK = "hsl(var(--secondary))";
 
 export default function CalendarPage() {
   const { images } = useSkyImages();
   const byDay = useMemo(() => (images ? imagesByDay(images) : new Map()), [images]);
-  const [dayHex, setDayHex] = useState<Record<string, string>>({});
-  const [hover, setHover] = useState<string | null>(null);
+  const [bands, setBands] = useState<Record<string, string[]>>({});
 
-  // Compute average sunset hue per day (sample 1h around 19:00).
-  useEffect(() => {
-    if (!images) return;
-    let cancel = false;
-    (async () => {
-      const out: Record<string, string> = {};
-      for (const [k, list] of byDay) {
-        const sun = list.filter((i: any) => {
-          const h = i.capturedAt.getHours();
-          return h >= 18 && h <= 20;
-        });
-        const sample = sun.length ? sun : list.slice(Math.floor(list.length / 2), Math.floor(list.length / 2) + 2);
-        if (!sample.length) continue;
-        const palettes = await Promise.all(sample.map((i: any) => getPalette(i)));
-        // average in RGB
-        let r = 0, g = 0, b = 0;
-        for (const p of palettes) {
-          const m = p.hex.replace("#", "").match(/.{2}/g)!;
-          r += parseInt(m[0], 16);
-          g += parseInt(m[1], 16);
-          b += parseInt(m[2], 16);
-        }
-        const n = palettes.length;
-        const hex = `#${[r, g, b].map((v) => Math.round(v / n).toString(16).padStart(2, "0")).join("")}`;
-        out[k] = hex;
-      }
-      if (!cancel) setDayHex(out);
-    })();
-    return () => { cancel = true; };
-  }, [images, byDay]);
-
-  const cells = useMemo(() => {
+  // Build month grids: list of months, each with grid of days (Sun..Sat rows×weeks)
+  const months = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const start = new Date(today);
-    start.setDate(start.getDate() - WEEKS * 7 + 1 - today.getDay());
-    const out: { date: Date; key: string }[] = [];
-    for (let i = 0; i < WEEKS * 7; i++) {
-      const d = new Date(start);
-      d.setDate(start.getDate() + i);
-      out.push({ date: d, key: d.toISOString().slice(0, 10) });
+    const out: { year: number; month: number; weeks: (Date | null)[][] }[] = [];
+    for (let m = MONTHS_BACK - 1; m >= 0; m--) {
+      const ref = new Date(today.getFullYear(), today.getMonth() - m, 1);
+      const year = ref.getFullYear();
+      const month = ref.getMonth();
+      const firstDow = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const weeks: (Date | null)[][] = [];
+      let week: (Date | null)[] = Array(firstDow).fill(null);
+      for (let d = 1; d <= daysInMonth; d++) {
+        week.push(new Date(year, month, d));
+        if (week.length === 7) { weeks.push(week); week = []; }
+      }
+      if (week.length) { while (week.length < 7) week.push(null); weeks.push(week); }
+      out.push({ year, month, weeks });
     }
     return out;
   }, []);
 
+  // Compute per-day vertical bands (morning → night)
+  useEffect(() => {
+    if (!images) return;
+    let cancel = false;
+    (async () => {
+      const out: Record<string, string[]> = {};
+      const BINS = 12; // 2h each, 0..23
+      for (const [k, list] of byDay) {
+        const buckets: any[][] = Array.from({ length: BINS }, () => []);
+        for (const img of list as any[]) {
+          const h = img.capturedAt.getHours();
+          buckets[Math.floor(h / 2)].push(img);
+        }
+        const bins: string[] = [];
+        for (let i = 0; i < BINS; i++) {
+          const sample = buckets[i].slice(0, 2);
+          if (!sample.length) { bins.push(""); continue; }
+          const palettes = await Promise.all(sample.map((im) => getPalette(im)));
+          let r = 0, g = 0, b = 0;
+          for (const p of palettes) {
+            const m = p.hex.replace("#", "").match(/.{2}/g)!;
+            r += parseInt(m[0], 16); g += parseInt(m[1], 16); b += parseInt(m[2], 16);
+          }
+          const n = palettes.length;
+          bins.push(`#${[r, g, b].map((v) => Math.round(v / n).toString(16).padStart(2, "0")).join("")}`);
+        }
+        // fill empty bins by interpolating from neighbours
+        for (let i = 0; i < BINS; i++) {
+          if (bins[i]) continue;
+          let prev = "", next = "";
+          for (let j = i - 1; j >= 0; j--) if (bins[j]) { prev = bins[j]; break; }
+          for (let j = i + 1; j < BINS; j++) if (bins[j]) { next = bins[j]; break; }
+          bins[i] = prev || next || "";
+        }
+        out[k] = bins;
+      }
+      if (!cancel) setBands(out);
+    })();
+    return () => { cancel = true; };
+  }, [images, byDay]);
+
+  const monthName = (y: number, m: number) =>
+    new Date(y, m, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-12">
       <header>
         <h1 className="font-display text-4xl text-ink md:text-5xl">Calendar</h1>
         <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.22em] text-ink-faint">
-          each cell · the sky's average sunset hue
+          each column · one day · morning above · night below
         </p>
       </header>
 
-      <div className="overflow-x-auto rounded-sm border border-hairline bg-card p-6">
-        <div
-          className="grid"
-          style={{
-            gridTemplateColumns: `repeat(${WEEKS}, 14px)`,
-            gridTemplateRows: "repeat(7, 14px)",
-            gridAutoFlow: "column",
-            gap: 3,
-          }}
-        >
-          {cells.map(({ date, key }) => {
-            const has = byDay.has(key);
-            const hex = dayHex[key];
-            const future = date.getTime() > Date.now();
-            return (
-              <Link
-                key={key}
-                to="/timelapse"
-                onMouseEnter={() => setHover(key)}
-                onMouseLeave={() => setHover(null)}
-                title={`${key}${has ? "" : " · no frames"}`}
-                className={cn(
-                  "h-3.5 w-3.5 rounded-[2px] transition-transform hover:scale-150",
-                  !has && "bg-secondary",
-                  future && "opacity-30",
-                )}
-                style={has ? { background: hex ?? "#222227", boxShadow: hex ? `0 0 6px ${hex}55` : undefined } : undefined}
-              />
-            );
-          })}
-        </div>
-
-        <div className="mt-6 flex items-center justify-between">
-          <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">
-            {hover ?? "hover a day"}
-          </div>
-          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">
-            <span>cool</span>
-            <div className="flex h-3 w-40 overflow-hidden rounded-sm">
-              {["#1a2a4a", "#3a3a6a", "#6a3a5a", "#a85a3a", "#e8a85a"].map((c) => (
-                <div key={c} className="flex-1" style={{ background: c }} />
-              ))}
+      {months.map(({ year, month, weeks }) => (
+        <section key={`${year}-${month}`} className="space-y-4">
+          <div className="flex items-baseline justify-between border-b border-hairline/20 pb-2">
+            <h2 className="font-display italic text-2xl text-ink md:text-3xl">{monthName(year, month)}</h2>
+            <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-ink-faint">
+              06 · 12 · 18 · 24
             </div>
-            <span>warm</span>
           </div>
+
+          <div className="grid grid-cols-7 gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+              <div key={d} className="text-center">{d}</div>
+            ))}
+          </div>
+
+          <div className="space-y-2">
+            {weeks.map((week, wi) => (
+              <div key={wi} className="grid grid-cols-7 gap-2">
+                {week.map((date, di) => {
+                  if (!date) return <div key={di} />;
+                  const key = date.toISOString().slice(0, 10);
+                  const has = byDay.has(key);
+                  const bins = bands[key];
+                  const future = date.getTime() > today.getTime();
+                  const isToday = date.getTime() === today.getTime();
+
+                  // Build vertical gradient from bins (top = morning hour 0, bottom = hour 22)
+                  const gradient = bins && bins.some(Boolean)
+                    ? `linear-gradient(180deg, ${bins.map((c, i) => `${c || "#1a1a22"} ${(i / (bins.length - 1)) * 100}%`).join(", ")})`
+                    : undefined;
+
+                  return (
+                    <div
+                      key={key}
+                      title={key}
+                      className={cn(
+                        "relative flex flex-col overflow-hidden rounded-md border border-hairline/15 transition-transform hover:scale-[1.03]",
+                        future && "opacity-25",
+                        isToday && "ring-2 ring-ink/40",
+                      )}
+                      style={{
+                        aspectRatio: "1 / 2.4",
+                        background: gradient ?? FALLBACK,
+                      }}
+                    >
+                      <div className="absolute left-1 top-1 font-mono text-[10px] text-paper/90 mix-blend-difference">
+                        {date.getDate()}
+                      </div>
+                      {!has && !future && (
+                        <div className="absolute inset-0 grid place-items-center">
+                          <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-ink-faint">—</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+
+      <div className="flex items-center justify-center gap-3 pt-4 font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
+        <span>morning</span>
+        <div className="flex h-24 w-3 flex-col overflow-hidden rounded-sm">
+          {["#9bb6d8", "#f0c8a0", "#e89870", "#a85a5a", "#3a3a6a", "#0a0a14"].map((c) => (
+            <div key={c} className="flex-1" style={{ background: c }} />
+          ))}
         </div>
+        <span>night</span>
       </div>
     </div>
   );

@@ -75,10 +75,16 @@ export function ColorRibbon({ images, height = 80, className, onScrub, activeInd
         style={{ height, background: gradient }}
       >
         {activeIndex != null && images.length > 1 && (
-          <div
-            className="pointer-events-none absolute top-0 bottom-0 w-px bg-white/90 shadow-[0_0_12px_rgba(255,255,255,0.7)]"
-            style={{ left: `${(activeIndex / (images.length - 1)) * 100}%` }}
-          />
+          <>
+            <div
+              className="pointer-events-none absolute top-0 bottom-0 w-0.5 bg-ink"
+              style={{ left: `${(activeIndex / (images.length - 1)) * 100}%` }}
+            />
+            <div
+              className="pointer-events-none absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-ink bg-paper shadow-[0_2px_8px_rgba(0,0,0,0.25)]"
+              style={{ left: `${(activeIndex / (images.length - 1)) * 100}%` }}
+            />
+          </>
         )}
       </div>
       {showTicks && hourTicks.length > 0 && (
