@@ -223,6 +223,21 @@ export default function Now() {
               </button>
             ))}
           </div>
+
+          <div className="flex overflow-hidden rounded-full border border-hairline/30">
+            {(["12", "24"] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => setMode(m)}
+                className={cn(
+                  "px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.22em] transition-colors",
+                  mode === m ? "bg-ink text-paper" : "text-ink-dim hover:text-ink",
+                )}
+              >
+                {m === "12" ? "12h" : "24h"}
+              </button>
+            ))}
+          </div>
         </div>
 
         <ColorRibbon
