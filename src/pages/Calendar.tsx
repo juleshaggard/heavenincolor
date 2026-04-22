@@ -25,7 +25,7 @@ export default function CalendarPage() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const out: { year: number; month: number; weeks: (Date | null)[][] }[] = [];
-    for (let m = MONTHS_BACK - 1; m >= 0; m--) {
+    for (let m = 0; m < MONTHS_BACK; m++) {
       const ref = new Date(today.getFullYear(), today.getMonth() - m, 1);
       const year = ref.getFullYear();
       const month = ref.getMonth();
