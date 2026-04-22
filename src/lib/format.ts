@@ -9,8 +9,8 @@ export function relativeTime(d: Date): string {
   return `${d2} day${d2 === 1 ? "" : "s"} ago`;
 }
 
-export function fmtTime(d: Date): string {
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+export function fmtTime(d: Date, hour12 = true): string {
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12 });
 }
 export function fmtDate(d: Date): string {
   return d.toLocaleDateString([], { weekday: "long", day: "numeric", month: "long", year: "numeric" });
