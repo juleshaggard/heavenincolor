@@ -263,6 +263,9 @@ export default function Now() {
           <span>{subset[subset.length - 1]?.capturedAt.toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
         </div>
       </section>
+
+      {/* === Live conditions widgets === */}
+      <Widgets />
     </div>
   );
 }
