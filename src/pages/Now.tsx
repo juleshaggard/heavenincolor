@@ -24,6 +24,13 @@ export default function Now() {
   const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(4);
   const [showOriginal, setShowOriginal] = useState(false);
   const { mode, setMode, hour12 } = useTimeFormat();
+  const [shrunk, setShrunk] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setShrunk(window.scrollY > 120);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const subset = useMemo(() => {
     if (!images) return [];
