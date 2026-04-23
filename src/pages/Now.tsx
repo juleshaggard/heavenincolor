@@ -11,6 +11,7 @@ import { captionFor, fmtTime } from "@/lib/format";
 import { cldUrl, isDemo } from "@/lib/cloudinary";
 import { useTimeFormat } from "@/hooks/useTimeFormat";
 import { cn } from "@/lib/utils";
+import { Widgets } from "@/components/sky/Widgets";
 
 const SPEEDS = [1, 4, 16, 60] as const;
 
