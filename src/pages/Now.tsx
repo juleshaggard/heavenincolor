@@ -142,7 +142,7 @@ export default function Now() {
           <div className="absolute inset-0 flex items-center justify-between px-[6%] md:px-[8%] text-paper">
             <div>
               <div className="font-mono text-[10px] uppercase tracking-[0.3em] opacity-80">
-                {captionFor(current.capturedAt)}
+                {captionFor(current.capturedAt, palette?.hex)}
               </div>
               <h1 className="font-display italic leading-[0.9] text-[clamp(3rem,11vw,9rem)] drop-shadow-[0_2px_24px_rgba(0,0,0,0.35)]">
                 {fmtTime(current.capturedAt, hour12)}
