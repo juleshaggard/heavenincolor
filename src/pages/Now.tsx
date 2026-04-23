@@ -24,6 +24,13 @@ export default function Now() {
   const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(4);
   const [showOriginal, setShowOriginal] = useState(false);
   const { mode, setMode, hour12 } = useTimeFormat();
+  const [shrunk, setShrunk] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setShrunk(window.scrollY > 120);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const subset = useMemo(() => {
     if (!images) return [];
@@ -109,11 +116,15 @@ export default function Now() {
   const isLatest = idx === subset.length - 1;
 
   return (
-    <div className="space-y-8">
-      {/* === Soft horizontal hero === */}
-      <section className="relative">
-        {/* pill-shaped cinematic frame with Apple TV-style tilt + glare */}
-        <TiltPill aspectRatio="21 / 9">
+    <div className="space-y-8 pb-40">
+      {/* === Sticky shrinking hero === */}
+      <section
+        className={cn(
+          "sticky top-2 z-30 transition-all duration-500 ease-out",
+          shrunk ? "mx-auto max-w-2xl" : "",
+        )}
+      >
+        <TiltPill aspectRatio={shrunk ? "8 / 2" : "21 / 9"}>
           {/* halo glow behind */}
           <div
             aria-hidden
@@ -142,25 +153,30 @@ export default function Now() {
           {/* date info inside the pill */}
           <div className="absolute inset-0 flex items-center justify-between px-[6%] md:px-[8%] text-paper">
             <div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.3em] opacity-80">
+              <div className={cn("font-mono uppercase tracking-[0.3em] opacity-80", shrunk ? "text-[8px]" : "text-[10px]")}>
                 {captionFor(current.capturedAt, palette?.hex)}
               </div>
-              <h1 className="font-display italic leading-[0.9] text-[clamp(3rem,11vw,9rem)] drop-shadow-[0_2px_24px_rgba(0,0,0,0.35)]">
+              <h1
+                className={cn(
+                  "font-display italic leading-[0.9] drop-shadow-[0_2px_24px_rgba(0,0,0,0.35)] transition-all duration-500",
+                  shrunk ? "text-[clamp(1.5rem,4vw,2.5rem)]" : "text-[clamp(3rem,11vw,9rem)]",
+                )}
+              >
                 {fmtTime(current.capturedAt, hour12)}
               </h1>
-              <div className="mt-1 font-display italic text-[clamp(0.9rem,1.6vw,1.25rem)] opacity-90">
+              <div className={cn("mt-1 font-display italic opacity-90", shrunk ? "text-[10px]" : "text-[clamp(0.9rem,1.6vw,1.25rem)]")}>
                 {current.capturedAt.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
               </div>
             </div>
-            <div className="hidden sm:block text-right font-mono text-[10px] uppercase tracking-[0.3em] opacity-80">
+            <div className={cn("hidden sm:block text-right font-mono uppercase tracking-[0.3em] opacity-80", shrunk ? "text-[8px]" : "text-[10px]")}>
               <div>{current.capturedAt.toLocaleDateString(undefined, { month: "short", day: "2-digit" })}</div>
               <div>{current.capturedAt.getFullYear()}</div>
             </div>
           </div>
         </TiltPill>
 
-        {/* original-photo toggle */}
-        <div className="mt-8 flex justify-center">
+        {/* original-photo toggle (hidden when shrunk) */}
+        <div className={cn("mt-8 flex justify-center transition-all", shrunk && "hidden")}>
           <button
             onClick={() => setShowOriginal((v) => !v)}
             className={cn(
@@ -176,7 +192,7 @@ export default function Now() {
         </div>
 
         {/* centered palette */}
-        {palette && (
+        {palette && !shrunk && (
           <div className="mt-8 mx-auto max-w-md space-y-3 rounded-2xl bg-paper p-4 shadow-neu">
             <div className="flex items-baseline justify-between px-1 font-mono text-[10px] uppercase tracking-[0.28em] text-ink-faint">
               <span>palette</span>
@@ -190,8 +206,11 @@ export default function Now() {
         )}
       </section>
 
-      {/* === Single timeline === */}
-      <section className="space-y-4 rounded-2xl bg-paper p-5 shadow-neu">
+      {/* === Live conditions widgets === */}
+      <Widgets />
+
+      {/* === Fixed bottom timeline === */}
+      <section className="fixed bottom-4 left-1/2 z-40 w-[calc(100%-2rem)] max-w-[1360px] -translate-x-1/2 space-y-3 rounded-2xl bg-paper/95 p-4 shadow-neu backdrop-blur-md">
         {/* 3-col grid keeps the range pill perfectly centered */}
         <div className="grid grid-cols-3 items-center gap-3">
           <div className="flex items-center gap-2 justify-self-start">
@@ -253,7 +272,7 @@ export default function Now() {
           images={subset}
           activeIndex={idx}
           onScrub={setIdx}
-          height={32}
+          height={24}
           showTicks={range === "week"}
         />
 
@@ -263,9 +282,6 @@ export default function Now() {
           <span>{subset[subset.length - 1]?.capturedAt.toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
         </div>
       </section>
-
-      {/* === Live conditions widgets === */}
-      <Widgets />
     </div>
   );
 }

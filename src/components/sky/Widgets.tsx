@@ -293,42 +293,24 @@ export function Widgets() {
         <div className="font-display italic text-ink-dim">~{condition}</div>
       </div>
 
-      {/* Top row: temp + air quality / UV stack */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <TempCircle tempC={data.tempC} hi={data.tempHighC} lo={data.tempLowC} />
-        <div className="grid grid-rows-2 gap-4">
-          <StatPill
-            label="HUMIDITY"
-            value={`${Math.round(data.humidity)}%`}
-            sub={data.humidity < 30 ? "Dry" : data.humidity < 60 ? "Comfortable" : "Humid"}
-          />
-          <StatPill
-            label="UV INDEX"
-            value={String(Math.round(data.uvIndex)).padStart(2, "0")}
-            sub={data.uvIndex < 3 ? "Low" : data.uvIndex < 6 ? "Moderate" : data.uvIndex < 8 ? "High" : "Very High"}
-          />
-        </div>
-      </div>
-
-      {/* Middle row: sun arc + cloud cover */}
-      <div className="grid grid-cols-2 gap-4">
+        <StatPill
+          label="HUMIDITY"
+          value={`${Math.round(data.humidity)}%`}
+          sub={data.humidity < 30 ? "Dry" : data.humidity < 60 ? "Comfortable" : "Humid"}
+        />
+        <StatPill
+          label="UV INDEX"
+          value={String(Math.round(data.uvIndex)).padStart(2, "0")}
+          sub={data.uvIndex < 3 ? "Low" : data.uvIndex < 6 ? "Moderate" : data.uvIndex < 8 ? "High" : "Very High"}
+        />
         <SunArc progress={progress} altitude={sun.altitudeDeg} isDay={data.isDay} />
         <PercentDot label="Cloud cover" value={data.cloudCover} />
-      </div>
-
-      {/* Wind + UV dome */}
-      <div className="grid grid-cols-2 gap-4">
         <WindCompass kmh={data.windKmh} dirDeg={data.windDirDeg} />
         <UvDome uv={data.uvIndex} />
-      </div>
-
-      {/* Sunrise + RealFeel + Pressure */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <SunriseTile sunrise={data.sunrise} sunset={data.sunset} now={now} />
         <RealFeel c={data.realFeelC} />
-      </div>
-
-      <div className="grid grid-cols-1 gap-4">
         <PressureTile hpa={data.pressureHpa} />
       </div>
     </section>
