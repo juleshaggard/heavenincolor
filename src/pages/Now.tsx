@@ -124,7 +124,7 @@ export default function Now() {
           />
           {showOriginal ? (
             <img
-              src={skyOriginal}
+              src={cldUrl(current.public_id, { w: 1800 })}
               alt="Original sky photograph"
               className="absolute inset-0 h-full w-full object-cover"
             />
