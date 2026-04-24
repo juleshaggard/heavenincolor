@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useWeather, sunPosition, dayProgress, weatherCodeLabel, LOCATION } from "@/hooks/useWeather";
 import { cn } from "@/lib/utils";
+import { nameColor } from "@/lib/format";
+import type { Palette } from "@/lib/palette";
 
 const cToF = (c: number) => Math.round(c * 9 / 5 + 32);
 
@@ -255,7 +257,14 @@ function PressureTile({ hpa }: { hpa: number }) {
 }
 
 /* ---------- Main grid ---------- */
-export function Widgets() {
+type WidgetsProps = {
+  /** Time of the currently scrubbed frame (defaults to now). */
+  frameTime?: Date;
+  /** Palette of the currently scrubbed frame (drives the color tile). */
+  framePalette?: Palette | null;
+};
+
+export function Widgets({ frameTime, framePalette }: WidgetsProps = {}) {
   const { data, error } = useWeather();
   const [now, setNow] = useState(new Date());
 
@@ -281,16 +290,22 @@ export function Widgets() {
   }
 
   const sun = sunPosition(now);
-  const progress = dayProgress(now, data.sunrise, data.sunset);
+  const refTime = frameTime ?? now;
+  const sunFrame = sunPosition(refTime);
+  const progress = dayProgress(refTime, data.sunrise, data.sunset);
   const condition = weatherCodeLabel(data.weatherCode);
+  const colorName = framePalette ? nameColor(framePalette.hex) : null;
 
   return (
     <section className="space-y-5">
       <div className="flex items-baseline justify-between px-1">
         <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-ink-faint">
-          {LOCATION.name} · live conditions
+          {LOCATION.name} · {frameTime ? "frame conditions" : "live conditions"}
         </div>
-        <div className="font-display italic text-ink-dim">~{condition}</div>
+        <div className="font-display italic text-ink-dim">
+          ~{condition}
+          {colorName && <span className="ml-2 text-ink-faint">· {colorName}</span>}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -305,14 +320,39 @@ export function Widgets() {
           value={String(Math.round(data.uvIndex)).padStart(2, "0")}
           sub={data.uvIndex < 3 ? "Low" : data.uvIndex < 6 ? "Moderate" : data.uvIndex < 8 ? "High" : "Very High"}
         />
-        <SunArc progress={progress} altitude={sun.altitudeDeg} isDay={data.isDay} />
+        <SunArc progress={progress} altitude={sunFrame.altitudeDeg} isDay={sunFrame.altitudeDeg > 0} />
         <PercentDot label="Cloud cover" value={data.cloudCover} />
         <WindCompass kmh={data.windKmh} dirDeg={data.windDirDeg} />
         <UvDome uv={data.uvIndex} />
-        <SunriseTile sunrise={data.sunrise} sunset={data.sunset} now={now} />
+        <SunriseTile sunrise={data.sunrise} sunset={data.sunset} now={refTime} />
         <RealFeel c={data.realFeelC} />
         <PressureTile hpa={data.pressureHpa} />
+        {framePalette && <FrameColorTile palette={framePalette} time={refTime} />}
       </div>
     </section>
+  );
+}
+
+/* ---------- Frame color tile (driven by timeline scrub) ---------- */
+function FrameColorTile({ palette, time }: { palette: Palette; time: Date }) {
+  const name = nameColor(palette.hex);
+  return (
+    <Tile className="flex flex-col">
+      <Label>Frame color</Label>
+      <div
+        className="mt-3 h-20 w-full rounded-2xl shadow-neu-inset"
+        style={{ background: palette.hex }}
+        aria-label={`${name} ${palette.hex}`}
+      />
+      <div className="mt-3 flex items-baseline justify-between">
+        <div className="font-display italic text-2xl text-ink">{name}</div>
+        <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
+          {palette.hex.toUpperCase()}
+        </div>
+      </div>
+      <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.25em] text-ink-faint">
+        {time.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+      </div>
+    </Tile>
   );
 }

@@ -20,7 +20,8 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route element={<Layout />}>
-            <Route path="/" element={<Now />} />
+            <Route path="/" element={<Archive />} />
+            <Route path="/now" element={<Now />} />
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/compare" element={<ComparePage />} />
             <Route path="/archive" element={<Archive />} />
