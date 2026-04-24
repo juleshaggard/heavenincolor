@@ -161,7 +161,7 @@ export default function Archive() {
       <div className="px-[4vw]">
         <div
           ref={parentRef}
-          className="relative bg-background"
+          className="relative overflow-hidden rounded-[6px] bg-background"
         >
           <div style={{ height: rowVirtualizer.getTotalSize(), position: "relative" }}>
           {rowVirtualizer.getVirtualItems().map((vr) => {
@@ -175,7 +175,7 @@ export default function Archive() {
               >
                 <div
                   className="grid"
-                  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "0px" }}
+                  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "0px", marginRight: "-1px", marginBottom: "-1px" }}
                 >
                   {slice.map((img) => {
                     const p = palettes[img.public_id];
@@ -269,6 +269,8 @@ function GridTile({
       className="group relative block overflow-hidden bg-background p-0 text-left leading-none align-top transition-transform duration-300 ease-out hover:scale-[1.04] hover:z-10 hover:shadow-xl"
       style={{
         height: tileSize,
+        marginRight: "-1px",
+        marginBottom: "-1px",
         viewTransitionName: isOpen ? vt : undefined,
       }}
     >
