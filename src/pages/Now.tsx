@@ -114,7 +114,7 @@ export default function Now() {
   const isLatest = idx === subset.length - 1;
 
   return (
-    <div className="fixed inset-0 top-16 bottom-0 overflow-hidden flex flex-col">
+    <div className="fixed inset-x-0 top-16 bottom-[68px] overflow-hidden flex flex-col">
       {/* === Hero scaled to fit viewport === */}
       <section
         className={cn(
