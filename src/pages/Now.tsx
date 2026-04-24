@@ -3,8 +3,6 @@ import { useSkyImages, imagesInRange } from "@/hooks/useSkyImages";
 import { useAmbientTint } from "@/hooks/useAmbientTint";
 import { getPalette, type Palette } from "@/lib/palette";
 import { SkyThumb } from "@/components/sky/SkyThumb";
-import skyOriginal from "@/assets/sky-original.jpg";
-import { Swatches } from "@/components/sky/Swatches";
 import { TiltPill } from "@/components/sky/TiltPill";
 import { captionFor, fmtTime } from "@/lib/format";
 import { cldUrl, isDemo } from "@/lib/cloudinary";
