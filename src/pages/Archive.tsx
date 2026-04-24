@@ -356,7 +356,7 @@ function BlurFollowText({ children }: { children: React.ReactNode }) {
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-clip-text text-transparent"
         style={{
-          backgroundImage: `radial-gradient(circle 1.4em at ${pos.x}% ${pos.y}%, hsl(48 100% 60%) 0%, hsl(45 95% 65%) 50%, hsl(48 95% 70% / 0) 100%)`,
+          backgroundImage: `radial-gradient(ellipse 60% 200% at ${pos.x}% ${pos.y}%, hsl(48 100% 60%) 0%, hsl(45 95% 65%) 35%, hsl(48 95% 70% / 0) 75%)`,
         }}
       >
         {children}
