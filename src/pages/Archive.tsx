@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useSkyImages } from "@/hooks/useSkyImages";
 import { SkyThumb } from "@/components/sky/SkyThumb";
-import { LiquifyTile } from "@/components/sky/LiquifyTile";
 import { Swatches } from "@/components/sky/Swatches";
 import { getPalette, timeOfDay, type Palette } from "@/lib/palette";
 import { fmtDate, fmtTime, captionFor, nameColor } from "@/lib/format";
@@ -275,7 +274,7 @@ function GridTile({
         viewTransitionName: isOpen ? vt : undefined,
       }}
     >
-      <LiquifyTile image={img} width={400} className="block h-full w-full transition-transform duration-500 ease-out group-hover:scale-110" />
+      <SkyThumb image={img} width={400} className="block h-full w-full transition-transform duration-500 ease-out group-hover:scale-110" />
       {p && (
         <div
           className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 transition-[clip-path,opacity] ease-out"
