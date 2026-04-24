@@ -144,11 +144,7 @@ export default function Archive() {
                 transform: "translateY(2px)",
               }}
             >
-              {seqImg ? (
-                <SkyThumb image={seqImg} width={200} className="h-full w-full" />
-              ) : (
-                <span className="block h-full w-full bg-secondary" />
-              )}
+              <CircleRevealSequence images={recent} index={seqIdx} />
             </span>
             <span>skies</span>
             <br />
