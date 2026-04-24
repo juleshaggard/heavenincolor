@@ -42,9 +42,9 @@ export default function Archive() {
   const [sort, setSort] = useState<(typeof SORTS)[number]>("chronological");
   const [palettes, setPalettes] = useState<Record<string, Palette>>({});
   const [open, setOpen] = useState<SkyImage | null>(null);
-  // 2 (zoomed out) ↔ 10 (zoomed in)
+  // cols == zoom level. 6 = max zoom in (largest tiles). 100 = max zoom out.
   const [zoom, setZoom] = useState(6);
-  const cols = Math.max(2, Math.min(10, 12 - zoom));
+  const cols = Math.max(6, Math.min(100, zoom));
 
   // Last-10 cycling sequence for the inline headline swatch
   const recent = useMemo(() => {
@@ -131,8 +131,12 @@ export default function Archive() {
           <span>{sorted.length.toLocaleString()}</span>
           <span
             aria-hidden
-            className="mx-3 inline-block overflow-hidden align-middle"
-            style={{ width: "0.7em", height: "0.7em" }}
+            className="mx-3 inline-block overflow-hidden rounded-sm"
+            style={{
+              width: "0.72em",
+              height: "0.72em",
+              verticalAlign: "-0.08em",
+            }}
           >
             {seqImg ? (
               <SkyThumb image={seqImg} width={200} className="h-full w-full" />
@@ -285,8 +289,8 @@ function ZoomCorner({
       <span className="font-medium text-ink">Zoom</span>
       <input
         type="range"
-        min={2}
-        max={10}
+        min={6}
+        max={100}
         step={1}
         value={zoom}
         onChange={(e) => setZoom(Number(e.target.value))}
