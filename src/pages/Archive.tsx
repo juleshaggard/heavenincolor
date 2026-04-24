@@ -129,31 +129,33 @@ export default function Archive() {
   return (
     <div className="pb-32">
       <header className="px-[4vw] pt-[6vh] pb-[6vh] text-center">
-        <h1 className="font-display text-ink leading-[0.95] tracking-[-0.02em] text-[clamp(3rem,9vw,9rem)]">
-          <span>{sorted.length.toLocaleString()}</span>
-          <span
-            aria-hidden
-            className="mx-3 inline-block overflow-hidden"
-            style={{
-              width: "0.62em",
-              height: "0.62em",
-              verticalAlign: "0.08em",
-              borderRadius: "8px",
-            }}
-          >
-            {seqImg ? (
-              <SkyThumb image={seqImg} width={200} className="h-full w-full" />
-            ) : (
-              <span className="block h-full w-full bg-secondary" />
-            )}
-          </span>
-          <span>skies</span>
-          <br />
-          <span>captured over </span>
-          <em className="italic">{LOCATION.name}</em>
-          <br />
-          <BlurFollowText>every 30 minutes</BlurFollowText>
-        </h1>
+        <BlurFollowText>
+          <h1 className="font-display leading-[0.95] tracking-[-0.02em] text-[clamp(3rem,9vw,9rem)]">
+            <span>{sorted.length.toLocaleString()}</span>
+            <span
+              aria-hidden
+              className="mx-3 inline-block overflow-hidden align-middle"
+              style={{
+                width: "0.62em",
+                height: "0.62em",
+                verticalAlign: "0.08em",
+                borderRadius: "8px",
+              }}
+            >
+              {seqImg ? (
+                <SkyThumb image={seqImg} width={200} className="h-full w-full" />
+              ) : (
+                <span className="block h-full w-full bg-secondary" />
+              )}
+            </span>
+            <span>skies</span>
+            <br />
+            <span>captured over </span>
+            <em className="italic">{LOCATION.name}</em>
+            <br />
+            <span>every 30 minutes</span>
+          </h1>
+        </BlurFollowText>
       </header>
 
       {/* Grid with comfortable side breathing room */}
