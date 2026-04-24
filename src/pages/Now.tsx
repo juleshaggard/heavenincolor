@@ -135,19 +135,15 @@ export default function Now() {
         <div className={cn("relative w-full transition-all duration-500", shrunk ? "" : "mx-auto")} style={!shrunk ? { width: "70%" } : undefined}>
         {/* Type laid out around the rectangle */}
         {!shrunk && (
-          <div className="mb-6 flex items-end justify-between gap-6 px-1">
-            <div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-ink-faint">
-                {captionFor(current.capturedAt, palette?.hex)}
-              </div>
-              <h1 className="font-display italic leading-[0.9] text-[clamp(3rem,9vw,7rem)] text-ink">
-                {fmtTime(current.capturedAt, hour12)}
-              </h1>
+          <div className="mb-6 flex flex-col items-center gap-2 text-center">
+            <div className="text-[13px] text-ink-dim">
+              {captionFor(current.capturedAt, palette?.hex)}
             </div>
-            <div className="text-right font-mono text-[10px] uppercase tracking-[0.3em] text-ink-faint">
-              <div>{current.capturedAt.toLocaleDateString(undefined, { weekday: "long" })}</div>
-              <div>{current.capturedAt.toLocaleDateString(undefined, { month: "short", day: "2-digit" })}</div>
-              <div>{current.capturedAt.getFullYear()}</div>
+            <h1 className="font-display italic leading-[0.9] text-[clamp(3rem,9vw,7rem)] text-ink">
+              {fmtTime(current.capturedAt, hour12)}
+            </h1>
+            <div className="text-[13px] text-ink-dim">
+              {current.capturedAt.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
             </div>
           </div>
         )}
@@ -193,7 +189,7 @@ export default function Now() {
         <div className={cn("mt-6 flex justify-center transition-all", shrunk && "hidden")}>
           <button
             onClick={() => setShowOriginal((v) => !v)}
-            className="text-[10px] uppercase tracking-[0.28em] text-ink-faint underline-offset-4 hover:text-ink hover:underline"
+            className="text-[13px] text-ink-dim underline-offset-4 hover:text-ink hover:underline"
           >
             {showOriginal ? "showing original photo" : "show original photo"}
           </button>
@@ -201,8 +197,8 @@ export default function Now() {
       </section>
 
       {/* === Simplified bottom timeline === */}
-      <section className="fixed bottom-0 left-0 right-0 z-40 border-t border-hairline bg-paper">
-        <div className="mx-auto flex max-w-[1400px] items-center gap-6 px-6 py-4">
+      <section className="fixed bottom-0 left-0 right-0 z-40 bg-paper">
+        <div className="mx-auto flex max-w-[1400px] items-center gap-6 px-6 py-4 text-[13px]">
           {/* play */}
           <button
             onClick={handlePlayToggle}
@@ -224,14 +220,14 @@ export default function Now() {
           />
 
           {/* range segmented (text only, no chrome) */}
-          <div className="flex items-center gap-4 text-[11px] uppercase tracking-[0.22em]">
+          <div className="flex items-center gap-5">
             {(["today", "week", "month"] as const).map((r) => (
               <button
                 key={r}
                 onClick={() => setRange(r)}
                 className={cn(
                   "transition-colors",
-                  range === r ? "text-ink underline underline-offset-4" : "text-ink-faint hover:text-ink",
+                  range === r ? "text-ink underline underline-offset-4" : "text-ink-dim hover:text-ink",
                 )}
               >
                 {r === "today" ? "Today" : r === "week" ? "7d" : "30d"}
@@ -240,7 +236,7 @@ export default function Now() {
           </div>
 
           {/* counter */}
-          <div className="hidden shrink-0 text-[11px] tabular-nums text-ink-faint sm:block">
+          <div className="hidden shrink-0 tabular-nums text-ink-dim sm:block">
             <span className="text-ink">{String(idx + 1).padStart(3, "0")}</span>
             <span> / {String(subset.length).padStart(3, "0")}</span>
           </div>
