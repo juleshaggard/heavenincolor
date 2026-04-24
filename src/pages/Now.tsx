@@ -137,8 +137,8 @@ export default function Now() {
             </div>
           </div>
         )}
-        <div className="relative flex w-full min-h-0 flex-1 items-stretch justify-center">
-        <TiltPill className="!h-full max-h-full" height="100%">
+        <div className="relative flex w-full min-h-0 flex-1 items-center justify-center">
+        <TiltPill className="max-h-full" aspectRatio="16 / 9">
           {/* halo glow behind */}
           <div
             aria-hidden
