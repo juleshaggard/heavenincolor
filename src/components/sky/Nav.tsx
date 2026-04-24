@@ -2,8 +2,8 @@ import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { to: "/", label: "Archive" },
-  { to: "/now", label: "Now" },
+  { to: "/", label: "Grid" },
+  { to: "/now", label: "Real Time" },
   { to: "/calendar", label: "Calendar" },
   { to: "/compare", label: "Compare" },
 ];

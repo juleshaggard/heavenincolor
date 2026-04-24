@@ -11,8 +11,6 @@ import { captionFor, fmtTime } from "@/lib/format";
 import { cldUrl, isDemo } from "@/lib/cloudinary";
 import { useTimeFormat } from "@/hooks/useTimeFormat";
 import { cn } from "@/lib/utils";
-import { Widgets } from "@/components/sky/Widgets";
-
 const SPEEDS = [1, 4, 16, 60] as const;
 
 const PILL_HEIGHT_FULL = 480; // px, hero
@@ -210,9 +208,6 @@ export default function Now() {
           </div>
         )}
       </section>
-
-      {/* === Live conditions widgets === */}
-      <Widgets frameTime={current?.capturedAt} framePalette={palette} />
 
       {/* === Fixed bottom timeline === */}
       <section className="fixed bottom-4 left-1/2 z-40 w-[calc(100%-2rem)] max-w-[1360px] -translate-x-1/2 space-y-3 rounded-2xl bg-paper/95 p-4 shadow-neu backdrop-blur-md">

@@ -7,6 +7,31 @@ import { getPalette, timeOfDay, type Palette } from "@/lib/palette";
 import { fmtDate, fmtTime, captionFor, nameColor } from "@/lib/format";
 import { cldUrl, isDemo, type SkyImage } from "@/lib/cloudinary";
 import { cn } from "@/lib/utils";
+import { X } from "lucide-react";
+import { LOCATION } from "@/hooks/useWeather";
+
+// View Transitions API (Chromium). Falls back gracefully.
+function openWithTransition(
+  img: SkyImage,
+  _vt: string,
+  setOpen: (i: SkyImage) => void,
+) {
+  const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+  if (typeof doc.startViewTransition === "function") {
+    doc.startViewTransition(() => setOpen(img));
+  } else {
+    setOpen(img);
+  }
+}
+
+// Pick black or white text for max contrast against a hex bg.
+function readableInk(hex: string): string {
+  const m = hex.replace("#", "").match(/.{2}/g);
+  if (!m) return "#000";
+  const [r, g, b] = m.map((h) => parseInt(h, 16));
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return lum > 0.55 ? "#0a0a0a" : "#ffffff";
+}
 
 const TODS = ["all", "dawn", "day", "golden", "dusk", "night"] as const;
 const SORTS = ["chronological", "saturation", "warmth", "unusual"] as const;
@@ -61,21 +86,37 @@ export default function Archive() {
   }, [filtered, sort, palettes]);
 
   const parentRef = useRef<HTMLDivElement>(null);
+  const [containerW, setContainerW] = useState(0);
+  useEffect(() => {
+    const el = parentRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => setContainerW(entry.contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const tileSize = containerW > 0 ? containerW / cols : 200;
   const rows = Math.ceil(sorted.length / cols);
   const rowVirtualizer = useVirtualizer({
     count: rows,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => Math.round(900 / cols),
+    estimateSize: () => tileSize,
     overscan: 4,
   });
+  // re-measure when cols/width changes
+  useEffect(() => {
+    rowVirtualizer.measure();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tileSize, cols]);
 
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl text-ink md:text-5xl">Archive</h1>
+          <h1 className="font-display text-4xl text-ink md:text-5xl">
+            {sorted.length.toLocaleString()} skies over {LOCATION.name}
+          </h1>
           <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.22em] text-ink-faint">
-            {sorted.length} frames · {tod} · sort by {sort}
+            captured every 30 minutes · {tod} · sort by {sort}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em]">
@@ -122,34 +163,41 @@ export default function Archive() {
                 >
                   {slice.map((img) => {
                     const p = palettes[img.public_id];
+                    const vt = `sky-${img.public_id.replace(/[^a-z0-9_-]/gi, "_")}`;
                     return (
                       <button
                         key={img.public_id}
-                        onClick={() => setOpen(img)}
-                        className="group relative block aspect-square overflow-hidden bg-background text-left"
+                        onClick={() => openWithTransition(img, vt, setOpen)}
+                        className="group relative block overflow-hidden bg-background p-0 text-left leading-none align-top"
+                        style={{
+                          height: tileSize,
+                          viewTransitionName: open?.public_id === img.public_id ? vt : undefined,
+                        }}
                       >
-                        <SkyThumb image={img} width={400} className="h-full w-full" />
-                        <div className="pointer-events-none absolute inset-0 flex flex-col justify-between bg-gradient-to-t from-black/70 via-transparent to-black/40 p-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                          <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-white/95">
-                            {fmtTime(img.capturedAt)}
-                            <span className="mx-1.5 opacity-60">·</span>
-                            {img.capturedAt.toLocaleDateString(undefined, { month: "short", day: "2-digit" })}
-                          </div>
-                          {p && (
-                            <div className="flex items-center gap-2">
-                              <span
-                                className="h-3 w-3 rounded-sm ring-1 ring-white/60"
-                                style={{ background: p.hex }}
-                              />
-                              <span className="font-display italic leading-none text-white text-sm">
-                                {nameColor(p.hex)}
-                              </span>
-                              <span className="ml-auto font-mono text-[9px] uppercase tracking-[0.2em] text-white/70">
-                                {p.hex.toUpperCase()}
-                              </span>
+                        <SkyThumb image={img} width={400} className="block h-full w-full" />
+                        {p && (
+                          <div
+                            className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                            style={{ background: p.hex }}
+                          >
+                            <div
+                              className="font-mono text-[10px] uppercase tracking-[0.22em]"
+                              style={{ color: readableInk(p.hex) }}
+                            >
+                              {fmtTime(img.capturedAt)}
+                              <span className="mx-1.5 opacity-60">·</span>
+                              {img.capturedAt.toLocaleDateString(undefined, { month: "short", day: "2-digit" })}
                             </div>
-                          )}
-                        </div>
+                            <div style={{ color: readableInk(p.hex) }}>
+                              <div className="font-display italic text-2xl leading-none">
+                                {nameColor(p.hex)}
+                              </div>
+                              <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.22em] opacity-80">
+                                {p.hex.toUpperCase()}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </button>
                     );
                   })}
@@ -188,13 +236,39 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+  const close = () => {
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+    if (typeof doc.startViewTransition === "function") {
+      doc.startViewTransition(() => onClose());
+    } else {
+      onClose();
+    }
+  };
+  const vt = `sky-${image.public_id.replace(/[^a-z0-9_-]/gi, "_")}`;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 p-4 backdrop-blur-md" onClick={onClose}>
-      <div className="relative grid w-full max-w-6xl gap-6 md:grid-cols-[3fr_1fr]" onClick={(e) => e.stopPropagation()}>
-        <div className="overflow-hidden rounded-sm border border-hairline">
-          <SkyThumb image={image} width={1600} className="aspect-[16/10] w-full" />
+    <div
+      className="fixed inset-0 z-[60] flex h-screen w-screen items-stretch bg-background/98 backdrop-blur-md animate-fade-in"
+      onClick={close}
+    >
+      {/* close button — fixed top-right, above everything */}
+      <button
+        onClick={(e) => { e.stopPropagation(); close(); }}
+        aria-label="Close"
+        className="fixed right-5 top-5 z-[70] grid h-11 w-11 place-items-center rounded-full bg-paper/90 text-ink shadow-neu backdrop-blur-md transition-all hover:scale-105 hover:bg-paper active:shadow-neu-pressed"
+      >
+        <X className="h-5 w-5" strokeWidth={1.5} />
+      </button>
+
+      <div
+        className="relative grid h-full w-full gap-0 md:grid-cols-[3fr_1fr]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="relative h-full w-full overflow-hidden bg-background">
+          <div className="absolute inset-0" style={{ viewTransitionName: vt }}>
+            <SkyThumb image={image} width={1800} className="h-full w-full" />
+          </div>
         </div>
-        <aside className="space-y-4 font-mono text-[11px]">
+        <aside className="flex h-full flex-col gap-4 overflow-y-auto border-l border-hairline bg-paper p-6 font-mono text-[11px]">
           <div>
             <div className="text-ink-faint uppercase tracking-[0.22em]">date</div>
             <div className="font-display text-2xl text-ink">{fmtDate(image.capturedAt)}</div>
@@ -233,12 +307,9 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
               open original ↗
             </a>
           )}
-          <button
-            onClick={onClose}
-            className="block w-full rounded-sm px-3 py-2 text-[10px] uppercase tracking-[0.22em] text-ink-dim hover:text-ink"
-          >
-            close · esc
-          </button>
+          <div className="mt-auto pt-4 text-center text-[10px] uppercase tracking-[0.22em] text-ink-faint">
+            press esc or click ✕ to close
+          </div>
         </aside>
       </div>
     </div>
