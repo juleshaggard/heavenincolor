@@ -168,8 +168,11 @@ export default function Archive() {
                       <button
                         key={img.public_id}
                         onClick={() => openWithTransition(img, vt, setOpen)}
-                        className="group relative block aspect-square overflow-hidden bg-background p-0 text-left leading-none align-top"
-                        style={{ viewTransitionName: open?.public_id === img.public_id ? vt : undefined }}
+                        className="group relative block overflow-hidden bg-background p-0 text-left leading-none align-top"
+                        style={{
+                          height: tileSize,
+                          viewTransitionName: open?.public_id === img.public_id ? vt : undefined,
+                        }}
                       >
                         <SkyThumb image={img} width={400} className="block h-full w-full" />
                         {p && (
