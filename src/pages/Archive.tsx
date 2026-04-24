@@ -89,10 +89,24 @@ export default function Archive() {
               <Chip key={s} active={sort === s} onClick={() => setSort(s)}>{s}</Chip>
             ))}
           </Group>
+          <div className="flex items-center gap-2 rounded-sm border border-hairline bg-card px-3 py-1.5">
+            <span className="text-ink-faint">zoom</span>
+            <input
+              type="range"
+              min={2}
+              max={10}
+              step={1}
+              value={zoom}
+              onChange={(e) => setZoom(Number(e.target.value))}
+              className="h-1 w-28 cursor-ew-resize accent-ink"
+              aria-label="Grid zoom"
+            />
+            <span className="tabular-nums text-ink-dim">{cols}×</span>
+          </div>
         </div>
       </header>
 
-      <div ref={parentRef} className="h-[78vh] overflow-auto rounded-sm border border-hairline">
+      <div ref={parentRef} className="h-[82vh] overflow-auto rounded-sm border border-hairline">
         <div style={{ height: rowVirtualizer.getTotalSize(), position: "relative" }}>
           {rowVirtualizer.getVirtualItems().map((vr) => {
             const start = vr.index * cols;
@@ -101,28 +115,44 @@ export default function Archive() {
               <div
                 key={vr.key}
                 style={{ position: "absolute", top: 0, left: 0, width: "100%", transform: `translateY(${vr.start}px)`, height: vr.size }}
-                className="grid gap-px bg-hairline"
               >
-                <div className="grid grid-cols-2 gap-px md:grid-cols-4">
-                  {slice.map((img) => (
-                    <button
-                      key={img.public_id}
-                      onClick={() => setOpen(img)}
-                      className="group relative block bg-background text-left"
-                    >
-                      <SkyThumb image={img} width={400} className="aspect-square" />
-                      {palettes[img.public_id] && (
-                        <div className="absolute inset-x-0 bottom-0 h-1.5">
-                          {palettes[img.public_id].swatches.map((c, i) => (
-                            <span key={i} className="inline-block h-full" style={{ width: `${100 / 5}%`, background: c }} />
-                          ))}
+                <div
+                  className="grid"
+                  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+                >
+                  {slice.map((img) => {
+                    const p = palettes[img.public_id];
+                    return (
+                      <button
+                        key={img.public_id}
+                        onClick={() => setOpen(img)}
+                        className="group relative block aspect-square overflow-hidden bg-background text-left"
+                      >
+                        <SkyThumb image={img} width={400} className="h-full w-full" />
+                        <div className="pointer-events-none absolute inset-0 flex flex-col justify-between bg-gradient-to-t from-black/70 via-transparent to-black/40 p-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                          <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-white/95">
+                            {fmtTime(img.capturedAt)}
+                            <span className="mx-1.5 opacity-60">·</span>
+                            {img.capturedAt.toLocaleDateString(undefined, { month: "short", day: "2-digit" })}
+                          </div>
+                          {p && (
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="h-3 w-3 rounded-sm ring-1 ring-white/60"
+                                style={{ background: p.hex }}
+                              />
+                              <span className="font-display italic leading-none text-white text-sm">
+                                {nameColor(p.hex)}
+                              </span>
+                              <span className="ml-auto font-mono text-[9px] uppercase tracking-[0.2em] text-white/70">
+                                {p.hex.toUpperCase()}
+                              </span>
+                            </div>
+                          )}
                         </div>
-                      )}
-                      <div className="absolute left-2 top-2 font-mono text-[9px] uppercase tracking-[0.2em] text-white/85 mix-blend-difference">
-                        {fmtTime(img.capturedAt)}
-                      </div>
-                    </button>
-                  ))}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             );
