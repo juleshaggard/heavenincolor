@@ -51,19 +51,11 @@ export function SkyThumb({ image, width = 320, className, rounded, hero, alt, fl
   return (
     <div className={cn("relative overflow-hidden bg-secondary", rounded && "rounded-sm", className)}>
       <img
-        src={blur}
-        aria-hidden
-        className="absolute inset-0 h-full w-full object-cover scale-110"
-        loading="lazy"
-      />
-      <img
         src={src}
         alt={alt ?? "Sky"}
-        loading="lazy"
         onLoad={() => setLoaded(true)}
         className={cn(
-          "relative h-full w-full object-cover transition-opacity duration-700",
-          loaded ? "opacity-100" : "opacity-0",
+          "relative h-full w-full object-cover",
           hero && "ken-burns",
         )}
       />

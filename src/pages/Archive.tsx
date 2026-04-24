@@ -46,6 +46,21 @@ export default function Archive() {
   const [zoom, setZoom] = useState(6);
   const cols = Math.max(2, Math.min(10, 12 - zoom));
 
+  // Last-10 cycling sequence for the inline headline swatch
+  const recent = useMemo(() => {
+    if (!images) return [];
+    return images.slice(-10);
+  }, [images]);
+  const [seqIdx, setSeqIdx] = useState(0);
+  useEffect(() => {
+    if (recent.length < 2) return;
+    const id = window.setInterval(() => {
+      setSeqIdx((i) => (i + 1) % recent.length);
+    }, 500);
+    return () => window.clearInterval(id);
+  }, [recent.length]);
+  const seqImg = recent[seqIdx];
+
   const filtered = useMemo(() => {
     if (!images) return [];
     let out = images;
@@ -111,18 +126,20 @@ export default function Archive() {
 
   return (
     <div className="pb-32">
-      <header className="px-[4vw] pt-[6vh] pb-[8vh] text-center">
+      <header className="px-[4vw] pt-[6vh] pb-[6vh] text-center">
         <h1 className="font-display text-ink leading-[0.95] tracking-[-0.02em] text-[clamp(3rem,9vw,9rem)]">
           <span>{sorted.length.toLocaleString()}</span>
           <span
             aria-hidden
-            className="mx-3 inline-block align-middle"
-            style={{
-              width: "0.7em",
-              height: "0.7em",
-              background: "linear-gradient(160deg, hsl(218 55% 75%), hsl(218 45% 55%))",
-            }}
-          />
+            className="mx-3 inline-block overflow-hidden align-middle"
+            style={{ width: "0.7em", height: "0.7em" }}
+          >
+            {seqImg ? (
+              <SkyThumb image={seqImg} width={200} className="h-full w-full" />
+            ) : (
+              <span className="block h-full w-full bg-secondary" />
+            )}
+          </span>
           <span>skies</span>
           <br />
           <span>captured over </span>
@@ -133,11 +150,12 @@ export default function Archive() {
       </header>
 
       {/* Grid with comfortable side breathing room */}
-      <div
-        ref={parentRef}
-        className="relative px-[4vw]"
-      >
-        <div style={{ height: rowVirtualizer.getTotalSize(), position: "relative" }}>
+      <div className="px-[4vw]">
+        <div
+          ref={parentRef}
+          className="relative overflow-hidden rounded-2xl bg-background"
+        >
+          <div style={{ height: rowVirtualizer.getTotalSize(), position: "relative" }}>
           {rowVirtualizer.getVirtualItems().map((vr) => {
             const start = vr.index * cols;
             const slice = sorted.slice(start, start + cols);
@@ -149,7 +167,7 @@ export default function Archive() {
               >
                 <div
                   className="grid"
-                  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+                  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: 0 }}
                 >
                   {slice.map((img) => {
                     const p = palettes[img.public_id];
@@ -158,7 +176,7 @@ export default function Archive() {
                       <button
                         key={img.public_id}
                         onClick={() => openWithTransition(img, vt, setOpen)}
-                        className="group relative block overflow-hidden bg-background p-0 text-left leading-none align-top"
+                        className="group relative block overflow-hidden bg-background p-0 text-left leading-none align-top -mr-px -mb-px"
                         style={{
                           height: tileSize,
                           viewTransitionName: open?.public_id === img.public_id ? vt : undefined,
@@ -195,6 +213,7 @@ export default function Archive() {
               </div>
             );
           })}
+          </div>
         </div>
       </div>
 
@@ -233,7 +252,7 @@ function FilterCorner({
   return (
     <div className="fixed bottom-5 left-6 z-40 text-[13px]">
       {open ? (
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-6 rounded-full border border-hairline bg-paper px-4 py-2 shadow-sm">
           <button onClick={() => setOpen(false)} className="font-medium text-ink underline underline-offset-4">
             Filter
           </button>
