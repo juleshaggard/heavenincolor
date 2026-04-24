@@ -133,6 +133,24 @@ export default function Now() {
         )}
       >
         <div className={cn("relative w-full transition-all duration-500", shrunk ? "" : "mx-auto")} style={!shrunk ? { width: "70%" } : undefined}>
+        {/* Type laid out around the rectangle */}
+        {!shrunk && (
+          <div className="mb-6 flex items-end justify-between gap-6 px-1">
+            <div>
+              <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+                {captionFor(current.capturedAt, palette?.hex)}
+              </div>
+              <h1 className="font-display italic leading-[0.9] text-[clamp(3rem,9vw,7rem)] text-ink">
+                {fmtTime(current.capturedAt, hour12)}
+              </h1>
+            </div>
+            <div className="text-right font-mono text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+              <div>{current.capturedAt.toLocaleDateString(undefined, { weekday: "long" })}</div>
+              <div>{current.capturedAt.toLocaleDateString(undefined, { month: "short", day: "2-digit" })}</div>
+              <div>{current.capturedAt.getFullYear()}</div>
+            </div>
+          </div>
+        )}
         <TiltPill height={shrunk ? PILL_HEIGHT_SHRUNK : PILL_HEIGHT_FULL}>
           {/* halo glow behind */}
           <div
@@ -158,30 +176,16 @@ export default function Now() {
               flatColor={palette?.hex}
             />
           )}
-
-          {/* date info inside the pill */}
-          <div className="absolute inset-0 flex items-center justify-between px-[6%] md:px-[8%] text-paper">
-            <div>
-              <div className={cn("font-mono uppercase tracking-[0.3em] opacity-80", shrunk ? "text-[8px]" : "text-[10px]")}>
-                {captionFor(current.capturedAt, palette?.hex)}
-              </div>
-              <h1
-                className={cn(
-                  "font-display italic leading-[0.9] drop-shadow-[0_2px_24px_rgba(0,0,0,0.35)] transition-all duration-500",
-                  shrunk ? "text-[clamp(1.5rem,4vw,2.5rem)]" : "text-[clamp(3rem,11vw,9rem)]",
-                )}
-              >
+          {shrunk && (
+            <div className="absolute inset-0 flex items-center justify-between px-6 text-paper">
+              <div className="font-display italic text-2xl drop-shadow-[0_2px_12px_rgba(0,0,0,0.4)]">
                 {fmtTime(current.capturedAt, hour12)}
-              </h1>
-              <div className={cn("mt-1 font-display italic opacity-90", shrunk ? "text-[10px]" : "text-[clamp(0.9rem,1.6vw,1.25rem)]")}>
-                {current.capturedAt.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
+              </div>
+              <div className="font-mono text-[9px] uppercase tracking-[0.3em] opacity-80">
+                {current.capturedAt.toLocaleDateString(undefined, { month: "short", day: "2-digit" })}
               </div>
             </div>
-            <div className={cn("hidden sm:block text-right font-mono uppercase tracking-[0.3em] opacity-80", shrunk ? "text-[8px]" : "text-[10px]")}>
-              <div>{current.capturedAt.toLocaleDateString(undefined, { month: "short", day: "2-digit" })}</div>
-              <div>{current.capturedAt.getFullYear()}</div>
-            </div>
-          </div>
+          )}
         </TiltPill>
         </div>
 

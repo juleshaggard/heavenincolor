@@ -51,7 +51,7 @@ export function TiltPill({ children, className, aspectRatio = "21 / 9", height, 
       onPointerMove={onMove}
       onPointerLeave={onLeave}
       className={cn(
-        "relative w-full overflow-hidden rounded-full transition-[transform,filter,height] duration-500 ease-out will-change-transform",
+        "relative w-full overflow-hidden rounded-2xl transition-[transform,filter,height] duration-500 ease-out will-change-transform",
         className,
       )}
       style={{
