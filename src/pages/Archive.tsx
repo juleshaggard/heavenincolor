@@ -109,7 +109,7 @@ export default function Archive() {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  const GAP = 6;
+  const GAP = -1;
   const tileSize = containerW > 0 ? (containerW - GAP * (cols - 1)) / cols : 200;
   const rowSize = tileSize + GAP;
   const rows = Math.ceil(sorted.length / cols);
@@ -176,7 +176,7 @@ export default function Archive() {
               >
                 <div
                   className="grid"
-                  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "6px" }}
+                  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "-1px" }}
                 >
                   {slice.map((img) => {
                     const p = palettes[img.public_id];
