@@ -4,7 +4,7 @@ import { useSkyImages } from "@/hooks/useSkyImages";
 import { SkyThumb } from "@/components/sky/SkyThumb";
 import { Swatches } from "@/components/sky/Swatches";
 import { getPalette, timeOfDay, type Palette } from "@/lib/palette";
-import { fmtDate, fmtTime, captionFor } from "@/lib/format";
+import { fmtDate, fmtTime, captionFor, nameColor } from "@/lib/format";
 import { cldUrl, isDemo, type SkyImage } from "@/lib/cloudinary";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +17,9 @@ export default function Archive() {
   const [sort, setSort] = useState<(typeof SORTS)[number]>("chronological");
   const [palettes, setPalettes] = useState<Record<string, Palette>>({});
   const [open, setOpen] = useState<SkyImage | null>(null);
+  // 2 (zoomed out) ↔ 10 (zoomed in)
+  const [zoom, setZoom] = useState(6);
+  const cols = Math.max(2, Math.min(10, 12 - zoom));
 
   const filtered = useMemo(() => {
     if (!images) return [];
@@ -58,12 +61,11 @@ export default function Archive() {
   }, [filtered, sort, palettes]);
 
   const parentRef = useRef<HTMLDivElement>(null);
-  const cols = 4;
   const rows = Math.ceil(sorted.length / cols);
   const rowVirtualizer = useVirtualizer({
     count: rows,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 280,
+    estimateSize: () => Math.round(900 / cols),
     overscan: 4,
   });
 
