@@ -43,7 +43,7 @@ export default function Archive() {
   const [palettes, setPalettes] = useState<Record<string, Palette>>({});
   const [open, setOpen] = useState<SkyImage | null>(null);
   // cols == zoom level. 6 = max zoom in (largest tiles). 100 = max zoom out.
-  const [zoom, setZoom] = useState(20);
+  const [zoom, setZoom] = useState(13);
   const cols = Math.max(6, Math.min(100, zoom));
 
   // Last-10 cycling sequence for the inline headline swatch
@@ -109,7 +109,7 @@ export default function Archive() {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  const GAP = 10;
+  const GAP = 16;
   const tileSize = containerW > 0 ? (containerW - GAP * (cols - 1)) / cols : 200;
   const rowSize = tileSize + GAP;
   const rows = Math.ceil(sorted.length / cols);
@@ -176,7 +176,7 @@ export default function Archive() {
               >
                 <div
                   className="grid"
-                  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "10px" }}
+                  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "16px" }}
                 >
                   {slice.map((img) => {
                     const p = palettes[img.public_id];
