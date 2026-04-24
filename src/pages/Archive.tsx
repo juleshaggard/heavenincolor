@@ -218,10 +218,6 @@ export default function Archive() {
 }
 
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return null as never;
-}
-
-// re-declare below; shim to keep ordering — actual Chip kept after.
   return (
     <button
       onClick={onClick}
