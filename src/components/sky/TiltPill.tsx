@@ -5,10 +5,12 @@ type Props = {
   children: ReactNode;
   className?: string;
   aspectRatio?: string;
+  /** Optional explicit height override (overrides aspectRatio for smooth transitions). */
+  height?: number | string;
   maxTilt?: number; // degrees
 };
 
-export function TiltPill({ children, className, aspectRatio = "21 / 9", maxTilt = 8 }: Props) {
+export function TiltPill({ children, className, aspectRatio = "21 / 9", height, maxTilt = 8 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [style, setStyle] = useState<React.CSSProperties>({
     transform: "perspective(1200px) rotateX(0deg) rotateY(0deg) scale(1)",
@@ -49,10 +51,14 @@ export function TiltPill({ children, className, aspectRatio = "21 / 9", maxTilt 
       onPointerMove={onMove}
       onPointerLeave={onLeave}
       className={cn(
-        "relative w-full overflow-hidden rounded-full transition-[transform,filter] duration-300 ease-out will-change-transform",
+        "relative w-full overflow-hidden rounded-full transition-[transform,filter,height] duration-500 ease-out will-change-transform",
         className,
       )}
-      style={{ aspectRatio, transformStyle: "preserve-3d", ...style }}
+      style={{
+        ...(height != null ? { height: typeof height === "number" ? `${height}px` : height } : { aspectRatio }),
+        transformStyle: "preserve-3d",
+        ...style,
+      }}
     >
       {children}
       {/* subtle moving glare — original intensity */}
