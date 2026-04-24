@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useSkyImages } from "@/hooks/useSkyImages";
 import { SkyThumb } from "@/components/sky/SkyThumb";
 import { Swatches } from "@/components/sky/Swatches";
@@ -96,11 +96,12 @@ export default function Archive() {
   }, []);
   const tileSize = containerW > 0 ? containerW / cols : 200;
   const rows = Math.ceil(sorted.length / cols);
-  const rowVirtualizer = useVirtualizer({
+  // Use the page (window) scroll instead of an inner scroll container.
+  const rowVirtualizer = useWindowVirtualizer({
     count: rows,
-    getScrollElement: () => parentRef.current,
     estimateSize: () => tileSize,
     overscan: 4,
+    scrollMargin: parentRef.current?.offsetTop ?? 0,
   });
   // re-measure when cols/width changes
   useEffect(() => {
@@ -109,15 +110,18 @@ export default function Archive() {
   }, [tileSize, cols]);
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-6 border-b border-hairline pb-6">
+    <div className="space-y-8">
+      <header className="flex flex-wrap items-end justify-between gap-6 pb-6">
         <div className="max-w-3xl">
-          <h1 className="font-display text-[clamp(2.5rem,6vw,5rem)] leading-[0.95] text-ink">
-            {sorted.length.toLocaleString()} skies<br />over {LOCATION.name}
-          </h1>
-          <p className="mt-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
-            Captured every 30 minutes · {tod} · sort by {sort}
+          <p className="mb-3 text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+            {LOCATION.name} · captured every 30 minutes
           </p>
+          <h1 className="font-display text-[clamp(3rem,8vw,7rem)] leading-[0.9] tracking-[-0.04em] text-ink">
+            {sorted.length.toLocaleString()}<sup className="ml-2 align-top text-[0.35em] font-normal text-ink-faint">{tod === "all" ? "all skies" : tod}</sup>
+          </h1>
+          <h2 className="mt-1 font-display text-[clamp(1.25rem,2.4vw,2rem)] leading-tight tracking-[-0.02em] text-ink-dim">
+            skies over {LOCATION.name}.
+          </h2>
         </div>
         <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em]">
           <Group>
@@ -147,15 +151,20 @@ export default function Archive() {
         </div>
       </header>
 
-      <div ref={parentRef} className="h-[82vh] overflow-auto rounded-sm border border-hairline">
+      {/* Full-bleed grid (escapes the page's max-width container) */}
+      <div
+        ref={parentRef}
+        className="relative w-screen left-1/2 right-1/2 -mx-[50vw]"
+      >
         <div style={{ height: rowVirtualizer.getTotalSize(), position: "relative" }}>
           {rowVirtualizer.getVirtualItems().map((vr) => {
             const start = vr.index * cols;
             const slice = sorted.slice(start, start + cols);
+            const top = vr.start - rowVirtualizer.options.scrollMargin;
             return (
               <div
                 key={vr.key}
-                style={{ position: "absolute", top: 0, left: 0, width: "100%", transform: `translateY(${vr.start}px)`, height: vr.size }}
+                style={{ position: "absolute", top: 0, left: 0, width: "100%", transform: `translateY(${top}px)`, height: vr.size }}
               >
                 <div
                   className="grid"
