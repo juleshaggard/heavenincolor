@@ -122,7 +122,7 @@ export default function Now() {
           "mx-auto w-full max-w-5xl flex flex-col items-center justify-center px-6 pb-2",
         )}
       >
-        <div className={cn("relative flex min-h-0 w-full flex-col items-center transition-all duration-500", shrunk ? "" : "mx-auto")} style={!shrunk ? { width: "70%" } : undefined}>
+        <div className={cn("relative flex min-h-0 flex-1 w-full flex-col items-center transition-all duration-500", shrunk ? "" : "mx-auto")} style={!shrunk ? { width: "70%" } : undefined}>
         {/* Type laid out around the rectangle */}
         {!shrunk && (
           <div className="mb-4 flex shrink-0 flex-col items-center gap-1 text-center">
@@ -137,7 +137,7 @@ export default function Now() {
             </div>
           </div>
         )}
-        <div className="flex w-full min-h-0 flex-1 items-center justify-center">
+        <div className="relative flex w-full min-h-0 flex-1 items-stretch justify-center">
         <TiltPill className="!h-full max-h-full" height="100%">
           {/* halo glow behind */}
           <div
