@@ -371,6 +371,11 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
   const close = () => {
     const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
     if (typeof doc.startViewTransition === "function") {
