@@ -336,7 +336,7 @@ function BlurFollowText({ children }: { children: React.ReactNode }) {
   return (
     <span ref={ref} className="relative inline-block">
       {/* base muted text */}
-      <span className="text-ink-faint/40">{children}</span>
+      <span className="text-ink-faint opacity-40">{children}</span>
       {/* blue blur, masked inside the text */}
       <span
         aria-hidden
