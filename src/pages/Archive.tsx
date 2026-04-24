@@ -175,7 +175,7 @@ export default function Archive() {
               >
                 <div
                   className="grid"
-                  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "0px", marginRight: "-1px", marginBottom: "-1px" }}
+                  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "0px", marginRight: "-1px", marginBottom: "-2px" }}
                 >
                   {slice.map((img) => {
                     const p = palettes[img.public_id];
@@ -270,7 +270,7 @@ function GridTile({
       style={{
         height: tileSize,
         marginRight: "-1px",
-        marginBottom: "-1px",
+        marginBottom: "-2px",
         viewTransitionName: isOpen ? vt : undefined,
       }}
     >
