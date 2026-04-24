@@ -99,8 +99,14 @@ export default {
           },
         },
         "circle-reveal": {
-          "0%": { clipPath: "circle(0% at 50% 50%)" },
-          "100%": { clipPath: "circle(75% at 50% 50%)" },
+          "0%": {
+            "-webkit-mask-size": "0% 0%",
+            "mask-size": "0% 0%",
+          },
+          "100%": {
+            "-webkit-mask-size": "300% 300%",
+            "mask-size": "300% 300%",
+          },
         },
       },
       animation: {
