@@ -144,11 +144,7 @@ export default function Archive() {
                 transform: "translateY(2px)",
               }}
             >
-              {seqImg ? (
-                <SkyThumb image={seqImg} width={200} className="h-full w-full" />
-              ) : (
-                <span className="block h-full w-full bg-secondary" />
-              )}
+              <CircleRevealSequence images={recent} index={seqIdx} />
             </span>
             <span>skies</span>
             <br />
@@ -232,6 +228,41 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
     >
       {children}
     </button>
+  );
+}
+
+function CircleRevealSequence({ images, index }: { images: SkyImage[]; index: number }) {
+  // Track previous image so we can keep it underneath while the new one reveals.
+  const [prev, setPrev] = useState<SkyImage | null>(null);
+  const [revealKey, setRevealKey] = useState(0);
+  const current = images[index];
+  const lastIdxRef = useRef(index);
+
+  useEffect(() => {
+    if (lastIdxRef.current !== index) {
+      setPrev(images[lastIdxRef.current] ?? null);
+      setRevealKey((k) => k + 1);
+      lastIdxRef.current = index;
+    }
+  }, [index, images]);
+
+  if (!current) return <span className="block h-full w-full bg-secondary" />;
+
+  return (
+    <span className="relative block h-full w-full">
+      {prev && (
+        <span className="absolute inset-0 block">
+          <SkyThumb image={prev} width={200} className="h-full w-full" />
+        </span>
+      )}
+      <span
+        key={revealKey}
+        className="absolute inset-0 block animate-circle-reveal"
+        style={{ willChange: "clip-path" }}
+      >
+        <SkyThumb image={current} width={200} className="h-full w-full" />
+      </span>
+    </span>
   );
 }
 

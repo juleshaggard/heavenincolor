@@ -98,10 +98,15 @@ export default {
             height: "0",
           },
         },
+        "circle-reveal": {
+          "0%": { clipPath: "circle(0% at 50% 50%)" },
+          "100%": { clipPath: "circle(75% at 50% 50%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "circle-reveal": "circle-reveal 500ms cubic-bezier(0.65, 0, 0.35, 1) both",
       },
     },
   },
