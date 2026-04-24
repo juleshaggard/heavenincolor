@@ -116,20 +116,18 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Helvetica Neue', Helvetica, Arial, 'Inter', system-ui, sans-serif;
-    font-feature-settings: 'ss01';
+    font-family: 'Sora', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
   .font-display {
-    font-family: 'Helvetica Neue', Helvetica, Arial, 'Inter', system-ui, sans-serif;
-    letter-spacing: -0.035em;
-    font-weight: 700;
-    font-style: normal;
+    font-family: 'Sora', system-ui, sans-serif;
+    letter-spacing: -0.025em;
+    font-weight: 600;
   }
   .font-condensed {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    font-stretch: condensed;
+    font-family: 'Sora', system-ui, sans-serif;
     letter-spacing: -0.01em;
+    font-weight: 500;
   }
   .font-mono {
     font-family: 'JetBrains Mono', ui-monospace, monospace;
