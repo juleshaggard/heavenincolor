@@ -114,22 +114,22 @@ export default function Now() {
   const isLatest = idx === subset.length - 1;
 
   return (
-    <div className="pb-40">
-      {/* === Sticky shrinking hero === */}
+    <div className="fixed inset-0 top-16 bottom-0 overflow-hidden flex flex-col">
+      {/* === Hero scaled to fit viewport === */}
       <section
         className={cn(
-          "z-30",
-          "mx-auto max-w-5xl flex min-h-[calc(100vh-4.5rem-8rem)] flex-col items-center justify-center pt-[4.5rem]",
+          "z-30 min-h-0 flex-1",
+          "mx-auto w-full max-w-5xl flex flex-col items-center justify-center px-6 pb-2",
         )}
       >
-        <div className={cn("relative w-full transition-all duration-500", shrunk ? "" : "mx-auto")} style={!shrunk ? { width: "70%" } : undefined}>
+        <div className={cn("relative flex min-h-0 w-full flex-col items-center transition-all duration-500", shrunk ? "" : "mx-auto")} style={!shrunk ? { width: "70%" } : undefined}>
         {/* Type laid out around the rectangle */}
         {!shrunk && (
-          <div className="mb-6 flex flex-col items-center gap-2 text-center">
+          <div className="mb-4 flex shrink-0 flex-col items-center gap-1 text-center">
             <div className="text-[13px] text-ink-dim">
               {captionFor(current.capturedAt, palette?.hex)}
             </div>
-            <h1 className="font-display italic leading-[0.9] text-[clamp(3rem,9vw,7rem)] text-ink">
+            <h1 className="font-display italic leading-[0.9] text-[clamp(2.5rem,7vw,5.5rem)] text-ink">
               {fmtTime(current.capturedAt, hour12)}
             </h1>
             <div className="text-[13px] text-ink-dim">
@@ -137,7 +137,8 @@ export default function Now() {
             </div>
           </div>
         )}
-        <TiltPill height={shrunk ? PILL_HEIGHT_SHRUNK : PILL_HEIGHT_FULL}>
+        <div className="flex w-full min-h-0 flex-1 items-center justify-center">
+        <TiltPill className="!h-full max-h-full" height="100%">
           {/* halo glow behind */}
           <div
             aria-hidden
@@ -174,9 +175,10 @@ export default function Now() {
           )}
         </TiltPill>
         </div>
+        </div>
 
         {/* show-original toggle */}
-        <div className={cn("mt-6 flex justify-center transition-all", shrunk && "hidden")}>
+        <div className={cn("mt-3 flex shrink-0 justify-center transition-all", shrunk && "hidden")}>
           <button
             onClick={() => setShowOriginal((v) => !v)}
             className="text-[13px] text-ink-dim underline-offset-4 hover:text-ink hover:underline"
