@@ -402,13 +402,13 @@ function BlurFollowText({ children }: { children: React.ReactNode }) {
   return (
     <span ref={ref} className="relative inline-block">
       {/* base: light blue text */}
-      <span style={{ color: "hsl(210 80% 78%)" }}>{children}</span>
+      <span style={{ color: "hsl(0 0% 92%)" }}>{children}</span>
       {/* yellow blur masked inside the text, trailing the cursor */}
       <span
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-clip-text text-transparent"
         style={{
-          backgroundImage: `radial-gradient(ellipse 60% 200% at ${pos.x}% ${pos.y}%, hsl(48 100% 60%) 0%, hsl(45 95% 65%) 35%, hsl(48 95% 70% / 0) 75%)`,
+          backgroundImage: `radial-gradient(ellipse 60% 200% at ${pos.x}% ${pos.y}%, hsl(210 60% 80%) 0%, hsl(210 55% 85%) 35%, hsl(210 60% 85% / 0) 75%)`,
         }}
       >
         {children}
