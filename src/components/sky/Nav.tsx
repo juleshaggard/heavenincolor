@@ -2,10 +2,10 @@ import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { to: "/", label: "Now" },
+  { to: "/", label: "Archive" },
+  { to: "/now", label: "Now" },
   { to: "/calendar", label: "Calendar" },
   { to: "/compare", label: "Compare" },
-  { to: "/archive", label: "Archive" },
 ];
 
 export function Nav() {
