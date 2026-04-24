@@ -5,14 +5,11 @@ import { getPalette, type Palette } from "@/lib/palette";
 import { SkyThumb } from "@/components/sky/SkyThumb";
 import skyOriginal from "@/assets/sky-original.jpg";
 import { Swatches } from "@/components/sky/Swatches";
-import { ColorRibbon } from "@/components/sky/ColorRibbon";
 import { TiltPill } from "@/components/sky/TiltPill";
 import { captionFor, fmtTime } from "@/lib/format";
 import { cldUrl, isDemo } from "@/lib/cloudinary";
 import { useTimeFormat } from "@/hooks/useTimeFormat";
 import { cn } from "@/lib/utils";
-const SPEEDS = [1, 4, 16, 60] as const;
-
 const PILL_HEIGHT_FULL = 480; // px, hero
 const PILL_HEIGHT_SHRUNK = 92; // px, sticky bar
 
@@ -22,9 +19,8 @@ export default function Now() {
   const [idx, setIdx] = useState(0);
   const [palette, setPalette] = useState<Palette | null>(null);
   const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(4);
   const [showOriginal, setShowOriginal] = useState(false);
-  const { mode, setMode, hour12 } = useTimeFormat();
+  const { hour12 } = useTimeFormat();
   const [shrunk, setShrunk] = useState(false);
 
   useEffect(() => {
@@ -75,7 +71,7 @@ export default function Now() {
     if (!playing) return;
     const step = (t: number) => {
       if (!last.current) last.current = t;
-      const ms = 1000 / (4 * speed);
+      const ms = 1000 / 8; // fixed, simple playback
       if (t - last.current >= ms) {
         last.current = t;
         setIdx((i) => {
@@ -93,7 +89,7 @@ export default function Now() {
       if (raf.current) cancelAnimationFrame(raf.current);
       last.current = 0;
     };
-  }, [playing, speed, subset.length]);
+  }, [playing, subset.length]);
 
   // keyboard
   useEffect(() => {
