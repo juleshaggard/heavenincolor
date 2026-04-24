@@ -3,16 +3,11 @@ import { useSkyImages, imagesInRange } from "@/hooks/useSkyImages";
 import { useAmbientTint } from "@/hooks/useAmbientTint";
 import { getPalette, type Palette } from "@/lib/palette";
 import { SkyThumb } from "@/components/sky/SkyThumb";
-import skyOriginal from "@/assets/sky-original.jpg";
-import { Swatches } from "@/components/sky/Swatches";
-import { ColorRibbon } from "@/components/sky/ColorRibbon";
 import { TiltPill } from "@/components/sky/TiltPill";
 import { captionFor, fmtTime } from "@/lib/format";
 import { cldUrl, isDemo } from "@/lib/cloudinary";
 import { useTimeFormat } from "@/hooks/useTimeFormat";
 import { cn } from "@/lib/utils";
-const SPEEDS = [1, 4, 16, 60] as const;
-
 const PILL_HEIGHT_FULL = 480; // px, hero
 const PILL_HEIGHT_SHRUNK = 92; // px, sticky bar
 
@@ -22,9 +17,8 @@ export default function Now() {
   const [idx, setIdx] = useState(0);
   const [palette, setPalette] = useState<Palette | null>(null);
   const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(4);
   const [showOriginal, setShowOriginal] = useState(false);
-  const { mode, setMode, hour12 } = useTimeFormat();
+  const { hour12 } = useTimeFormat();
   const [shrunk, setShrunk] = useState(false);
 
   useEffect(() => {
@@ -75,7 +69,7 @@ export default function Now() {
     if (!playing) return;
     const step = (t: number) => {
       if (!last.current) last.current = t;
-      const ms = 1000 / (4 * speed);
+      const ms = 1000 / 8; // fixed, simple playback
       if (t - last.current >= ms) {
         last.current = t;
         setIdx((i) => {
@@ -93,7 +87,7 @@ export default function Now() {
       if (raf.current) cancelAnimationFrame(raf.current);
       last.current = 0;
     };
-  }, [playing, speed, subset.length]);
+  }, [playing, subset.length]);
 
   // keyboard
   useEffect(() => {
@@ -178,108 +172,61 @@ export default function Now() {
           </div>
         </TiltPill>
 
-        {/* original-photo toggle (hidden when shrunk) */}
-        <div className={cn("mt-8 flex justify-center transition-all", shrunk && "hidden")}>
+        {/* show-original toggle */}
+        <div className={cn("mt-6 flex justify-center transition-all", shrunk && "hidden")}>
           <button
             onClick={() => setShowOriginal((v) => !v)}
-            className={cn(
-              "flex items-center gap-2 rounded-full px-5 py-2 font-mono text-[10px] uppercase tracking-[0.25em] transition-all",
-              showOriginal
-                ? "bg-ink text-paper shadow-neu-pressed"
-                : "bg-paper text-ink-dim shadow-neu-sm hover:text-ink active:shadow-neu-pressed",
-            )}
+            className="text-[10px] uppercase tracking-[0.28em] text-ink-faint underline-offset-4 hover:text-ink hover:underline"
           >
-            <span className="h-1.5 w-1.5 rounded-full" style={{ background: showOriginal ? "currentColor" : "hsl(var(--ink-faint))" }} />
             {showOriginal ? "showing original photo" : "show original photo"}
           </button>
         </div>
-
-        {/* centered palette */}
-        {palette && !shrunk && (
-          <div className="mt-8 mx-auto max-w-md space-y-3 rounded-2xl bg-paper p-4 shadow-neu">
-            <div className="flex items-baseline justify-between px-1 font-mono text-[10px] uppercase tracking-[0.28em] text-ink-faint">
-              <span>palette</span>
-              <span className="text-ink-dim">{palette.hex.toUpperCase()}</span>
-            </div>
-            <Swatches swatches={palette.swatches} size="md" />
-            <div className="px-1 font-mono text-[9px] uppercase tracking-[0.25em] text-ink-faint">
-              click a swatch to copy
-            </div>
-          </div>
-        )}
       </section>
 
-      {/* === Fixed bottom timeline === */}
-      <section className="fixed bottom-0 left-0 right-0 z-40 mx-auto w-full max-w-none space-y-3 border-t border-hairline bg-paper/95 px-6 py-4 backdrop-blur-md">
-        {/* 3-col grid keeps the range pill perfectly centered */}
-        <div className="grid grid-cols-3 items-center gap-3">
-          <div className="flex items-center gap-2 justify-self-start">
-            <button
-              onClick={() => setPlaying((p) => !p)}
-              className="flex h-9 items-center gap-2 rounded-full bg-paper px-4 font-mono text-[10px] uppercase tracking-[0.25em] text-ink shadow-neu-sm transition-all active:shadow-neu-pressed"
-            >
-              <span className="text-sm leading-none">{playing ? "❚❚" : "▶"}</span>
-              {playing ? "pause" : "play"}
-            </button>
-            <div className="flex items-center gap-0.5 rounded-full bg-paper px-1 py-0.5 shadow-neu-inset font-mono text-[10px] uppercase tracking-[0.22em]">
-              {SPEEDS.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setSpeed(s)}
-                  className={cn(
-                    "rounded-full px-2 py-1 transition-colors",
-                    speed === s ? "bg-ink text-paper" : "text-ink-faint hover:text-ink",
-                  )}
-                >
-                  {s}×
-                </button>
-              ))}
-            </div>
-          </div>
+      {/* === Simplified bottom timeline === */}
+      <section className="fixed bottom-0 left-0 right-0 z-40 border-t border-hairline bg-paper">
+        <div className="mx-auto flex max-w-[1400px] items-center gap-6 px-6 py-4">
+          {/* play */}
+          <button
+            onClick={() => setPlaying((p) => !p)}
+            aria-label={playing ? "Pause" : "Play"}
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink text-paper transition-colors hover:bg-ink-dim"
+          >
+            <span className="text-[11px] leading-none">{playing ? "❚❚" : "▶"}</span>
+          </button>
 
-          <div className="flex justify-self-center rounded-full bg-paper p-1 shadow-neu-inset">
+          {/* slim slider */}
+          <input
+            type="range"
+            min={0}
+            max={Math.max(0, subset.length - 1)}
+            value={idx}
+            onChange={(e) => setIdx(Number(e.target.value))}
+            className="h-1 flex-1 cursor-ew-resize accent-ink"
+            aria-label="Scrub timeline"
+          />
+
+          {/* range segmented (text only, no chrome) */}
+          <div className="flex items-center gap-4 text-[11px] uppercase tracking-[0.22em]">
             {(["today", "week", "month"] as const).map((r) => (
               <button
                 key={r}
                 onClick={() => setRange(r)}
                 className={cn(
-                  "rounded-full px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.22em] transition-all",
-                  range === r ? "bg-ink text-paper shadow-sm" : "text-ink-dim hover:text-ink",
+                  "transition-colors",
+                  range === r ? "text-ink underline underline-offset-4" : "text-ink-faint hover:text-ink",
                 )}
               >
-                {r === "today" ? "today" : r === "week" ? "7 days" : "30 days"}
+                {r === "today" ? "Today" : r === "week" ? "7d" : "30d"}
               </button>
             ))}
           </div>
 
-          <div className="flex justify-self-end rounded-full bg-paper p-1 shadow-neu-inset">
-            {(["12", "24"] as const).map((m) => (
-              <button
-                key={m}
-                onClick={() => setMode(m)}
-                className={cn(
-                  "rounded-full px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.22em] transition-all",
-                  mode === m ? "bg-ink text-paper" : "text-ink-dim hover:text-ink",
-                )}
-              >
-                {m === "12" ? "12h" : "24h"}
-              </button>
-            ))}
+          {/* counter */}
+          <div className="hidden shrink-0 text-[11px] tabular-nums text-ink-faint sm:block">
+            <span className="text-ink">{String(idx + 1).padStart(3, "0")}</span>
+            <span> / {String(subset.length).padStart(3, "0")}</span>
           </div>
-        </div>
-
-        <ColorRibbon
-          images={subset}
-          activeIndex={idx}
-          onScrub={setIdx}
-          height={24}
-          showTicks={range === "week"}
-        />
-
-        <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
-          <span>{subset[0]?.capturedAt.toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
-          <span>{subset.length} frames · drag · ←/→ · space</span>
-          <span>{subset[subset.length - 1]?.capturedAt.toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
         </div>
       </section>
     </div>
