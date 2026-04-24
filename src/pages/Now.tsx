@@ -65,6 +65,15 @@ export default function Now() {
   // playback
   const raf = useRef<number | null>(null);
   const last = useRef(0);
+  const handlePlayToggle = () => {
+    setPlaying((p) => {
+      const next = !p;
+      if (next && idx >= subset.length - 1) {
+        setIdx(0);
+      }
+      return next;
+    });
+  };
   useEffect(() => {
     if (!playing) return;
     const step = (t: number) => {
@@ -92,7 +101,7 @@ export default function Now() {
   // keyboard
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.code === "Space") { e.preventDefault(); setPlaying((p) => !p); }
+      if (e.code === "Space") { e.preventDefault(); handlePlayToggle(); }
       if (e.code === "ArrowRight") setIdx((i) => Math.min(subset.length - 1, i + 1));
       if (e.code === "ArrowLeft") setIdx((i) => Math.max(0, i - 1));
     };
@@ -190,7 +199,7 @@ export default function Now() {
         <div className="mx-auto flex max-w-[1400px] items-center gap-6 px-6 py-4">
           {/* play */}
           <button
-            onClick={() => setPlaying((p) => !p)}
+            onClick={handlePlayToggle}
             aria-label={playing ? "Pause" : "Play"}
             className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink text-paper transition-colors hover:bg-ink-dim"
           >
