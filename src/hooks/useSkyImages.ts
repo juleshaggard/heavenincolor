@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { listSkyImages, type SkyImage } from "@/lib/cloudinary";
 
-// Hide any frames captured on or before Friday, April 24, 2026 (local time).
-const MIN_CAPTURED_AT = new Date(2026, 3, 25, 0, 0, 0, 0).getTime();
+// Hide any frames captured before Friday, April 24, 2026 (local time).
+const MIN_CAPTURED_AT = new Date(2026, 3, 24, 0, 0, 0, 0).getTime();
 
 function filterRecent(imgs: SkyImage[]): SkyImage[] {
   return imgs.filter((i) => i.capturedAt.getTime() >= MIN_CAPTURED_AT);
