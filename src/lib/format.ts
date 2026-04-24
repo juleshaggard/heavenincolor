@@ -136,5 +136,5 @@ export function nameColor(hex: string): string {
       best = c;
     }
   }
-  return best.name;
+  return best.name.charAt(0).toUpperCase() + best.name.slice(1);
 }
