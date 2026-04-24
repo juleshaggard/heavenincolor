@@ -43,7 +43,7 @@ export default function Archive() {
   const [palettes, setPalettes] = useState<Record<string, Palette>>({});
   const [open, setOpen] = useState<SkyImage | null>(null);
   // cols == zoom level. 6 = max zoom in (largest tiles). 100 = max zoom out.
-  const [zoom, setZoom] = useState(14);
+  const [zoom, setZoom] = useState(10);
   const cols = Math.max(6, Math.min(100, zoom));
 
   // Last-10 cycling sequence for the inline headline swatch
@@ -138,7 +138,7 @@ export default function Archive() {
               width: "0.62em",
               height: "0.62em",
               verticalAlign: "0.08em",
-              borderRadius: "4px",
+              borderRadius: "8px",
             }}
           >
             {seqImg ? (
@@ -186,7 +186,7 @@ export default function Archive() {
                         className="group relative block overflow-hidden bg-background p-0 text-left leading-none align-top transition-transform duration-300 ease-out hover:scale-[1.04] hover:z-10 hover:shadow-xl"
                         style={{
                           height: tileSize,
-                          borderRadius: "4px",
+                          borderRadius: "8px",
                           viewTransitionName: open?.public_id === img.public_id ? vt : undefined,
                         }}
                       >
