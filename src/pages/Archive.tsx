@@ -7,7 +7,7 @@ import { getPalette, timeOfDay, type Palette } from "@/lib/palette";
 import { fmtDate, fmtTime, captionFor, nameColor } from "@/lib/format";
 import { cldUrl, isDemo, type SkyImage } from "@/lib/cloudinary";
 import { cn } from "@/lib/utils";
-import { X } from "lucide-react";
+import { X, ArrowUpRight } from "lucide-react";
 import { LOCATION } from "@/hooks/useWeather";
 
 // View Transitions API (Chromium). Falls back gracefully.
@@ -340,27 +340,27 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
             <SkyThumb image={image} width={1800} className="h-full w-full" />
           </div>
         </div>
-        <aside className="flex h-full flex-col gap-4 overflow-y-auto border-l border-hairline bg-paper p-6 text-[13px]">
+        <aside className="flex h-full flex-col gap-6 overflow-y-auto border-l border-hairline bg-paper p-8 text-[13px]">
           <div>
-            <div className="text-ink-faint">Date</div>
-            <div className="font-display text-2xl text-ink">{fmtDate(image.capturedAt)}</div>
+            <div className="text-ink-dim">Date</div>
+            <div className="font-display text-3xl leading-tight text-ink">{fmtDate(image.capturedAt)}</div>
           </div>
           <div className="flex justify-between text-ink-dim">
             <span>{fmtTime(image.capturedAt)}</span>
             <span>{captionFor(image.capturedAt)}</span>
           </div>
           {palette && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Swatches swatches={palette.swatches} size="lg" />
-              <div className="space-y-1 text-ink-dim">
+              <div className="space-y-1">
                 {palette.swatches.map((c) => (
                   <button
                     key={c}
                     onClick={() => navigator.clipboard?.writeText(c)}
-                    className="flex w-full items-center justify-between rounded-sm px-1 py-0.5 text-[12px] hover:bg-secondary"
+                    className="flex w-full items-center justify-between rounded-sm px-1 py-1 text-[13px] text-ink-dim hover:bg-secondary"
                   >
                     <span className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-sm" style={{ background: c }} />
+                      <span className="h-2.5 w-2.5 rounded-sm" style={{ background: c }} />
                       {c.toUpperCase()}
                     </span>
                     <span className="text-ink-faint">Copy</span>
@@ -374,14 +374,12 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
               href={cldUrl(image.public_id, { w: 2400 })}
               target="_blank"
               rel="noreferrer"
-              className="block rounded-sm border border-hairline bg-secondary px-3 py-2 text-center text-[13px] text-ink hover:bg-accent"
+              className="inline-flex items-center justify-center gap-2 self-start rounded-full bg-ink px-5 py-2.5 text-[13px] text-paper transition-colors hover:bg-ink-dim"
             >
-              Open original ↗
+              Open original
+              <ArrowUpRight className="h-4 w-4" strokeWidth={1.75} />
             </a>
           )}
-          <div className="mt-auto pt-4 text-center text-[12px] text-ink-faint">
-            Press esc or click ✕ to close
-          </div>
         </aside>
       </div>
     </div>
