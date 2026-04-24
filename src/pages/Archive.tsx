@@ -269,6 +269,8 @@ function GridTile({
       className="group relative block overflow-hidden bg-background p-0 text-left leading-none align-top transition-transform duration-300 ease-out hover:scale-[1.04] hover:z-10 hover:shadow-xl"
       style={{
         height: tileSize,
+        marginRight: "-1px",
+        marginBottom: "-1px",
         viewTransitionName: isOpen ? vt : undefined,
       }}
     >
