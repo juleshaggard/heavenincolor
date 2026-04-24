@@ -182,7 +182,7 @@ export default function Archive() {
                       <button
                         key={img.public_id}
                         onClick={() => openWithTransition(img, vt, setOpen)}
-                        className="group relative block overflow-hidden rounded-lg bg-background p-0 text-left leading-none align-top transition-transform duration-300 ease-out hover:scale-[1.04] hover:z-10 hover:shadow-xl"
+                        className="group relative block overflow-hidden rounded-2xl bg-background p-0 text-left leading-none align-top transition-transform duration-300 ease-out hover:scale-[1.04] hover:z-10 hover:shadow-xl"
                         style={{
                           height: tileSize,
                           viewTransitionName: open?.public_id === img.public_id ? vt : undefined,
@@ -356,7 +356,7 @@ function BlurFollowText({ children }: { children: React.ReactNode }) {
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-clip-text text-transparent"
         style={{
-          backgroundImage: `radial-gradient(circle at ${pos.x}% ${pos.y}%, hsl(48 100% 60%) 0%, hsl(45 95% 65%) 22%, transparent 50%)`,
+          backgroundImage: `radial-gradient(circle 1.4em at ${pos.x}% ${pos.y}%, hsl(48 100% 60%) 0%, hsl(45 95% 65%) 50%, hsl(48 95% 70% / 0) 100%)`,
         }}
       >
         {children}
