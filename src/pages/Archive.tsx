@@ -219,13 +219,39 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+  const close = () => {
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+    if (typeof doc.startViewTransition === "function") {
+      doc.startViewTransition(() => onClose());
+    } else {
+      onClose();
+    }
+  };
+  const vt = `sky-${image.public_id.replace(/[^a-z0-9_-]/gi, "_")}`;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 p-4 backdrop-blur-md" onClick={onClose}>
-      <div className="relative grid w-full max-w-6xl gap-6 md:grid-cols-[3fr_1fr]" onClick={(e) => e.stopPropagation()}>
-        <div className="overflow-hidden rounded-sm border border-hairline">
-          <SkyThumb image={image} width={1600} className="aspect-[16/10] w-full" />
+    <div
+      className="fixed inset-0 z-[60] flex h-screen w-screen items-stretch bg-background/98 backdrop-blur-md animate-fade-in"
+      onClick={close}
+    >
+      {/* close button — fixed top-right, above everything */}
+      <button
+        onClick={(e) => { e.stopPropagation(); close(); }}
+        aria-label="Close"
+        className="fixed right-5 top-5 z-[70] grid h-11 w-11 place-items-center rounded-full bg-paper/90 text-ink shadow-neu backdrop-blur-md transition-all hover:scale-105 hover:bg-paper active:shadow-neu-pressed"
+      >
+        <X className="h-5 w-5" strokeWidth={1.5} />
+      </button>
+
+      <div
+        className="relative grid h-full w-full gap-0 md:grid-cols-[3fr_1fr]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="relative h-full w-full overflow-hidden bg-background">
+          <div className="absolute inset-0" style={{ viewTransitionName: vt }}>
+            <SkyThumb image={image} width={1800} className="h-full w-full" />
+          </div>
         </div>
-        <aside className="space-y-4 font-mono text-[11px]">
+        <aside className="flex h-full flex-col gap-4 overflow-y-auto border-l border-hairline bg-paper p-6 font-mono text-[11px]">
           <div>
             <div className="text-ink-faint uppercase tracking-[0.22em]">date</div>
             <div className="font-display text-2xl text-ink">{fmtDate(image.capturedAt)}</div>
@@ -264,12 +290,9 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
               open original ↗
             </a>
           )}
-          <button
-            onClick={onClose}
-            className="block w-full rounded-sm px-3 py-2 text-[10px] uppercase tracking-[0.22em] text-ink-dim hover:text-ink"
-          >
-            close · esc
-          </button>
+          <div className="mt-auto pt-4 text-center text-[10px] uppercase tracking-[0.22em] text-ink-faint">
+            press esc or click ✕ to close
+          </div>
         </aside>
       </div>
     </div>
