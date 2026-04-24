@@ -258,7 +258,17 @@ function CircleRevealSequence({ images, index }: { images: SkyImage[]; index: nu
       <span
         key={revealKey}
         className="absolute inset-0 block animate-circle-reveal"
-        style={{ willChange: "clip-path" }}
+        style={{
+          willChange: "mask-size",
+          WebkitMaskImage:
+            "radial-gradient(circle at 50% 50%, #000 45%, transparent 55%)",
+          maskImage:
+            "radial-gradient(circle at 50% 50%, #000 45%, transparent 55%)",
+          WebkitMaskRepeat: "no-repeat",
+          maskRepeat: "no-repeat",
+          WebkitMaskPosition: "center",
+          maskPosition: "center",
+        }}
       >
         <SkyThumb image={current} width={200} className="h-full w-full" />
       </span>
