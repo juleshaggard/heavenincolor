@@ -5,8 +5,9 @@ import { SkyThumb } from "@/components/sky/SkyThumb";
 import { Swatches } from "@/components/sky/Swatches";
 import { getPalette, timeOfDay, type Palette } from "@/lib/palette";
 import { fmtDate, fmtTime, captionFor, nameColor } from "@/lib/format";
-import { cldUrl, isDemo, type SkyImage } from "@/lib/cloudinary";
+import { cldUrl, isDemo, LOCATION as _, type SkyImage } from "@/lib/cloudinary";
 import { cn } from "@/lib/utils";
+import { X } from "lucide-react";
 
 const TODS = ["all", "dawn", "day", "golden", "dusk", "night"] as const;
 const SORTS = ["chronological", "saturation", "warmth", "unusual"] as const;
