@@ -139,7 +139,6 @@ export default function Archive() {
                 width: "0.62em",
                 height: "0.62em",
                 verticalAlign: "0.08em",
-                borderRadius: "8px",
               }}
             >
               {seqImg ? (
