@@ -130,7 +130,7 @@ export default function Archive() {
               <Chip key={s} active={sort === s} onClick={() => setSort(s)}>{s}</Chip>
             ))}
           </Group>
-          <div className="flex items-center gap-2 rounded-sm border border-hairline bg-card px-3 py-1.5">
+          <div className="flex items-center gap-2 border border-hairline px-3 py-1.5">
             <span className="text-ink-faint">zoom</span>
             <input
               type="range"
@@ -214,15 +214,15 @@ export default function Archive() {
 }
 
 function Group({ children }: { children: React.ReactNode }) {
-  return <div className="flex items-center gap-1 rounded-sm border border-hairline bg-card p-1">{children}</div>;
+  return <div className="flex items-center border border-hairline">{children}</div>;
 }
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
       onClick={onClick}
       className={cn(
-        "rounded-sm px-2.5 py-1.5 transition-colors",
-        active ? "bg-secondary text-ink" : "text-ink-dim hover:text-ink",
+        "px-3 py-1.5 transition-colors border-r border-hairline last:border-r-0",
+        active ? "bg-ink text-paper" : "text-ink-dim hover:text-ink",
       )}
     >
       {children}
