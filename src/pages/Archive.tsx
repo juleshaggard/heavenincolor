@@ -126,34 +126,38 @@ export default function Archive() {
                 >
                   {slice.map((img) => {
                     const p = palettes[img.public_id];
+                    const vt = `sky-${img.public_id.replace(/[^a-z0-9_-]/gi, "_")}`;
                     return (
                       <button
                         key={img.public_id}
-                        onClick={() => setOpen(img)}
-                        className="group relative block aspect-square overflow-hidden bg-background text-left"
+                        onClick={() => openWithTransition(img, vt, setOpen)}
+                        className="group relative block aspect-square overflow-hidden bg-background p-0 text-left leading-none align-top"
+                        style={{ viewTransitionName: open?.public_id === img.public_id ? vt : undefined }}
                       >
-                        <SkyThumb image={img} width={400} className="h-full w-full" />
-                        <div className="pointer-events-none absolute inset-0 flex flex-col justify-between bg-gradient-to-t from-black/70 via-transparent to-black/40 p-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                          <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-white/95">
-                            {fmtTime(img.capturedAt)}
-                            <span className="mx-1.5 opacity-60">·</span>
-                            {img.capturedAt.toLocaleDateString(undefined, { month: "short", day: "2-digit" })}
-                          </div>
-                          {p && (
-                            <div className="flex items-center gap-2">
-                              <span
-                                className="h-3 w-3 rounded-sm ring-1 ring-white/60"
-                                style={{ background: p.hex }}
-                              />
-                              <span className="font-display italic leading-none text-white text-sm">
-                                {nameColor(p.hex)}
-                              </span>
-                              <span className="ml-auto font-mono text-[9px] uppercase tracking-[0.2em] text-white/70">
-                                {p.hex.toUpperCase()}
-                              </span>
+                        <SkyThumb image={img} width={400} className="block h-full w-full" />
+                        {p && (
+                          <div
+                            className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                            style={{ background: p.hex }}
+                          >
+                            <div
+                              className="font-mono text-[10px] uppercase tracking-[0.22em]"
+                              style={{ color: readableInk(p.hex) }}
+                            >
+                              {fmtTime(img.capturedAt)}
+                              <span className="mx-1.5 opacity-60">·</span>
+                              {img.capturedAt.toLocaleDateString(undefined, { month: "short", day: "2-digit" })}
                             </div>
-                          )}
-                        </div>
+                            <div style={{ color: readableInk(p.hex) }}>
+                              <div className="font-display italic text-2xl leading-none">
+                                {nameColor(p.hex)}
+                              </div>
+                              <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.22em] opacity-80">
+                                {p.hex.toUpperCase()}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </button>
                     );
                   })}
