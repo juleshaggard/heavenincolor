@@ -110,17 +110,32 @@ export default function Archive() {
   }, [tileSize, cols]);
 
   return (
-    <div className="space-y-8 pb-32">
-      <header className="border-b border-hairline pb-8">
-        <h1 className="font-display text-4xl leading-tight text-ink md:text-6xl">
-          {sorted.length.toLocaleString()} skies captured over {LOCATION.name}, every 30 minutes.
+    <div className="pb-32">
+      <header className="px-[4vw] pt-[6vh] pb-[8vh] text-center">
+        <h1 className="font-display text-ink leading-[0.95] tracking-[-0.02em] text-[clamp(3rem,9vw,9rem)]">
+          <span>{sorted.length.toLocaleString()}</span>
+          <span
+            aria-hidden
+            className="mx-3 inline-block align-middle"
+            style={{
+              width: "0.7em",
+              height: "0.7em",
+              background: "linear-gradient(160deg, hsl(218 55% 75%), hsl(218 45% 55%))",
+            }}
+          />
+          <span>skies</span>
+          <br />
+          <span>captured over </span>
+          <em className="italic">{LOCATION.name}</em>
+          <br />
+          <span className="text-ink-faint">every 30 minutes</span>
         </h1>
       </header>
 
       {/* Grid with comfortable side breathing room */}
       <div
         ref={parentRef}
-        className="relative"
+        className="relative px-[4vw]"
       >
         <div style={{ height: rowVirtualizer.getTotalSize(), position: "relative" }}>
           {rowVirtualizer.getVirtualItems().map((vr) => {
@@ -185,55 +200,82 @@ export default function Archive() {
 
       {open && <Lightbox image={open} palette={palettes[open.public_id]} onClose={() => setOpen(null)} />}
 
-      {/* Fixed bottom controls */}
-      <section className="fixed bottom-0 left-0 right-0 z-40 border-t border-hairline bg-paper">
-        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-3 px-6 py-3 font-mono text-[10px] uppercase tracking-[0.2em]">
-          <div className="flex flex-wrap items-center gap-2">
-            <Group>
-              {TODS.map((t) => (
-                <Chip key={t} active={tod === t} onClick={() => setTod(t)}>{t}</Chip>
-              ))}
-            </Group>
-            <Group>
-              {SORTS.map((s) => (
-                <Chip key={s} active={sort === s} onClick={() => setSort(s)}>{s}</Chip>
-              ))}
-            </Group>
-          </div>
-          <div className="flex items-center gap-2 border border-hairline px-3 py-1.5">
-            <span className="text-ink-faint">zoom</span>
-            <input
-              type="range"
-              min={2}
-              max={10}
-              step={1}
-              value={zoom}
-              onChange={(e) => setZoom(Number(e.target.value))}
-              className="h-1 w-28 cursor-ew-resize accent-ink"
-              aria-label="Grid zoom"
-            />
-            <span className="tabular-nums text-ink-dim">{cols}×</span>
-          </div>
-        </div>
-      </section>
+      {/* Corner controls — editorial style */}
+      <FilterCorner tod={tod} setTod={setTod} sort={sort} setSort={setSort} />
+      <ZoomCorner zoom={zoom} setZoom={setZoom} cols={cols} />
     </div>
   );
 }
 
-function Group({ children }: { children: React.ReactNode }) {
-  return <div className="flex items-center border border-hairline">{children}</div>;
-}
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
       onClick={onClick}
       className={cn(
-        "px-3 py-1.5 transition-colors border-r border-hairline last:border-r-0",
-        active ? "bg-ink text-paper" : "text-ink-dim hover:text-ink",
+        "transition-colors",
+        active ? "text-ink underline underline-offset-4" : "text-ink-faint hover:text-ink",
       )}
     >
       {children}
     </button>
+  );
+}
+
+function FilterCorner({
+  tod, setTod, sort, setSort,
+}: {
+  tod: (typeof TODS)[number];
+  setTod: (t: (typeof TODS)[number]) => void;
+  sort: (typeof SORTS)[number];
+  setSort: (s: (typeof SORTS)[number]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="fixed bottom-5 left-6 z-40 text-[13px]">
+      {open ? (
+        <div className="flex items-center gap-6">
+          <button onClick={() => setOpen(false)} className="font-medium text-ink underline underline-offset-4">
+            Filter
+          </button>
+          <div className="flex items-center gap-3 text-ink-dim">
+            {TODS.map((t) => (
+              <Chip key={t} active={tod === t} onClick={() => setTod(t)}>{t}</Chip>
+            ))}
+          </div>
+          <span className="text-ink-faint">·</span>
+          <div className="flex items-center gap-3 text-ink-dim">
+            {SORTS.map((s) => (
+              <Chip key={s} active={sort === s} onClick={() => setSort(s)}>{s}</Chip>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <button onClick={() => setOpen(true)} className="text-ink hover:underline underline-offset-4">
+          Filter
+        </button>
+      )}
+    </div>
+  );
+}
+
+function ZoomCorner({
+  zoom, setZoom, cols,
+}: { zoom: number; setZoom: (n: number) => void; cols: number }) {
+  return (
+    <div className="fixed bottom-5 right-6 z-40 flex items-center gap-3 text-[13px]">
+      <span className="font-medium text-ink">Zoom</span>
+      <input
+        type="range"
+        min={2}
+        max={10}
+        step={1}
+        value={zoom}
+        onChange={(e) => setZoom(Number(e.target.value))}
+        className="h-1 w-32 cursor-ew-resize accent-ink"
+        aria-label="Grid zoom"
+      />
+      <span className="tabular-nums text-ink-faint">{cols}×</span>
+    </div>
   );
 }
 
