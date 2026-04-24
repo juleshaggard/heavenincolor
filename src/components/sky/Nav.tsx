@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 const links = [
   { to: "/", label: "Grid" },
-  { to: "/now", label: "Real Time" },
+  { to: "/now", label: "Watch" },
 ];
 
 export function Nav() {
