@@ -111,17 +111,14 @@ export default function Archive() {
 
   return (
     <div className="space-y-8">
-      <header className="flex flex-wrap items-end justify-between gap-6 pb-6">
-        <div className="max-w-3xl">
-          <p className="mb-3 text-[10px] uppercase tracking-[0.3em] text-ink-faint">
-            {LOCATION.name} · captured every 30 minutes
-          </p>
-          <h1 className="font-display text-[clamp(3rem,8vw,7rem)] leading-[0.9] tracking-[-0.04em] text-ink">
-            {sorted.length.toLocaleString()}<sup className="ml-2 align-top text-[0.35em] font-normal text-ink-faint">{tod === "all" ? "all skies" : tod}</sup>
+      <header className="flex flex-wrap items-end justify-between gap-6 border-b border-hairline pb-6">
+        <div>
+          <h1 className="font-display text-3xl text-ink md:text-4xl">
+            Grid
           </h1>
-          <h2 className="mt-1 font-display text-[clamp(1.25rem,2.4vw,2rem)] leading-tight tracking-[-0.02em] text-ink-dim">
-            skies over {LOCATION.name}.
-          </h2>
+          <p className="mt-2 text-sm text-ink-dim">
+            {sorted.length.toLocaleString()} skies captured over {LOCATION.name}, every 30 minutes.
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em]">
           <Group>
