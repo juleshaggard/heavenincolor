@@ -271,7 +271,6 @@ function GridTile({
       style={{
         height: tileSize,
         marginRight: "-1px",
-        marginBottom: "-2px",
         viewTransitionName: isOpen ? vt : undefined,
       }}
     >
