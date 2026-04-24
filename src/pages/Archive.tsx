@@ -149,7 +149,7 @@ export default function Archive() {
           <span>captured over </span>
           <em className="italic">{LOCATION.name}</em>
           <br />
-          <span className="text-ink-faint">every 30 minutes</span>
+          <BlurFollowText>every 30 minutes</BlurFollowText>
         </h1>
       </header>
 
@@ -171,7 +171,7 @@ export default function Archive() {
               >
                 <div
                   className="grid"
-                  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: 0 }}
+                  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "10px" }}
                 >
                   {slice.map((img) => {
                     const p = palettes[img.public_id];
@@ -180,17 +180,22 @@ export default function Archive() {
                       <button
                         key={img.public_id}
                         onClick={() => openWithTransition(img, vt, setOpen)}
-                        className="group relative block overflow-hidden bg-background p-0 text-left leading-none align-top -mr-px -mb-px"
+                        className="group relative block overflow-hidden rounded-lg bg-background p-0 text-left leading-none align-top transition-transform duration-300 ease-out hover:scale-[1.04] hover:z-10 hover:shadow-xl"
                         style={{
                           height: tileSize,
                           viewTransitionName: open?.public_id === img.public_id ? vt : undefined,
                         }}
                       >
-                        <SkyThumb image={img} width={400} className="block h-full w-full" />
+                        <SkyThumb image={img} width={400} className="block h-full w-full transition-transform duration-500 ease-out group-hover:scale-110" />
                         {p && (
                           <div
-                            className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-                            style={{ background: p.hex }}
+                            className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 transition-[clip-path,opacity] duration-500 ease-out"
+                            style={{
+                              background: p.hex,
+                              clipPath: "circle(0% at 50% 100%)",
+                              opacity: 0,
+                            }}
+                            data-hover-overlay
                           >
                             <div
                               className="text-[12px]"
