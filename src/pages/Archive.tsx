@@ -109,7 +109,7 @@ export default function Archive() {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  const GAP = 6;
+  const GAP = -1;
   const tileSize = containerW > 0 ? (containerW - GAP * (cols - 1)) / cols : 200;
   const rowSize = tileSize + GAP;
   const rows = Math.ceil(sorted.length / cols);
@@ -139,7 +139,6 @@ export default function Archive() {
                 width: "0.62em",
                 height: "0.62em",
                 verticalAlign: "0.08em",
-                borderRadius: "8px",
               }}
             >
               {seqImg ? (
@@ -176,7 +175,7 @@ export default function Archive() {
               >
                 <div
                   className="grid"
-                  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "6px" }}
+                  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "0px" }}
                 >
                   {slice.map((img) => {
                     const p = palettes[img.public_id];
@@ -270,7 +269,6 @@ function GridTile({
       className="group relative block overflow-hidden bg-background p-0 text-left leading-none align-top transition-transform duration-300 ease-out hover:scale-[1.04] hover:z-10 hover:shadow-xl"
       style={{
         height: tileSize,
-        borderRadius: "8px",
         viewTransitionName: isOpen ? vt : undefined,
       }}
     >
