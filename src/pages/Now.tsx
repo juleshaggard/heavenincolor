@@ -210,7 +210,7 @@ export default function Now() {
       </section>
 
       {/* === Fixed bottom timeline === */}
-      <section className="fixed bottom-4 left-1/2 z-40 w-[calc(100%-2rem)] max-w-[1360px] -translate-x-1/2 space-y-3 rounded-2xl bg-paper/95 p-4 shadow-neu backdrop-blur-md">
+      <section className="fixed bottom-0 left-0 right-0 z-40 mx-auto w-full max-w-none space-y-3 border-t border-hairline bg-paper/95 px-6 py-4 backdrop-blur-md">
         {/* 3-col grid keeps the range pill perfectly centered */}
         <div className="grid grid-cols-3 items-center gap-3">
           <div className="flex items-center gap-2 justify-self-start">
