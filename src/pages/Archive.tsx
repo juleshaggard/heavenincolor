@@ -237,18 +237,22 @@ function GridTile({
   onOpen: () => void;
 }) {
   const [origin, setOrigin] = useState<{ x: number; y: number }>({ x: 50, y: 100 });
+  const [hovered, setHovered] = useState(false);
 
   const handleEnter = (e: React.PointerEvent<HTMLButtonElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - r.left) / r.width) * 100;
     const y = ((e.clientY - r.top) / r.height) * 100;
     setOrigin({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) });
+    setHovered(true);
   };
+  const handleLeave = () => setHovered(false);
 
   return (
     <button
       onClick={onOpen}
       onPointerEnter={handleEnter}
+      onPointerLeave={handleLeave}
       className="group relative block overflow-hidden bg-background p-0 text-left leading-none align-top transition-transform duration-300 ease-out hover:scale-[1.04] hover:z-10 hover:shadow-xl"
       style={{
         height: tileSize,
@@ -259,14 +263,15 @@ function GridTile({
       <SkyThumb image={img} width={400} className="block h-full w-full transition-transform duration-500 ease-out group-hover:scale-110" />
       {p && (
         <div
-          className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 opacity-0 transition-all duration-500 ease-out group-hover:opacity-100"
+          className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 transition-[clip-path,opacity] duration-500 ease-out"
           style={{
             background: p.hex,
-            clipPath: `circle(0% at ${origin.x}% ${origin.y}%)`,
+            opacity: hovered ? 1 : 0,
+            clipPath: hovered
+              ? `circle(160% at ${origin.x}% ${origin.y}%)`
+              : `circle(0% at ${origin.x}% ${origin.y}%)`,
           }}
         >
-          <style>{`.group:hover > div[data-tile-overlay="${vt}"] { clip-path: circle(160% at ${origin.x}% ${origin.y}%) !important; }`}</style>
-          <span data-tile-overlay={vt} className="hidden" />
           {cols <= 11 && (
             <>
               <div className="text-[12px]" style={{ color: readableInk(p.hex) }}>
