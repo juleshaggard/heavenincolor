@@ -109,9 +109,10 @@ export default function Archive() {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  const GAP = -1;
-  const tileSize = containerW > 0 ? (containerW - GAP * (cols - 1)) / cols : 200;
-  const rowSize = tileSize + GAP;
+  const COL_OVERLAP = 1;
+  const ROW_OVERLAP = 2;
+  const tileSize = containerW > 0 ? (containerW + COL_OVERLAP * (cols - 1)) / cols : 200;
+  const rowSize = tileSize - ROW_OVERLAP;
   const rows = Math.ceil(sorted.length / cols);
   // Use the page (window) scroll instead of an inner scroll container.
   const rowVirtualizer = useWindowVirtualizer({
@@ -175,7 +176,7 @@ export default function Archive() {
               >
                 <div
                   className="grid"
-                  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "0px", marginRight: "-1px", marginBottom: "-2px" }}
+                  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "0px", marginRight: "-1px" }}
                 >
                   {slice.map((img) => {
                     const p = palettes[img.public_id];
@@ -270,7 +271,6 @@ function GridTile({
       style={{
         height: tileSize,
         marginRight: "-1px",
-        marginBottom: "-2px",
         viewTransitionName: isOpen ? vt : undefined,
       }}
     >
