@@ -266,7 +266,7 @@ function GridTile({
       onClick={onOpen}
       onPointerEnter={handleEnter}
       onPointerLeave={handleLeave}
-      className="group relative block overflow-hidden bg-background p-0 text-left leading-none align-top transition-transform duration-300 ease-out hover:scale-[1.04] hover:z-10 hover:shadow-xl"
+      className="group relative block overflow-hidden bg-background p-0 text-left leading-none align-top transition-shadow duration-300 ease-out hover:z-10 hover:shadow-xl"
       style={{
         height: tileSize,
         marginRight: "-1px",
@@ -274,7 +274,7 @@ function GridTile({
         viewTransitionName: isOpen ? vt : undefined,
       }}
     >
-      <SkyThumb image={img} width={400} className="block h-full w-full transition-transform duration-500 ease-out group-hover:scale-110" />
+      <SkyThumb image={img} width={400} className="block h-full w-full" />
       {p && (
         <div
           className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 transition-[clip-path,opacity] ease-out"
