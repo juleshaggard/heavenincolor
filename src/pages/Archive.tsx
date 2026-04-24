@@ -275,7 +275,7 @@ function GridTile({
         viewTransitionName: isOpen ? vt : undefined,
       }}
     >
-      <SkyThumb image={img} width={400} className="block h-full w-full transition-transform duration-500 ease-out group-hover:scale-110" />
+      <LiquifyTile image={img} width={400} className="block h-full w-full transition-transform duration-500 ease-out group-hover:scale-110" />
       {p && (
         <div
           className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 transition-[clip-path,opacity] ease-out"
