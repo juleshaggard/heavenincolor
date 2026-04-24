@@ -43,7 +43,7 @@ export default function Archive() {
   const [palettes, setPalettes] = useState<Record<string, Palette>>({});
   const [open, setOpen] = useState<SkyImage | null>(null);
   // cols == zoom level. 6 = max zoom in (largest tiles). 100 = max zoom out.
-  const [zoom, setZoom] = useState(24);
+  const [zoom, setZoom] = useState(14);
   const cols = Math.max(6, Math.min(100, zoom));
 
   // Last-10 cycling sequence for the inline headline swatch
@@ -159,7 +159,7 @@ export default function Archive() {
       <div className="px-[4vw]">
         <div
           ref={parentRef}
-          className="relative overflow-hidden rounded-2xl bg-background"
+          className="relative bg-background"
         >
           <div style={{ height: rowVirtualizer.getTotalSize(), position: "relative" }}>
           {rowVirtualizer.getVirtualItems().map((vr) => {
@@ -310,39 +310,53 @@ function ZoomCorner({
 
 function BlurFollowText({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLSpanElement>(null);
+  const target = useRef<{ x: number; y: number }>({ x: 50, y: 50 });
   const [pos, setPos] = useState<{ x: number; y: number }>({ x: 50, y: 50 });
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const PROX = 220; // px proximity radius
+    const PROX = 260;
     const onMove = (e: MouseEvent) => {
       const r = el.getBoundingClientRect();
       const cx = r.left + r.width / 2;
       const cy = r.top + r.height / 2;
       const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
       if (dist < Math.max(r.width, r.height) / 2 + PROX) {
-        const x = ((e.clientX - r.left) / r.width) * 100;
-        const y = ((e.clientY - r.top) / r.height) * 100;
-        setPos({ x, y });
+        target.current = {
+          x: ((e.clientX - r.left) / r.width) * 100,
+          y: ((e.clientY - r.top) / r.height) * 100,
+        };
       } else {
-        setPos({ x: 50, y: 50 });
+        target.current = { x: 50, y: 50 };
       }
     };
     window.addEventListener("mousemove", onMove);
-    return () => window.removeEventListener("mousemove", onMove);
+    let raf = 0;
+    const tick = () => {
+      setPos((p) => ({
+        x: p.x + (target.current.x - p.x) * 0.06,
+        y: p.y + (target.current.y - p.y) * 0.06,
+      }));
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      cancelAnimationFrame(raf);
+    };
   }, []);
 
   return (
     <span ref={ref} className="relative inline-block">
-      {/* base muted text */}
-      <span className="text-ink-faint opacity-40">{children}</span>
-      {/* blue blur, masked inside the text */}
+      {/* base: light blue text */}
+      <span style={{ color: "hsl(210 80% 78%)" }}>{children}</span>
+      {/* yellow blur masked inside the text, trailing the cursor */}
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-clip-text text-transparent transition-[background-position,background-image] duration-500 ease-out"
+        className="pointer-events-none absolute inset-0 bg-clip-text text-transparent"
         style={{
-          backgroundImage: `radial-gradient(circle at ${pos.x}% ${pos.y}%, hsl(218 90% 60%) 0%, hsl(218 75% 65%) 18%, transparent 45%)`,
+          backgroundImage: `radial-gradient(circle at ${pos.x}% ${pos.y}%, hsl(48 100% 60%) 0%, hsl(45 95% 65%) 22%, transparent 50%)`,
         }}
       >
         {children}
