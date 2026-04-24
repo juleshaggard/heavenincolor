@@ -134,7 +134,7 @@ export default function Archive() {
             <span>{sorted.length.toLocaleString()}</span>
             <span
               aria-hidden
-              className="mx-3 inline-block overflow-hidden align-middle [&_img]:grayscale"
+              className="mx-3 inline-block overflow-hidden align-middle"
               style={{
                 width: "0.62em",
                 height: "0.62em",
