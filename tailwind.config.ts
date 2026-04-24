@@ -106,7 +106,7 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "circle-reveal": "circle-reveal 500ms cubic-bezier(0.65, 0, 0.35, 1) both",
+        "circle-reveal": "circle-reveal 2000ms cubic-bezier(0.65, 0, 0.35, 1) both",
       },
     },
   },
