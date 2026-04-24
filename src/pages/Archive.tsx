@@ -43,7 +43,7 @@ export default function Archive() {
   const [palettes, setPalettes] = useState<Record<string, Palette>>({});
   const [open, setOpen] = useState<SkyImage | null>(null);
   // cols == zoom level. 6 = max zoom in (largest tiles). 100 = max zoom out.
-  const [zoom, setZoom] = useState(6);
+  const [zoom, setZoom] = useState(24);
   const cols = Math.max(6, Math.min(100, zoom));
 
   // Last-10 cycling sequence for the inline headline swatch
@@ -187,7 +187,7 @@ export default function Archive() {
                         }}
                       >
                         <SkyThumb image={img} width={400} className="block h-full w-full transition-transform duration-500 ease-out group-hover:scale-110" />
-                        {p && (
+                        {p && cols <= 11 && (
                           <div
                             className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 opacity-0 transition-all duration-500 ease-out [clip-path:circle(0%_at_50%_100%)] group-hover:opacity-100 group-hover:[clip-path:circle(140%_at_50%_100%)]"
                             style={{ background: p.hex }}
@@ -304,24 +304,27 @@ function ZoomCorner({
 
 function BlurFollowText({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const [pos, setPos] = useState<{ x: number; y: number; on: boolean }>({ x: 50, y: 50, on: false });
+  const [pos, setPos] = useState<{ x: number; y: number }>({ x: 50, y: 50 });
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    const PROX = 220; // px proximity radius
     const onMove = (e: MouseEvent) => {
       const r = el.getBoundingClientRect();
-      const x = ((e.clientX - r.left) / r.width) * 100;
-      const y = ((e.clientY - r.top) / r.height) * 100;
-      setPos({ x, y, on: true });
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
+      if (dist < Math.max(r.width, r.height) / 2 + PROX) {
+        const x = ((e.clientX - r.left) / r.width) * 100;
+        const y = ((e.clientY - r.top) / r.height) * 100;
+        setPos({ x, y });
+      } else {
+        setPos({ x: 50, y: 50 });
+      }
     };
-    const onLeave = () => setPos((p) => ({ ...p, on: false }));
     window.addEventListener("mousemove", onMove);
-    el.addEventListener("mouseleave", onLeave);
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      el.removeEventListener("mouseleave", onLeave);
-    };
+    return () => window.removeEventListener("mousemove", onMove);
   }, []);
 
   return (
@@ -331,10 +334,9 @@ function BlurFollowText({ children }: { children: React.ReactNode }) {
       {/* blue blur, masked inside the text */}
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-clip-text text-transparent transition-opacity duration-300"
+        className="pointer-events-none absolute inset-0 bg-clip-text text-transparent transition-[background-position,background-image] duration-500 ease-out"
         style={{
-          opacity: pos.on ? 1 : 0,
-          backgroundImage: `radial-gradient(circle at ${pos.x}% ${pos.y}%, hsl(218 90% 60%) 0%, hsl(218 75% 65%) 18%, transparent 40%)`,
+          backgroundImage: `radial-gradient(circle at ${pos.x}% ${pos.y}%, hsl(218 90% 60%) 0%, hsl(218 75% 65%) 18%, transparent 45%)`,
         }}
       >
         {children}
@@ -373,15 +375,10 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
       </button>
 
       <div
-        className="relative grid h-full w-full gap-0 md:grid-cols-[3fr_1fr]"
+        className="relative grid h-full w-full gap-0 md:grid-cols-[1fr_3fr]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="relative h-full w-full overflow-hidden bg-background">
-          <div className="absolute inset-0" style={{ viewTransitionName: vt }}>
-            <SkyThumb image={image} width={1800} className="h-full w-full" />
-          </div>
-        </div>
-        <aside className="flex h-full flex-col gap-6 overflow-y-auto border-l border-hairline bg-paper p-8 text-[13px]">
+        <aside className="flex h-full flex-col gap-6 overflow-y-auto border-r border-hairline bg-paper p-8 text-[13px]">
           <div>
             <div className="text-ink-dim">Date</div>
             <div className="font-display text-3xl leading-tight text-ink">{fmtDate(image.capturedAt)}</div>
@@ -422,6 +419,11 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
             </a>
           )}
         </aside>
+        <div className="relative h-full w-full overflow-hidden bg-background">
+          <div className="absolute inset-0" style={{ viewTransitionName: vt }}>
+            <SkyThumb image={image} width={1800} className="h-full w-full" />
+          </div>
+        </div>
       </div>
     </div>
   );
