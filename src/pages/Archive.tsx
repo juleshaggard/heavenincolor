@@ -109,12 +109,14 @@ export default function Archive() {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  const tileSize = containerW > 0 ? containerW / cols : 200;
+  const GAP = 10;
+  const tileSize = containerW > 0 ? (containerW - GAP * (cols - 1)) / cols : 200;
+  const rowSize = tileSize + GAP;
   const rows = Math.ceil(sorted.length / cols);
   // Use the page (window) scroll instead of an inner scroll container.
   const rowVirtualizer = useWindowVirtualizer({
     count: rows,
-    estimateSize: () => tileSize,
+    estimateSize: () => rowSize,
     overscan: 4,
     scrollMargin: parentRef.current?.offsetTop ?? 0,
   });
@@ -122,7 +124,7 @@ export default function Archive() {
   useEffect(() => {
     rowVirtualizer.measure();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tileSize, cols]);
+  }, [rowSize, cols]);
 
   return (
     <div className="pb-32">
@@ -167,7 +169,7 @@ export default function Archive() {
             return (
               <div
                 key={vr.key}
-                style={{ position: "absolute", top: 0, left: 0, width: "100%", transform: `translateY(${top}px)`, height: vr.size }}
+                style={{ position: "absolute", top: 0, left: 0, width: "100%", transform: `translateY(${top}px)`, height: tileSize }}
               >
                 <div
                   className="grid"
@@ -187,27 +189,31 @@ export default function Archive() {
                         }}
                       >
                         <SkyThumb image={img} width={400} className="block h-full w-full transition-transform duration-500 ease-out group-hover:scale-110" />
-                        {p && cols <= 11 && (
+                        {p && (
                           <div
                             className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 opacity-0 transition-all duration-500 ease-out [clip-path:circle(0%_at_50%_100%)] group-hover:opacity-100 group-hover:[clip-path:circle(140%_at_50%_100%)]"
                             style={{ background: p.hex }}
                           >
-                            <div
-                              className="text-[12px]"
-                              style={{ color: readableInk(p.hex) }}
-                            >
-                              {fmtTime(img.capturedAt)}
-                              <span className="mx-1.5 opacity-60">·</span>
-                              {img.capturedAt.toLocaleDateString(undefined, { month: "short", day: "2-digit" })}
-                            </div>
-                            <div style={{ color: readableInk(p.hex) }}>
-                              <div className="font-display italic text-2xl leading-none">
-                                {nameColor(p.hex)}
-                              </div>
-                              <div className="mt-1 text-[11px] opacity-80">
-                                {p.hex.toUpperCase()}
-                              </div>
-                            </div>
+                            {cols <= 11 && (
+                              <>
+                                <div
+                                  className="text-[12px]"
+                                  style={{ color: readableInk(p.hex) }}
+                                >
+                                  {fmtTime(img.capturedAt)}
+                                  <span className="mx-1.5 opacity-60">·</span>
+                                  {img.capturedAt.toLocaleDateString(undefined, { month: "short", day: "2-digit" })}
+                                </div>
+                                <div style={{ color: readableInk(p.hex) }}>
+                                  <div className="font-display italic text-2xl leading-none">
+                                    {nameColor(p.hex)}
+                                  </div>
+                                  <div className="mt-1 text-[11px] opacity-80">
+                                    {p.hex.toUpperCase()}
+                                  </div>
+                                </div>
+                              </>
+                            )}
                           </div>
                         )}
                       </button>
@@ -330,7 +336,7 @@ function BlurFollowText({ children }: { children: React.ReactNode }) {
   return (
     <span ref={ref} className="relative inline-block">
       {/* base muted text */}
-      <span className="text-ink-faint">{children}</span>
+      <span className="text-ink-faint/40">{children}</span>
       {/* blue blur, masked inside the text */}
       <span
         aria-hidden
