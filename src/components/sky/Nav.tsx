@@ -94,7 +94,7 @@ export function Nav() {
               rel="noreferrer"
               className="mt-8 inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-[13px] text-paper transition-colors hover:bg-ink-dim"
             >
-              By Jules Haggard ↗
+              By Haggard ↗
             </a>
           </div>
         </div>
