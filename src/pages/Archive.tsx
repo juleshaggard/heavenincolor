@@ -43,7 +43,7 @@ export default function Archive() {
   const [palettes, setPalettes] = useState<Record<string, Palette>>({});
   const [open, setOpen] = useState<SkyImage | null>(null);
   // cols == zoom level. 6 = max zoom in (largest tiles). 100 = max zoom out.
-  const [zoom, setZoom] = useState(10);
+  const [zoom, setZoom] = useState(20);
   const cols = Math.max(6, Math.min(100, zoom));
 
   // Last-10 cycling sequence for the inline headline swatch
@@ -182,45 +182,16 @@ export default function Archive() {
                     const p = palettes[img.public_id];
                     const vt = `sky-${img.public_id.replace(/[^a-z0-9_-]/gi, "_")}`;
                     return (
-                      <button
+                      <GridTile
                         key={img.public_id}
-                        onClick={() => openWithTransition(img, vt, setOpen)}
-                        className="group relative block overflow-hidden bg-background p-0 text-left leading-none align-top transition-transform duration-300 ease-out hover:scale-[1.04] hover:z-10 hover:shadow-xl"
-                        style={{
-                          height: tileSize,
-                          borderRadius: "8px",
-                          viewTransitionName: open?.public_id === img.public_id ? vt : undefined,
-                        }}
-                      >
-                        <SkyThumb image={img} width={400} className="block h-full w-full transition-transform duration-500 ease-out group-hover:scale-110" />
-                        {p && (
-                          <div
-                            className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 opacity-0 transition-all duration-500 ease-out [clip-path:circle(0%_at_50%_100%)] group-hover:opacity-100 group-hover:[clip-path:circle(140%_at_50%_100%)]"
-                            style={{ background: p.hex }}
-                          >
-                            {cols <= 11 && (
-                              <>
-                                <div
-                                  className="text-[12px]"
-                                  style={{ color: readableInk(p.hex) }}
-                                >
-                                  {fmtTime(img.capturedAt)}
-                                  <span className="mx-1.5 opacity-60">·</span>
-                                  {img.capturedAt.toLocaleDateString(undefined, { month: "short", day: "2-digit" })}
-                                </div>
-                                <div style={{ color: readableInk(p.hex) }}>
-                                  <div className="font-display italic text-2xl leading-none">
-                                    {nameColor(p.hex)}
-                                  </div>
-                                  <div className="mt-1 text-[11px] opacity-80">
-                                    {p.hex.toUpperCase()}
-                                  </div>
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        )}
-                      </button>
+                        img={img}
+                        palette={p}
+                        vt={vt}
+                        tileSize={tileSize}
+                        cols={cols}
+                        isOpen={open?.public_id === img.public_id}
+                        onOpen={() => openWithTransition(img, vt, setOpen)}
+                      />
                     );
                   })}
                 </div>
