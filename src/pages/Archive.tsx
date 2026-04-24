@@ -225,6 +225,71 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
   );
 }
 
+function GridTile({
+  img, palette: p, vt, tileSize, cols, isOpen, onOpen,
+}: {
+  img: SkyImage;
+  palette?: Palette;
+  vt: string;
+  tileSize: number;
+  cols: number;
+  isOpen: boolean;
+  onOpen: () => void;
+}) {
+  const [origin, setOrigin] = useState<{ x: number; y: number }>({ x: 50, y: 100 });
+
+  const handleEnter = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width) * 100;
+    const y = ((e.clientY - r.top) / r.height) * 100;
+    setOrigin({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) });
+  };
+
+  return (
+    <button
+      onClick={onOpen}
+      onPointerEnter={handleEnter}
+      className="group relative block overflow-hidden bg-background p-0 text-left leading-none align-top transition-transform duration-300 ease-out hover:scale-[1.04] hover:z-10 hover:shadow-xl"
+      style={{
+        height: tileSize,
+        borderRadius: "8px",
+        viewTransitionName: isOpen ? vt : undefined,
+      }}
+    >
+      <SkyThumb image={img} width={400} className="block h-full w-full transition-transform duration-500 ease-out group-hover:scale-110" />
+      {p && (
+        <div
+          className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 opacity-0 transition-all duration-500 ease-out group-hover:opacity-100"
+          style={{
+            background: p.hex,
+            clipPath: `circle(0% at ${origin.x}% ${origin.y}%)`,
+          }}
+        >
+          <style>{`.group:hover > div[data-tile-overlay="${vt}"] { clip-path: circle(160% at ${origin.x}% ${origin.y}%) !important; }`}</style>
+          <span data-tile-overlay={vt} className="hidden" />
+          {cols <= 11 && (
+            <>
+              <div className="text-[12px]" style={{ color: readableInk(p.hex) }}>
+                {fmtTime(img.capturedAt)}
+                <span className="mx-1.5 opacity-60">·</span>
+                {img.capturedAt.toLocaleDateString(undefined, { month: "short", day: "2-digit" })}
+              </div>
+              <div style={{ color: readableInk(p.hex) }}>
+                <div className="font-display italic text-2xl leading-none">
+                  {nameColor(p.hex)}
+                </div>
+                <div className="mt-1 text-[11px] opacity-80">
+                  {p.hex.toUpperCase()}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </button>
+  );
+}
+
 function FilterCorner({
   tod, setTod, sort, setSort,
 }: {
