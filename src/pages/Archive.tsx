@@ -189,13 +189,8 @@ export default function Archive() {
                         <SkyThumb image={img} width={400} className="block h-full w-full transition-transform duration-500 ease-out group-hover:scale-110" />
                         {p && (
                           <div
-                            className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 transition-[clip-path,opacity] duration-500 ease-out"
-                            style={{
-                              background: p.hex,
-                              clipPath: "circle(0% at 50% 100%)",
-                              opacity: 0,
-                            }}
-                            data-hover-overlay
+                            className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 opacity-0 transition-all duration-500 ease-out [clip-path:circle(0%_at_50%_100%)] group-hover:opacity-100 group-hover:[clip-path:circle(140%_at_50%_100%)]"
+                            style={{ background: p.hex }}
                           >
                             <div
                               className="text-[12px]"
