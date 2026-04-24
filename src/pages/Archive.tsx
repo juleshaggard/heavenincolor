@@ -86,13 +86,27 @@ export default function Archive() {
   }, [filtered, sort, palettes]);
 
   const parentRef = useRef<HTMLDivElement>(null);
+  const [containerW, setContainerW] = useState(0);
+  useEffect(() => {
+    const el = parentRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => setContainerW(entry.contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const tileSize = containerW > 0 ? containerW / cols : 200;
   const rows = Math.ceil(sorted.length / cols);
   const rowVirtualizer = useVirtualizer({
     count: rows,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => Math.round(900 / cols),
+    estimateSize: () => tileSize,
     overscan: 4,
   });
+  // re-measure when cols/width changes
+  useEffect(() => {
+    rowVirtualizer.measure();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tileSize, cols]);
 
   return (
     <div className="space-y-6">
