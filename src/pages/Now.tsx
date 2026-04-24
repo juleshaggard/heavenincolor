@@ -17,7 +17,7 @@ export default function Now() {
   const [idx, setIdx] = useState(0);
   const [palette, setPalette] = useState<Palette | null>(null);
   const [playing, setPlaying] = useState(false);
-  const [showOriginal, setShowOriginal] = useState(false);
+  const [showOriginal, setShowOriginal] = useState(true);
   const { hour12 } = useTimeFormat();
   const [shrunk, setShrunk] = useState(false);
 
@@ -191,7 +191,7 @@ export default function Now() {
             onClick={() => setShowOriginal((v) => !v)}
             className="text-[13px] text-ink-dim underline-offset-4 hover:text-ink hover:underline"
           >
-            {showOriginal ? "showing original photo" : "show original photo"}
+            {showOriginal ? "Show overall color" : "Show original photo"}
           </button>
         </div>
       </section>

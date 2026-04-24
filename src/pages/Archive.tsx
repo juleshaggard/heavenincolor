@@ -33,13 +33,13 @@ function readableInk(hex: string): string {
   return lum > 0.55 ? "#0a0a0a" : "#ffffff";
 }
 
-const TODS = ["all", "dawn", "day", "golden", "dusk", "night"] as const;
-const SORTS = ["chronological", "saturation", "warmth", "unusual"] as const;
+const TODS = ["All", "Dawn", "Day", "Golden", "Dusk", "Night"] as const;
+const SORTS = ["Chronological", "Saturation", "Warmth", "Unusual"] as const;
 
 export default function Archive() {
   const { images } = useSkyImages();
-  const [tod, setTod] = useState<(typeof TODS)[number]>("all");
-  const [sort, setSort] = useState<(typeof SORTS)[number]>("chronological");
+  const [tod, setTod] = useState<(typeof TODS)[number]>("All");
+  const [sort, setSort] = useState<(typeof SORTS)[number]>("Chronological");
   const [palettes, setPalettes] = useState<Record<string, Palette>>({});
   const [open, setOpen] = useState<SkyImage | null>(null);
   // cols == zoom level. 6 = max zoom in (largest tiles). 100 = max zoom out.
@@ -64,8 +64,8 @@ export default function Archive() {
   const filtered = useMemo(() => {
     if (!images) return [];
     let out = images;
-    if (tod !== "all") out = out.filter((i) => timeOfDay(i.capturedAt) === tod);
-    if (sort === "chronological") out = [...out].reverse();
+    if (tod !== "All") out = out.filter((i) => timeOfDay(i.capturedAt) === tod.toLowerCase());
+    if (sort === "Chronological") out = [...out].reverse();
     return out;
   }, [images, tod, sort]);
 
@@ -85,12 +85,12 @@ export default function Archive() {
 
   // sort post-palette
   const sorted = useMemo(() => {
-    if (sort === "chronological") return filtered;
+    if (sort === "Chronological") return filtered;
     const score = (img: SkyImage) => {
       const p = palettes[img.public_id];
       if (!p) return 0;
-      if (sort === "saturation") return p.hsl[1];
-      if (sort === "warmth") {
+      if (sort === "Saturation") return p.hsl[1];
+      if (sort === "Warmth") {
         const h = p.hsl[0];
         return Math.cos(((h - 30) * Math.PI) / 180);
       }
@@ -193,7 +193,7 @@ export default function Archive() {
                             style={{ background: p.hex }}
                           >
                             <div
-                              className="font-mono text-[10px] uppercase tracking-[0.22em]"
+                              className="text-[12px]"
                               style={{ color: readableInk(p.hex) }}
                             >
                               {fmtTime(img.capturedAt)}
@@ -204,7 +204,7 @@ export default function Archive() {
                               <div className="font-display italic text-2xl leading-none">
                                 {nameColor(p.hex)}
                               </div>
-                              <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.22em] opacity-80">
+                              <div className="mt-1 text-[11px] opacity-80">
                                 {p.hex.toUpperCase()}
                               </div>
                             </div>
@@ -340,9 +340,9 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
             <SkyThumb image={image} width={1800} className="h-full w-full" />
           </div>
         </div>
-        <aside className="flex h-full flex-col gap-4 overflow-y-auto border-l border-hairline bg-paper p-6 font-mono text-[11px]">
+        <aside className="flex h-full flex-col gap-4 overflow-y-auto border-l border-hairline bg-paper p-6 text-[13px]">
           <div>
-            <div className="text-ink-faint uppercase tracking-[0.22em]">date</div>
+            <div className="text-ink-faint">Date</div>
             <div className="font-display text-2xl text-ink">{fmtDate(image.capturedAt)}</div>
           </div>
           <div className="flex justify-between text-ink-dim">
@@ -357,13 +357,13 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
                   <button
                     key={c}
                     onClick={() => navigator.clipboard?.writeText(c)}
-                    className="flex w-full items-center justify-between rounded-sm px-1 py-0.5 text-[10px] uppercase tracking-[0.2em] hover:bg-secondary"
+                    className="flex w-full items-center justify-between rounded-sm px-1 py-0.5 text-[12px] hover:bg-secondary"
                   >
                     <span className="flex items-center gap-2">
                       <span className="h-2 w-2 rounded-sm" style={{ background: c }} />
                       {c.toUpperCase()}
                     </span>
-                    <span className="text-ink-faint">copy</span>
+                    <span className="text-ink-faint">Copy</span>
                   </button>
                 ))}
               </div>
@@ -374,13 +374,13 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
               href={cldUrl(image.public_id, { w: 2400 })}
               target="_blank"
               rel="noreferrer"
-              className="block rounded-sm border border-hairline bg-secondary px-3 py-2 text-center text-[10px] uppercase tracking-[0.22em] text-ink hover:bg-accent"
+              className="block rounded-sm border border-hairline bg-secondary px-3 py-2 text-center text-[13px] text-ink hover:bg-accent"
             >
-              open original ↗
+              Open original ↗
             </a>
           )}
-          <div className="mt-auto pt-4 text-center text-[10px] uppercase tracking-[0.22em] text-ink-faint">
-            press esc or click ✕ to close
+          <div className="mt-auto pt-4 text-center text-[12px] text-ink-faint">
+            Press esc or click ✕ to close
           </div>
         </aside>
       </div>
