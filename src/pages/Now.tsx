@@ -19,13 +19,7 @@ export default function Now() {
   const [playing, setPlaying] = useState(false);
   const [showOriginal, setShowOriginal] = useState(true);
   const { hour12 } = useTimeFormat();
-  const [shrunk, setShrunk] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setShrunk(window.scrollY > 120);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  const shrunk = false;
 
   const subset = useMemo(() => {
     if (!images) return [];
@@ -124,12 +118,8 @@ export default function Now() {
       {/* === Sticky shrinking hero === */}
       <section
         className={cn(
-          "sticky z-30 transition-all duration-500 ease-out",
-          // sit just under the h-14 nav so it never overlaps
-          "top-[4.5rem]",
-          shrunk
-            ? "mx-auto max-w-2xl"
-            : "mx-auto max-w-5xl flex min-h-[calc(100vh-4.5rem-8rem)] flex-col items-center justify-center",
+          "z-30",
+          "mx-auto max-w-5xl flex min-h-[calc(100vh-4.5rem-8rem)] flex-col items-center justify-center pt-[4.5rem]",
         )}
       >
         <div className={cn("relative w-full transition-all duration-500", shrunk ? "" : "mx-auto")} style={!shrunk ? { width: "70%" } : undefined}>
