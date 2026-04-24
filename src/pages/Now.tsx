@@ -15,6 +15,9 @@ import { Widgets } from "@/components/sky/Widgets";
 
 const SPEEDS = [1, 4, 16, 60] as const;
 
+const PILL_HEIGHT_FULL = 480; // px, hero
+const PILL_HEIGHT_SHRUNK = 92; // px, sticky bar
+
 export default function Now() {
   const { images } = useSkyImages();
   const [range, setRange] = useState<"today" | "week" | "month">("week");
@@ -120,11 +123,13 @@ export default function Now() {
       {/* === Sticky shrinking hero === */}
       <section
         className={cn(
-          "sticky top-2 z-30 transition-all duration-500 ease-out",
-          shrunk ? "mx-auto max-w-2xl" : "",
+          "sticky z-30 transition-all duration-500 ease-out",
+          // sit just under the h-14 nav so it never overlaps
+          "top-[4.5rem]",
+          shrunk ? "mx-auto max-w-3xl" : "",
         )}
       >
-        <TiltPill aspectRatio={shrunk ? "8 / 2" : "21 / 9"}>
+        <TiltPill height={shrunk ? PILL_HEIGHT_SHRUNK : PILL_HEIGHT_FULL}>
           {/* halo glow behind */}
           <div
             aria-hidden
