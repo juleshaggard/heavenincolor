@@ -252,7 +252,7 @@ function FilterCorner({
   return (
     <div className="fixed bottom-5 left-6 z-40 text-[13px]">
       {open ? (
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-6 rounded-full border border-hairline bg-paper px-4 py-2 shadow-sm">
           <button onClick={() => setOpen(false)} className="font-medium text-ink underline underline-offset-4">
             Filter
           </button>
