@@ -212,7 +212,7 @@ export default function Now() {
       </section>
 
       {/* === Live conditions widgets === */}
-      <Widgets />
+      <Widgets frameTime={current?.capturedAt} framePalette={palette} />
 
       {/* === Fixed bottom timeline === */}
       <section className="fixed bottom-4 left-1/2 z-40 w-[calc(100%-2rem)] max-w-[1360px] -translate-x-1/2 space-y-3 rounded-2xl bg-paper/95 p-4 shadow-neu backdrop-blur-md">
