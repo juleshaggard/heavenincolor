@@ -193,7 +193,7 @@ export default function Archive() {
                             style={{ background: p.hex }}
                           >
                             <div
-                              className="font-mono text-[10px] uppercase tracking-[0.22em]"
+                              className="text-[12px]"
                               style={{ color: readableInk(p.hex) }}
                             >
                               {fmtTime(img.capturedAt)}
