@@ -176,7 +176,7 @@ export default function Archive() {
               >
                 <div
                   className="grid"
-                  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "10px" }}
+                  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "16px" }}
                 >
                   {slice.map((img) => {
                     const p = palettes[img.public_id];
