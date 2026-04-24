@@ -75,10 +75,11 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       boxShadow: {
-        neu: "8px 8px 20px hsl(36 20% 82% / 0.7), -8px -8px 20px hsl(38 60% 100% / 0.9)",
-        "neu-sm": "4px 4px 10px hsl(36 20% 82% / 0.6), -4px -4px 10px hsl(38 60% 100% / 0.85)",
-        "neu-inset": "inset 4px 4px 8px hsl(36 20% 80% / 0.7), inset -4px -4px 8px hsl(38 60% 100% / 0.9)",
-        "neu-pressed": "inset 3px 3px 6px hsl(36 20% 78% / 0.75), inset -3px -3px 6px hsl(38 60% 100% / 0.85)",
+        // Flat, hairline-based — no neumorphism.
+        neu: "0 0 0 1px hsl(var(--hairline))",
+        "neu-sm": "0 0 0 1px hsl(var(--hairline))",
+        "neu-inset": "inset 0 0 0 1px hsl(var(--hairline))",
+        "neu-pressed": "inset 0 0 0 1px hsl(var(--ink))",
       },
       keyframes: {
         "accordion-down": {

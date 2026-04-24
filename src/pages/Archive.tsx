@@ -110,13 +110,13 @@ export default function Archive() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-4xl text-ink md:text-5xl">
-            {sorted.length.toLocaleString()} skies over {LOCATION.name}
+      <header className="flex flex-wrap items-end justify-between gap-6 border-b border-hairline pb-6">
+        <div className="max-w-3xl">
+          <h1 className="font-display text-[clamp(2.5rem,6vw,5rem)] leading-[0.95] text-ink">
+            {sorted.length.toLocaleString()} skies<br />over {LOCATION.name}
           </h1>
-          <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.22em] text-ink-faint">
-            captured every 30 minutes · {tod} · sort by {sort}
+          <p className="mt-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+            Captured every 30 minutes · {tod} · sort by {sort}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em]">
@@ -130,7 +130,7 @@ export default function Archive() {
               <Chip key={s} active={sort === s} onClick={() => setSort(s)}>{s}</Chip>
             ))}
           </Group>
-          <div className="flex items-center gap-2 rounded-sm border border-hairline bg-card px-3 py-1.5">
+          <div className="flex items-center gap-2 border border-hairline px-3 py-1.5">
             <span className="text-ink-faint">zoom</span>
             <input
               type="range"
@@ -214,15 +214,15 @@ export default function Archive() {
 }
 
 function Group({ children }: { children: React.ReactNode }) {
-  return <div className="flex items-center gap-1 rounded-sm border border-hairline bg-card p-1">{children}</div>;
+  return <div className="flex items-center border border-hairline">{children}</div>;
 }
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
       onClick={onClick}
       className={cn(
-        "rounded-sm px-2.5 py-1.5 transition-colors",
-        active ? "bg-secondary text-ink" : "text-ink-dim hover:text-ink",
+        "px-3 py-1.5 transition-colors border-r border-hairline last:border-r-0",
+        active ? "bg-ink text-paper" : "text-ink-dim hover:text-ink",
       )}
     >
       {children}
