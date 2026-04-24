@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { listSkyImages, type SkyImage } from "@/lib/cloudinary";
 
+// Hide any frames captured before Friday, April 24, 2026 (local time).
+const MIN_CAPTURED_AT = new Date(2026, 3, 24, 0, 0, 0, 0).getTime();
+
+function filterRecent(imgs: SkyImage[]): SkyImage[] {
+  return imgs.filter((i) => i.capturedAt.getTime() >= MIN_CAPTURED_AT);
+}
+
 export function useSkyImages() {
   const [images, setImages] = useState<SkyImage[] | null>(null);
   const [error, setError] = useState<Error | null>(null);
@@ -8,10 +15,10 @@ export function useSkyImages() {
   useEffect(() => {
     let alive = true;
     listSkyImages()
-      .then((r) => alive && setImages(r))
+      .then((r) => alive && setImages(filterRecent(r)))
       .catch((e) => alive && setError(e));
     const id = window.setInterval(() => {
-      listSkyImages(true).then((r) => alive && setImages(r)).catch(() => {});
+      listSkyImages(true).then((r) => alive && setImages(filterRecent(r))).catch(() => {});
     }, 60_000);
     return () => {
       alive = false;
