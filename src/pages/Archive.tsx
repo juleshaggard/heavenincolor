@@ -110,17 +110,32 @@ export default function Archive() {
   }, [tileSize, cols]);
 
   return (
-    <div className="space-y-8 pb-32">
-      <header className="border-b border-hairline pb-8">
-        <h1 className="font-display text-4xl leading-tight text-ink md:text-6xl">
-          {sorted.length.toLocaleString()} skies captured over {LOCATION.name}, every 30 minutes.
+    <div className="pb-32">
+      <header className="px-[4vw] pt-[6vh] pb-[8vh] text-center">
+        <h1 className="font-display text-ink leading-[0.95] tracking-[-0.02em] text-[clamp(3rem,9vw,9rem)]">
+          <span>{sorted.length.toLocaleString()}</span>
+          <span
+            aria-hidden
+            className="mx-3 inline-block align-middle"
+            style={{
+              width: "0.7em",
+              height: "0.7em",
+              background: "linear-gradient(160deg, hsl(218 55% 75%), hsl(218 45% 55%))",
+            }}
+          />
+          <span>skies</span>
+          <br />
+          <span>captured over </span>
+          <em className="italic">{LOCATION.name}</em>
+          <br />
+          <span className="text-ink-faint">every 30 minutes</span>
         </h1>
       </header>
 
       {/* Grid with comfortable side breathing room */}
       <div
         ref={parentRef}
-        className="relative"
+        className="relative px-[4vw]"
       >
         <div style={{ height: rowVirtualizer.getTotalSize(), position: "relative" }}>
           {rowVirtualizer.getVirtualItems().map((vr) => {
