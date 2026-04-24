@@ -99,14 +99,8 @@ export default {
           },
         },
         "circle-reveal": {
-          "0%": {
-            "-webkit-mask-image": "radial-gradient(circle at 50% 50%, #000 0%, #000 0%, transparent 0.5%)",
-            "mask-image": "radial-gradient(circle at 50% 50%, #000 0%, #000 0%, transparent 0.5%)",
-          },
-          "100%": {
-            "-webkit-mask-image": "radial-gradient(circle at 50% 50%, #000 0%, #000 150%, transparent 150.5%)",
-            "mask-image": "radial-gradient(circle at 50% 50%, #000 0%, #000 150%, transparent 150.5%)",
-          },
+          "0%": { clipPath: "circle(0% at 50% 50%)" },
+          "100%": { clipPath: "circle(120% at 50% 50%)" },
         },
       },
       animation: {
