@@ -131,11 +131,11 @@ export default function Archive() {
           <span>{sorted.length.toLocaleString()}</span>
           <span
             aria-hidden
-            className="mx-3 inline-block overflow-hidden rounded-sm"
+            className="mx-3 inline-block overflow-hidden rounded-xl"
             style={{
-              width: "0.72em",
-              height: "0.72em",
-              verticalAlign: "-0.08em",
+              width: "0.78em",
+              height: "0.62em",
+              verticalAlign: "0.08em",
             }}
           >
             {seqImg ? (
