@@ -302,6 +302,47 @@ function ZoomCorner({
   );
 }
 
+function BlurFollowText({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [pos, setPos] = useState<{ x: number; y: number; on: boolean }>({ x: 50, y: 50, on: false });
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const onMove = (e: MouseEvent) => {
+      const r = el.getBoundingClientRect();
+      const x = ((e.clientX - r.left) / r.width) * 100;
+      const y = ((e.clientY - r.top) / r.height) * 100;
+      setPos({ x, y, on: true });
+    };
+    const onLeave = () => setPos((p) => ({ ...p, on: false }));
+    window.addEventListener("mousemove", onMove);
+    el.addEventListener("mouseleave", onLeave);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      el.removeEventListener("mouseleave", onLeave);
+    };
+  }, []);
+
+  return (
+    <span ref={ref} className="relative inline-block">
+      {/* base muted text */}
+      <span className="text-ink-faint">{children}</span>
+      {/* blue blur, masked inside the text */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-clip-text text-transparent transition-opacity duration-300"
+        style={{
+          opacity: pos.on ? 1 : 0,
+          backgroundImage: `radial-gradient(circle at ${pos.x}% ${pos.y}%, hsl(218 90% 60%) 0%, hsl(218 75% 65%) 18%, transparent 40%)`,
+        }}
+      >
+        {children}
+      </span>
+    </span>
+  );
+}
+
 function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Palette; onClose: () => void }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
