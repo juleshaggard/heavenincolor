@@ -9,6 +9,7 @@ import CalendarPage from "./pages/Calendar";
 import ComparePage from "./pages/Compare";
 import Archive from "./pages/Archive";
 import NotFound from "./pages/NotFound.tsx";
+import LiquidScroll from "./components/LiquidScroll";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +19,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <LiquidScroll />
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<Archive />} />
