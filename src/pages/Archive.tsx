@@ -148,10 +148,10 @@ export default function Archive() {
         </div>
       </header>
 
-      {/* Full-bleed grid (escapes the page's max-width container) */}
+      {/* Grid with comfortable side breathing room */}
       <div
         ref={parentRef}
-        className="relative w-screen left-1/2 right-1/2 -mx-[50vw]"
+        className="relative"
       >
         <div style={{ height: rowVirtualizer.getTotalSize(), position: "relative" }}>
           {rowVirtualizer.getVirtualItems().map((vr) => {

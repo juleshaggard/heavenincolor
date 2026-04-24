@@ -8,8 +8,8 @@ import { captionFor, fmtTime } from "@/lib/format";
 import { cldUrl, isDemo } from "@/lib/cloudinary";
 import { useTimeFormat } from "@/hooks/useTimeFormat";
 import { cn } from "@/lib/utils";
-const PILL_HEIGHT_FULL = 480; // px, hero
-const PILL_HEIGHT_SHRUNK = 92; // px, sticky bar
+const PILL_HEIGHT_FULL = 384; // px, hero (80% of 480)
+const PILL_HEIGHT_SHRUNK = 74; // px, sticky bar (80% of 92)
 
 export default function Now() {
   const { images } = useSkyImages();
@@ -65,6 +65,15 @@ export default function Now() {
   // playback
   const raf = useRef<number | null>(null);
   const last = useRef(0);
+  const handlePlayToggle = () => {
+    setPlaying((p) => {
+      const next = !p;
+      if (next && idx >= subset.length - 1) {
+        setIdx(0);
+      }
+      return next;
+    });
+  };
   useEffect(() => {
     if (!playing) return;
     const step = (t: number) => {
@@ -92,7 +101,7 @@ export default function Now() {
   // keyboard
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.code === "Space") { e.preventDefault(); setPlaying((p) => !p); }
+      if (e.code === "Space") { e.preventDefault(); handlePlayToggle(); }
       if (e.code === "ArrowRight") setIdx((i) => Math.min(subset.length - 1, i + 1));
       if (e.code === "ArrowLeft") setIdx((i) => Math.max(0, i - 1));
     };
@@ -111,14 +120,16 @@ export default function Now() {
   const isLatest = idx === subset.length - 1;
 
   return (
-    <div className="space-y-8 pb-40">
+    <div className="pb-40">
       {/* === Sticky shrinking hero === */}
       <section
         className={cn(
           "sticky z-30 transition-all duration-500 ease-out",
           // sit just under the h-14 nav so it never overlaps
           "top-[4.5rem]",
-          shrunk ? "mx-auto max-w-3xl" : "",
+          shrunk
+            ? "mx-auto max-w-2xl"
+            : "mx-auto max-w-5xl flex min-h-[calc(100vh-4.5rem-8rem)] flex-col items-center justify-center",
         )}
       >
         <TiltPill height={shrunk ? PILL_HEIGHT_SHRUNK : PILL_HEIGHT_FULL}>
@@ -188,7 +199,7 @@ export default function Now() {
         <div className="mx-auto flex max-w-[1400px] items-center gap-6 px-6 py-4">
           {/* play */}
           <button
-            onClick={() => setPlaying((p) => !p)}
+            onClick={handlePlayToggle}
             aria-label={playing ? "Pause" : "Play"}
             className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink text-paper transition-colors hover:bg-ink-dim"
           >

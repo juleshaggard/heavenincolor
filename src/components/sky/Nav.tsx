@@ -5,7 +5,6 @@ const links = [
   { to: "/", label: "Grid" },
   { to: "/now", label: "Real Time" },
   { to: "/calendar", label: "Calendar" },
-  { to: "/compare", label: "Compare" },
 ];
 
 export function Nav() {
