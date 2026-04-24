@@ -14,7 +14,7 @@ export function Nav() {
     >
       <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between px-6">
         <NavLink to="/" className="flex items-baseline gap-3">
-          <span className="text-[15px] font-bold tracking-tight text-ink">SKY ARCHIVE</span>
+          <span className="font-display text-2xl tracking-tight text-ink">Sky Archive</span>
           <span className="text-[10px] uppercase tracking-[0.28em] text-ink-faint">San Francisco</span>
         </NavLink>
         <nav className="flex items-center gap-6 text-[12px] uppercase tracking-[0.18em]">

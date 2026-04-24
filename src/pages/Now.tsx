@@ -132,6 +132,7 @@ export default function Now() {
             : "mx-auto max-w-5xl flex min-h-[calc(100vh-4.5rem-8rem)] flex-col items-center justify-center",
         )}
       >
+        <div className={cn("relative w-full transition-all duration-500", shrunk ? "" : "mx-auto")} style={!shrunk ? { width: "70%" } : undefined}>
         <TiltPill height={shrunk ? PILL_HEIGHT_SHRUNK : PILL_HEIGHT_FULL}>
           {/* halo glow behind */}
           <div
@@ -182,6 +183,7 @@ export default function Now() {
             </div>
           </div>
         </TiltPill>
+        </div>
 
         {/* show-original toggle */}
         <div className={cn("mt-6 flex justify-center transition-all", shrunk && "hidden")}>

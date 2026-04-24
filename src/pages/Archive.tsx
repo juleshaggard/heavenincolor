@@ -110,42 +110,11 @@ export default function Archive() {
   }, [tileSize, cols]);
 
   return (
-    <div className="space-y-8">
-      <header className="flex flex-wrap items-end justify-between gap-6 border-b border-hairline pb-6">
-        <div>
-          <h1 className="font-display text-3xl text-ink md:text-4xl">
-            Grid
-          </h1>
-          <p className="mt-2 text-sm text-ink-dim">
-            {sorted.length.toLocaleString()} skies captured over {LOCATION.name}, every 30 minutes.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em]">
-          <Group>
-            {TODS.map((t) => (
-              <Chip key={t} active={tod === t} onClick={() => setTod(t)}>{t}</Chip>
-            ))}
-          </Group>
-          <Group>
-            {SORTS.map((s) => (
-              <Chip key={s} active={sort === s} onClick={() => setSort(s)}>{s}</Chip>
-            ))}
-          </Group>
-          <div className="flex items-center gap-2 border border-hairline px-3 py-1.5">
-            <span className="text-ink-faint">zoom</span>
-            <input
-              type="range"
-              min={2}
-              max={10}
-              step={1}
-              value={zoom}
-              onChange={(e) => setZoom(Number(e.target.value))}
-              className="h-1 w-28 cursor-ew-resize accent-ink"
-              aria-label="Grid zoom"
-            />
-            <span className="tabular-nums text-ink-dim">{cols}×</span>
-          </div>
-        </div>
+    <div className="space-y-8 pb-32">
+      <header className="border-b border-hairline pb-8">
+        <h1 className="font-display text-4xl leading-tight text-ink md:text-6xl">
+          {sorted.length.toLocaleString()} skies captured over {LOCATION.name}, every 30 minutes.
+        </h1>
       </header>
 
       {/* Grid with comfortable side breathing room */}
@@ -215,6 +184,38 @@ export default function Archive() {
       </div>
 
       {open && <Lightbox image={open} palette={palettes[open.public_id]} onClose={() => setOpen(null)} />}
+
+      {/* Fixed bottom controls */}
+      <section className="fixed bottom-0 left-0 right-0 z-40 border-t border-hairline bg-paper">
+        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-3 px-6 py-3 font-mono text-[10px] uppercase tracking-[0.2em]">
+          <div className="flex flex-wrap items-center gap-2">
+            <Group>
+              {TODS.map((t) => (
+                <Chip key={t} active={tod === t} onClick={() => setTod(t)}>{t}</Chip>
+              ))}
+            </Group>
+            <Group>
+              {SORTS.map((s) => (
+                <Chip key={s} active={sort === s} onClick={() => setSort(s)}>{s}</Chip>
+              ))}
+            </Group>
+          </div>
+          <div className="flex items-center gap-2 border border-hairline px-3 py-1.5">
+            <span className="text-ink-faint">zoom</span>
+            <input
+              type="range"
+              min={2}
+              max={10}
+              step={1}
+              value={zoom}
+              onChange={(e) => setZoom(Number(e.target.value))}
+              className="h-1 w-28 cursor-ew-resize accent-ink"
+              aria-label="Grid zoom"
+            />
+            <span className="tabular-nums text-ink-dim">{cols}×</span>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
