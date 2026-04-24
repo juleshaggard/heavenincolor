@@ -149,7 +149,7 @@ export default function Archive() {
           <span>captured over </span>
           <em className="italic">{LOCATION.name}</em>
           <br />
-          <span className="text-ink-faint">every 30 minutes</span>
+          <BlurFollowText>every 30 minutes</BlurFollowText>
         </h1>
       </header>
 
@@ -171,7 +171,7 @@ export default function Archive() {
               >
                 <div
                   className="grid"
-                  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: 0 }}
+                  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "10px" }}
                 >
                   {slice.map((img) => {
                     const p = palettes[img.public_id];
@@ -180,16 +180,16 @@ export default function Archive() {
                       <button
                         key={img.public_id}
                         onClick={() => openWithTransition(img, vt, setOpen)}
-                        className="group relative block overflow-hidden bg-background p-0 text-left leading-none align-top -mr-px -mb-px"
+                        className="group relative block overflow-hidden rounded-lg bg-background p-0 text-left leading-none align-top transition-transform duration-300 ease-out hover:scale-[1.04] hover:z-10 hover:shadow-xl"
                         style={{
                           height: tileSize,
                           viewTransitionName: open?.public_id === img.public_id ? vt : undefined,
                         }}
                       >
-                        <SkyThumb image={img} width={400} className="block h-full w-full" />
+                        <SkyThumb image={img} width={400} className="block h-full w-full transition-transform duration-500 ease-out group-hover:scale-110" />
                         {p && (
                           <div
-                            className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                            className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 opacity-0 transition-all duration-500 ease-out [clip-path:circle(0%_at_50%_100%)] group-hover:opacity-100 group-hover:[clip-path:circle(140%_at_50%_100%)]"
                             style={{ background: p.hex }}
                           >
                             <div
@@ -299,6 +299,47 @@ function ZoomCorner({
       />
       <span className="tabular-nums text-ink-faint">{cols}×</span>
     </div>
+  );
+}
+
+function BlurFollowText({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [pos, setPos] = useState<{ x: number; y: number; on: boolean }>({ x: 50, y: 50, on: false });
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const onMove = (e: MouseEvent) => {
+      const r = el.getBoundingClientRect();
+      const x = ((e.clientX - r.left) / r.width) * 100;
+      const y = ((e.clientY - r.top) / r.height) * 100;
+      setPos({ x, y, on: true });
+    };
+    const onLeave = () => setPos((p) => ({ ...p, on: false }));
+    window.addEventListener("mousemove", onMove);
+    el.addEventListener("mouseleave", onLeave);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      el.removeEventListener("mouseleave", onLeave);
+    };
+  }, []);
+
+  return (
+    <span ref={ref} className="relative inline-block">
+      {/* base muted text */}
+      <span className="text-ink-faint">{children}</span>
+      {/* blue blur, masked inside the text */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-clip-text text-transparent transition-opacity duration-300"
+        style={{
+          opacity: pos.on ? 1 : 0,
+          backgroundImage: `radial-gradient(circle at ${pos.x}% ${pos.y}%, hsl(218 90% 60%) 0%, hsl(218 75% 65%) 18%, transparent 40%)`,
+        }}
+      >
+        {children}
+      </span>
+    </span>
   );
 }
 
