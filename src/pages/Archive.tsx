@@ -263,13 +263,14 @@ function GridTile({
       <SkyThumb image={img} width={400} className="block h-full w-full transition-transform duration-500 ease-out group-hover:scale-110" />
       {p && (
         <div
-          className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 transition-[clip-path,opacity] duration-500 ease-out"
+          className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 transition-[clip-path,opacity] ease-out"
           style={{
             background: p.hex,
             opacity: hovered ? 1 : 0,
             clipPath: hovered
               ? `circle(160% at ${origin.x}% ${origin.y}%)`
               : `circle(0% at ${origin.x}% ${origin.y}%)`,
+            transitionDuration: hovered ? "500ms" : "2000ms",
           }}
         >
           {cols <= 11 && (
