@@ -75,9 +75,11 @@ export default function Archive() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl text-ink md:text-5xl">Archive</h1>
+          <h1 className="font-display text-4xl text-ink md:text-5xl">
+            {sorted.length.toLocaleString()} skies over {LOCATION.name}
+          </h1>
           <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.22em] text-ink-faint">
-            {sorted.length} frames · {tod} · sort by {sort}
+            captured every 30 minutes · {tod} · sort by {sort}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em]">
