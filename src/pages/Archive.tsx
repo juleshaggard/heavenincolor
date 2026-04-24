@@ -10,6 +10,29 @@ import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
 import { LOCATION } from "@/hooks/useWeather";
 
+// View Transitions API (Chromium). Falls back gracefully.
+function openWithTransition(
+  img: SkyImage,
+  _vt: string,
+  setOpen: (i: SkyImage) => void,
+) {
+  const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+  if (typeof doc.startViewTransition === "function") {
+    doc.startViewTransition(() => setOpen(img));
+  } else {
+    setOpen(img);
+  }
+}
+
+// Pick black or white text for max contrast against a hex bg.
+function readableInk(hex: string): string {
+  const m = hex.replace("#", "").match(/.{2}/g);
+  if (!m) return "#000";
+  const [r, g, b] = m.map((h) => parseInt(h, 16));
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return lum > 0.55 ? "#0a0a0a" : "#ffffff";
+}
+
 const TODS = ["all", "dawn", "day", "golden", "dusk", "night"] as const;
 const SORTS = ["chronological", "saturation", "warmth", "unusual"] as const;
 
