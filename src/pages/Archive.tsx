@@ -133,11 +133,12 @@ export default function Archive() {
           <span>{sorted.length.toLocaleString()}</span>
           <span
             aria-hidden
-            className="mx-3 inline-block overflow-hidden rounded-md"
+            className="mx-3 inline-block overflow-hidden"
             style={{
               width: "0.62em",
               height: "0.62em",
               verticalAlign: "0.08em",
+              borderRadius: "6px",
             }}
           >
             {seqImg ? (
@@ -182,9 +183,10 @@ export default function Archive() {
                       <button
                         key={img.public_id}
                         onClick={() => openWithTransition(img, vt, setOpen)}
-                        className="group relative block overflow-hidden rounded-md bg-background p-0 text-left leading-none align-top transition-transform duration-300 ease-out hover:scale-[1.04] hover:z-10 hover:shadow-xl"
+                        className="group relative block overflow-hidden bg-background p-0 text-left leading-none align-top transition-transform duration-300 ease-out hover:scale-[1.04] hover:z-10 hover:shadow-xl"
                         style={{
                           height: tileSize,
+                          borderRadius: "6px",
                           viewTransitionName: open?.public_id === img.public_id ? vt : undefined,
                         }}
                       >
