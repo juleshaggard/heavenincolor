@@ -43,7 +43,7 @@ export default function Archive() {
   const [palettes, setPalettes] = useState<Record<string, Palette>>({});
   const [open, setOpen] = useState<SkyImage | null>(null);
   // cols == zoom level. 6 = max zoom in (largest tiles). 100 = max zoom out.
-  const [zoom, setZoom] = useState(10);
+  const [zoom, setZoom] = useState(20);
   const cols = Math.max(6, Math.min(100, zoom));
 
   // Last-10 cycling sequence for the inline headline swatch
@@ -182,45 +182,16 @@ export default function Archive() {
                     const p = palettes[img.public_id];
                     const vt = `sky-${img.public_id.replace(/[^a-z0-9_-]/gi, "_")}`;
                     return (
-                      <button
+                      <GridTile
                         key={img.public_id}
-                        onClick={() => openWithTransition(img, vt, setOpen)}
-                        className="group relative block overflow-hidden bg-background p-0 text-left leading-none align-top transition-transform duration-300 ease-out hover:scale-[1.04] hover:z-10 hover:shadow-xl"
-                        style={{
-                          height: tileSize,
-                          borderRadius: "8px",
-                          viewTransitionName: open?.public_id === img.public_id ? vt : undefined,
-                        }}
-                      >
-                        <SkyThumb image={img} width={400} className="block h-full w-full transition-transform duration-500 ease-out group-hover:scale-110" />
-                        {p && (
-                          <div
-                            className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 opacity-0 transition-all duration-500 ease-out [clip-path:circle(0%_at_50%_100%)] group-hover:opacity-100 group-hover:[clip-path:circle(140%_at_50%_100%)]"
-                            style={{ background: p.hex }}
-                          >
-                            {cols <= 11 && (
-                              <>
-                                <div
-                                  className="text-[12px]"
-                                  style={{ color: readableInk(p.hex) }}
-                                >
-                                  {fmtTime(img.capturedAt)}
-                                  <span className="mx-1.5 opacity-60">·</span>
-                                  {img.capturedAt.toLocaleDateString(undefined, { month: "short", day: "2-digit" })}
-                                </div>
-                                <div style={{ color: readableInk(p.hex) }}>
-                                  <div className="font-display italic text-2xl leading-none">
-                                    {nameColor(p.hex)}
-                                  </div>
-                                  <div className="mt-1 text-[11px] opacity-80">
-                                    {p.hex.toUpperCase()}
-                                  </div>
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        )}
-                      </button>
+                        img={img}
+                        palette={p}
+                        vt={vt}
+                        tileSize={tileSize}
+                        cols={cols}
+                        isOpen={open?.public_id === img.public_id}
+                        onOpen={() => openWithTransition(img, vt, setOpen)}
+                      />
                     );
                   })}
                 </div>
@@ -250,6 +221,76 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
       )}
     >
       {children}
+    </button>
+  );
+}
+
+function GridTile({
+  img, palette: p, vt, tileSize, cols, isOpen, onOpen,
+}: {
+  img: SkyImage;
+  palette?: Palette;
+  vt: string;
+  tileSize: number;
+  cols: number;
+  isOpen: boolean;
+  onOpen: () => void;
+}) {
+  const [origin, setOrigin] = useState<{ x: number; y: number }>({ x: 50, y: 100 });
+  const [hovered, setHovered] = useState(false);
+
+  const handleEnter = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width) * 100;
+    const y = ((e.clientY - r.top) / r.height) * 100;
+    setOrigin({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) });
+    setHovered(true);
+  };
+  const handleLeave = () => setHovered(false);
+
+  return (
+    <button
+      onClick={onOpen}
+      onPointerEnter={handleEnter}
+      onPointerLeave={handleLeave}
+      className="group relative block overflow-hidden bg-background p-0 text-left leading-none align-top transition-transform duration-300 ease-out hover:scale-[1.04] hover:z-10 hover:shadow-xl"
+      style={{
+        height: tileSize,
+        borderRadius: "8px",
+        viewTransitionName: isOpen ? vt : undefined,
+      }}
+    >
+      <SkyThumb image={img} width={400} className="block h-full w-full transition-transform duration-500 ease-out group-hover:scale-110" />
+      {p && (
+        <div
+          className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 transition-[clip-path,opacity] duration-500 ease-out"
+          style={{
+            background: p.hex,
+            opacity: hovered ? 1 : 0,
+            clipPath: hovered
+              ? `circle(160% at ${origin.x}% ${origin.y}%)`
+              : `circle(0% at ${origin.x}% ${origin.y}%)`,
+          }}
+        >
+          {cols <= 11 && (
+            <>
+              <div className="text-[12px]" style={{ color: readableInk(p.hex) }}>
+                {fmtTime(img.capturedAt)}
+                <span className="mx-1.5 opacity-60">·</span>
+                {img.capturedAt.toLocaleDateString(undefined, { month: "short", day: "2-digit" })}
+              </div>
+              <div style={{ color: readableInk(p.hex) }}>
+                <div className="font-display italic text-2xl leading-none">
+                  {nameColor(p.hex)}
+                </div>
+                <div className="mt-1 text-[11px] opacity-80">
+                  {p.hex.toUpperCase()}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </button>
   );
 }
