@@ -68,7 +68,7 @@ export function Nav() {
           <button
             onClick={(e) => { e.stopPropagation(); setAboutOpen(false); }}
             aria-label="Close"
-            className="fixed right-5 top-5 z-[90] grid h-11 w-11 place-items-center rounded-full bg-paper text-ink transition-transform hover:scale-105"
+            className="fixed right-5 top-5 z-[90] grid h-11 w-11 place-items-center rounded-full bg-paper/90 text-ink shadow-neu backdrop-blur-md transition-all hover:scale-105 hover:bg-paper active:shadow-neu-pressed"
           >
             <X className="h-5 w-5" strokeWidth={1.5} />
           </button>
