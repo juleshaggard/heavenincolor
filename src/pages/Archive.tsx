@@ -56,7 +56,7 @@ export default function Archive() {
     if (recent.length < 2) return;
     const id = window.setInterval(() => {
       setSeqIdx((i) => (i + 1) % recent.length);
-    }, 500);
+    }, 2000);
     return () => window.clearInterval(id);
   }, [recent.length]);
   const seqImg = recent[seqIdx];
