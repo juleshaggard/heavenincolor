@@ -4,16 +4,22 @@ import { listSkyImages, type SkyImage } from "@/lib/cloudinary";
 // Hide any frames captured before Friday, April 24, 2026 (local time).
 const MIN_CAPTURED_AT = new Date(2026, 3, 24, 0, 0, 0, 0).getTime();
 
-// Specific frames to exclude (matched by exact captured-at timestamp, local time).
-const EXCLUDED_TIMESTAMPS = new Set<number>([
-  new Date(2026, 3, 24, 20, 10, 0, 0).getTime(),
+// Specific frames to exclude. Matched by local-time "YYYY-MM-DD HH:MM" key,
+// rounded to the nearest minute so capture-time jitter still matches.
+const EXCLUDED_LOCAL_MINUTES = new Set<string>([
+  "2026-04-24 20:10",
 ]);
+
+function localMinuteKey(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
 
 function filterRecent(imgs: SkyImage[]): SkyImage[] {
   return imgs.filter((i) => {
     const t = i.capturedAt.getTime();
     if (t < MIN_CAPTURED_AT) return false;
-    if (EXCLUDED_TIMESTAMPS.has(t)) return false;
+    if (EXCLUDED_LOCAL_MINUTES.has(localMinuteKey(i.capturedAt))) return false;
     return true;
   });
 }
