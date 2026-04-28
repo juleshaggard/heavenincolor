@@ -46,6 +46,9 @@ export default function Archive() {
   const [zoom, setZoom] = useState(13);
   const cols = Math.max(6, Math.min(100, zoom));
 
+  // Progressive reveal: count animates up as the grid populates.
+  const [revealCount, setRevealCount] = useState(0);
+
   // Last-10 cycling sequence for the inline headline swatch
   const recent = useMemo(() => {
     if (!images) return [];
@@ -100,6 +103,33 @@ export default function Archive() {
     return [...filtered].sort((a, b) => score(b) - score(a));
   }, [filtered, sort, palettes]);
 
+  // Animate revealCount from current value up to sorted.length when it changes.
+  useEffect(() => {
+    const target = sorted.length;
+    if (target === 0) {
+      setRevealCount(0);
+      return;
+    }
+    let raf = 0;
+    const start = performance.now();
+    let from = 0;
+    setRevealCount((c) => {
+      from = c > target ? 0 : c;
+      return from;
+    });
+    const duration = Math.min(2400, 700 + target * 1.4);
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+      setRevealCount(Math.round(from + (target - from) * eased));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [sorted.length]);
+
+  const visible = useMemo(() => sorted.slice(0, revealCount), [sorted, revealCount]);
+
   const parentRef = useRef<HTMLDivElement>(null);
   const [containerW, setContainerW] = useState(0);
   useEffect(() => {
@@ -113,7 +143,7 @@ export default function Archive() {
   const ROW_OVERLAP = 2;
   const tileSize = containerW > 0 ? (containerW + COL_OVERLAP * (cols - 1)) / cols : 200;
   const rowSize = tileSize - ROW_OVERLAP;
-  const rows = Math.ceil(sorted.length / cols);
+  const rows = Math.ceil(visible.length / cols);
   // Use the page (window) scroll instead of an inner scroll container.
   const rowVirtualizer = useWindowVirtualizer({
     count: rows,
@@ -132,7 +162,7 @@ export default function Archive() {
       <header className="px-[4vw] pt-[6vh] pb-[6vh] text-center">
         <BlurFollowText>
           <h1 className="font-display leading-[0.95] tracking-[-0.02em] text-[clamp(3rem,9vw,9rem)]">
-            <span>{sorted.length.toLocaleString()}</span>
+            <span className="tabular-nums">{revealCount.toLocaleString()}</span>
             <span
               aria-hidden
               className="mx-5 inline-block overflow-hidden align-middle"
@@ -165,7 +195,7 @@ export default function Archive() {
           <div style={{ height: rowVirtualizer.getTotalSize(), position: "relative" }}>
           {rowVirtualizer.getVirtualItems().map((vr) => {
             const start = vr.index * cols;
-            const slice = sorted.slice(start, start + cols);
+            const slice = visible.slice(start, start + cols);
             const top = vr.start - rowVirtualizer.options.scrollMargin;
             return (
               <div
