@@ -143,7 +143,7 @@ export default function Archive() {
   const ROW_OVERLAP = 2;
   const tileSize = containerW > 0 ? (containerW + COL_OVERLAP * (cols - 1)) / cols : 200;
   const rowSize = tileSize - ROW_OVERLAP;
-  const rows = Math.ceil(sorted.length / cols);
+  const rows = Math.ceil(visible.length / cols);
   // Use the page (window) scroll instead of an inner scroll container.
   const rowVirtualizer = useWindowVirtualizer({
     count: rows,
@@ -162,7 +162,7 @@ export default function Archive() {
       <header className="px-[4vw] pt-[6vh] pb-[6vh] text-center">
         <BlurFollowText>
           <h1 className="font-display leading-[0.95] tracking-[-0.02em] text-[clamp(3rem,9vw,9rem)]">
-            <span>{sorted.length.toLocaleString()}</span>
+            <span className="tabular-nums">{revealCount.toLocaleString()}</span>
             <span
               aria-hidden
               className="mx-5 inline-block overflow-hidden align-middle"
@@ -195,7 +195,7 @@ export default function Archive() {
           <div style={{ height: rowVirtualizer.getTotalSize(), position: "relative" }}>
           {rowVirtualizer.getVirtualItems().map((vr) => {
             const start = vr.index * cols;
-            const slice = sorted.slice(start, start + cols);
+            const slice = visible.slice(start, start + cols);
             const top = vr.start - rowVirtualizer.options.scrollMargin;
             return (
               <div
