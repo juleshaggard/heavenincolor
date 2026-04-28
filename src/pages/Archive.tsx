@@ -46,6 +46,9 @@ export default function Archive() {
   const [zoom, setZoom] = useState(13);
   const cols = Math.max(6, Math.min(100, zoom));
 
+  // Progressive reveal: count animates up as the grid populates.
+  const [revealCount, setRevealCount] = useState(0);
+
   // Last-10 cycling sequence for the inline headline swatch
   const recent = useMemo(() => {
     if (!images) return [];
