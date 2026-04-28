@@ -103,6 +103,33 @@ export default function Archive() {
     return [...filtered].sort((a, b) => score(b) - score(a));
   }, [filtered, sort, palettes]);
 
+  // Animate revealCount from current value up to sorted.length when it changes.
+  useEffect(() => {
+    const target = sorted.length;
+    if (target === 0) {
+      setRevealCount(0);
+      return;
+    }
+    let raf = 0;
+    const start = performance.now();
+    let from = 0;
+    setRevealCount((c) => {
+      from = c > target ? 0 : c;
+      return from;
+    });
+    const duration = Math.min(2400, 700 + target * 1.4);
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+      setRevealCount(Math.round(from + (target - from) * eased));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [sorted.length]);
+
+  const visible = useMemo(() => sorted.slice(0, revealCount), [sorted, revealCount]);
+
   const parentRef = useRef<HTMLDivElement>(null);
   const [containerW, setContainerW] = useState(0);
   useEffect(() => {
