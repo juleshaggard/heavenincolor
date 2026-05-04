@@ -49,7 +49,7 @@ export function SkyThumb({ image, width = 320, className, rounded, hero, alt, fl
   const src = cldUrl(image.public_id, { w: width });
   const blur = cldUrl(image.public_id, { w: 24, q: 30, blur: 800 });
   return (
-    <div className={cn("relative overflow-hidden bg-secondary", rounded && "rounded-sm", className)}>
+    <div className={cn("relative overflow-hidden bg-black", rounded && "rounded-sm", className)}>
       <img
         src={src}
         alt={alt ?? "Sky"}
