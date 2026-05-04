@@ -54,7 +54,7 @@ export function Nav() {
             <h2 className="font-display text-4xl leading-tight">About</h2>
             <div className="mt-5 space-y-4 text-[15px] leading-relaxed text-ink-dim">
               <p>
-                Sky Archive is an ongoing record of the sky over San Francisco — a single
+                Heaven in Color is an ongoing record of the sky over San Francisco — a single
                 photograph captured every thirty minutes, day and night, archived with the
                 color of that exact moment.
               </p>
