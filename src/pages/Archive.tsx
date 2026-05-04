@@ -487,8 +487,8 @@ function ZoomCorner({
   zoom, setZoom, cols,
 }: { zoom: number; setZoom: (n: number) => void; cols: number }) {
   return (
-    <div className="fixed bottom-5 right-6 z-40 flex items-center gap-3 text-[13px]">
-      <span className="font-medium text-ink">Zoom</span>
+    <div className="pointer-events-none fixed right-6 top-5 z-40 flex items-center gap-3 text-[13px]">
+      <span className="text-ink-dim">Zoom</span>
       <input
         type="range"
         min={6}
@@ -496,7 +496,7 @@ function ZoomCorner({
         step={1}
         value={zoom}
         onChange={(e) => setZoom(Number(e.target.value))}
-        className="h-1 w-32 cursor-ew-resize accent-ink"
+        className="pointer-events-auto h-1 w-32 cursor-ew-resize accent-ink"
         aria-label="Grid zoom"
       />
       <span className="tabular-nums text-ink-faint">{cols}×</span>
