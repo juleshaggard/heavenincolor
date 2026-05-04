@@ -22,20 +22,7 @@ export function Nav() {
     <>
       <header className="pointer-events-none fixed inset-x-0 top-0 z-40">
         <div className="grid grid-cols-3 items-start px-6 py-5 text-[13px]">
-          <div className="justify-self-start">
-            <NavLink
-              to="/"
-              end
-              className={({ isActive }) =>
-                cn(
-                  "pointer-events-auto transition-colors",
-                  isActive ? "text-ink underline underline-offset-4" : "text-ink-dim hover:text-ink",
-                )
-              }
-            >
-              Grid
-            </NavLink>
-          </div>
+          <div className="justify-self-start" />
           <div className="justify-self-center">
             <button
               onClick={() => setAboutOpen(true)}
