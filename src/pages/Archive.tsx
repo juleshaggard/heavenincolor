@@ -110,14 +110,19 @@ export default function Archive() {
       setRevealCount(0);
       return;
     }
+    // Show the first batch immediately so the page feels instant,
+    // then progressively animate the rest in.
+    const INSTANT = Math.min(50, target);
     let raf = 0;
-    const start = performance.now();
-    let from = 0;
+    let from = INSTANT;
     setRevealCount((c) => {
-      from = c > target ? 0 : c;
+      from = c > target ? INSTANT : Math.max(c, INSTANT);
       return from;
     });
-    const duration = Math.min(2400, 700 + target * 1.4);
+    if (from >= target) return;
+    const start = performance.now();
+    const remaining = target - from;
+    const duration = Math.min(3000, 600 + remaining * 1.2);
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / duration);
       const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
@@ -209,6 +214,7 @@ export default function Archive() {
                   {slice.map((img) => {
                     const p = palettes[img.public_id];
                     const vt = `sky-${img.public_id.replace(/[^a-z0-9_-]/gi, "_")}`;
+                    const flatIndex = start + slice.indexOf(img);
                     return (
                       <GridTile
                         key={img.public_id}
@@ -219,6 +225,7 @@ export default function Archive() {
                         cols={cols}
                         isOpen={open?.public_id === img.public_id}
                         onOpen={() => openWithTransition(img, vt, setOpen)}
+                        eager={flatIndex < 50}
                       />
                     );
                   })}
@@ -307,7 +314,7 @@ function CircleRevealSequence({ images, index }: { images: SkyImage[]; index: nu
 }
 
 function GridTile({
-  img, palette: p, vt, tileSize, cols, isOpen, onOpen,
+  img, palette: p, vt, tileSize, cols, isOpen, onOpen, eager,
 }: {
   img: SkyImage;
   palette?: Palette;
@@ -316,6 +323,7 @@ function GridTile({
   cols: number;
   isOpen: boolean;
   onOpen: () => void;
+  eager?: boolean;
 }) {
   const [origin, setOrigin] = useState<{ x: number; y: number }>({ x: 50, y: 100 });
   const [hovered, setHovered] = useState(false);
@@ -347,7 +355,7 @@ function GridTile({
         viewTransitionName: isOpen ? vt : undefined,
       }}
     >
-      <SkyThumb image={img} width={400} className="block h-full w-full" />
+      <SkyThumb image={img} width={400} className="block h-full w-full" eager={eager} />
       {p && (
         <div
           className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 transition-[clip-path,opacity] ease-out"
