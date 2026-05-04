@@ -273,7 +273,7 @@ export default function Archive() {
 
       {open && <Lightbox image={open} palette={palettes[open.public_id]} onClose={() => setOpen(null)} />}
 
-      <footer className="px-[4vw] pt-[10vh] pb-[6vh] text-center">
+      <footer className="px-[4vw] pt-[6vh] pb-[6vh] text-center">
         <BlurFollowText>
           <h2 className="font-display leading-[0.95] tracking-[-0.02em] text-[clamp(3rem,9vw,9rem)]">
             Heaven in Color
