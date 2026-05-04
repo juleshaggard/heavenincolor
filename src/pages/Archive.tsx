@@ -487,7 +487,7 @@ function ZoomCorner({
   zoom, setZoom, cols,
 }: { zoom: number; setZoom: (n: number) => void; cols: number }) {
   return (
-    <div className="pointer-events-none fixed right-6 top-5 z-40 flex items-center gap-3 text-[13px]">
+    <div className="pointer-events-none fixed inset-x-0 top-5 z-40 flex items-center justify-center gap-3 text-[13px]">
       <span className="text-ink-dim">Zoom</span>
       <input
         type="range"
