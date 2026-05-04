@@ -193,6 +193,13 @@ export default function Archive() {
       {!ready && (
         <SitePreloader loaded={preloaded} target={loadTarget} />
       )}
+      <div
+        aria-hidden={!ready}
+        className={cn(
+          "transition-opacity duration-700 ease-out",
+          ready ? "opacity-100" : "pointer-events-none opacity-0",
+        )}
+      >
       <header className="px-[4vw] pt-[6vh] pb-[6vh] text-center">
         <BlurFollowText>
           <h1 className="font-display leading-[0.95] tracking-[-0.02em] text-[clamp(3rem,9vw,9rem)]">
@@ -273,10 +280,32 @@ export default function Archive() {
           </h2>
         </BlurFollowText>
       </footer>
+      </div>
 
       {/* Corner controls — editorial style */}
       <FilterCorner tod={tod} setTod={setTod} sort={sort} setSort={setSort} />
       <ZoomCorner zoom={zoom} setZoom={setZoom} cols={cols} />
+    </div>
+  );
+}
+
+function SitePreloader({ loaded, target }: { loaded: number; target: number }) {
+  const pct = target > 0 ? Math.min(100, Math.round((loaded / target) * 100)) : 0;
+  return (
+    <div className="fixed inset-0 z-[80] flex flex-col items-center justify-center gap-6 bg-paper text-ink animate-fade-in">
+      <div className="font-display text-[clamp(2rem,6vw,4rem)] leading-none tracking-[-0.02em]">
+        <span className="tabular-nums">{loaded}</span>
+        <span className="text-ink-faint"> / {target}</span>
+      </div>
+      <div className="h-[2px] w-[min(420px,60vw)] overflow-hidden bg-secondary">
+        <div
+          className="h-full bg-ink transition-[width] duration-300 ease-out"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <div className="text-[12px] uppercase tracking-[0.2em] text-ink-faint">
+        Loading skies
+      </div>
     </div>
   );
 }
