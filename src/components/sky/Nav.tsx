@@ -44,19 +44,7 @@ export function Nav() {
               About
             </button>
           </div>
-          <div className="justify-self-end">
-            <NavLink
-              to="/now"
-              className={({ isActive }) =>
-                cn(
-                  "pointer-events-auto transition-colors",
-                  isActive ? "text-ink underline underline-offset-4" : "text-ink-dim hover:text-ink",
-                )
-              }
-            >
-              Watch
-            </NavLink>
-          </div>
+          <div className="justify-self-end" />
         </div>
       </header>
 
