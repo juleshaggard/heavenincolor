@@ -231,7 +231,7 @@ export default function Archive() {
       <div className="px-[4vw]">
         <div
           ref={parentRef}
-          className="relative overflow-hidden rounded-[24px] bg-background"
+          className="relative overflow-hidden rounded-[24px] bg-black"
         >
           <div style={{ height: rowVirtualizer.getTotalSize(), position: "relative" }}>
           {rowVirtualizer.getVirtualItems().map((vr) => {
@@ -403,7 +403,7 @@ function GridTile({
       onClick={onOpen}
       onPointerEnter={handleEnter}
       onPointerLeave={handleLeave}
-      className="group relative block overflow-hidden bg-background p-0 text-left leading-none align-top transition-shadow duration-300 ease-out hover:z-10 hover:shadow-xl"
+      className="group relative block overflow-hidden bg-black p-0 text-left leading-none align-top transition-shadow duration-300 ease-out hover:z-10 hover:shadow-xl"
       style={{
         height: tileSize,
         marginRight: "-1px",

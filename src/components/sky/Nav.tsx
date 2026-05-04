@@ -23,7 +23,8 @@ export function Nav() {
       <header className="pointer-events-none fixed inset-x-0 top-0 z-40">
         <div className="grid grid-cols-3 items-start px-6 py-5 text-[13px]">
           <div className="justify-self-start" />
-          <div className="justify-self-center">
+          <div className="justify-self-center" />
+          <div className="justify-self-end">
             <button
               onClick={() => setAboutOpen(true)}
               className="pointer-events-auto text-ink-dim transition-colors hover:text-ink"
@@ -31,7 +32,6 @@ export function Nav() {
               About
             </button>
           </div>
-          <div className="justify-self-end" />
         </div>
       </header>
 
