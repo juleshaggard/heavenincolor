@@ -10,10 +10,9 @@ type Props = {
   hero?: boolean;
   alt?: string;
   flatColor?: string;
-  eager?: boolean;
 };
 
-export function SkyThumb({ image, width = 320, className, rounded, hero, alt, flatColor, eager }: Props) {
+export function SkyThumb({ image, width = 320, className, rounded, hero, alt, flatColor }: Props) {
   const [loaded, setLoaded] = useState(false);
 
   if (flatColor) {
@@ -54,10 +53,6 @@ export function SkyThumb({ image, width = 320, className, rounded, hero, alt, fl
       <img
         src={src}
         alt={alt ?? "Sky"}
-        loading={eager ? "eager" : "lazy"}
-        decoding="async"
-        // @ts-expect-error fetchpriority is valid HTML attr
-        fetchpriority={eager ? "high" : "low"}
         onLoad={() => setLoaded(true)}
         className={cn(
           "relative h-full w-full object-cover",
