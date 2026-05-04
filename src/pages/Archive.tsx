@@ -189,7 +189,7 @@ export default function Archive() {
   }, [rowSize, cols]);
 
   return (
-    <div className="pb-32">
+    <div>
       {!ready && (
         <SitePreloader loaded={preloaded} target={loadTarget} />
       )}
