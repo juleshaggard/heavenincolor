@@ -596,10 +596,10 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
       </button>
 
       <div
-        className="relative grid h-full w-full gap-0 md:grid-cols-[1fr_3fr]"
+        className="relative grid h-full w-full gap-0 grid-rows-[auto_1fr] md:grid-rows-1 md:grid-cols-[1fr_3fr]"
         onClick={(e) => e.stopPropagation()}
       >
-        <aside className="flex h-full flex-col gap-6 overflow-y-auto border-r border-hairline bg-paper p-8 text-[13px]">
+        <aside className="flex h-full min-h-0 flex-col gap-6 overflow-y-auto border-b border-hairline bg-paper p-8 text-[13px] md:border-b-0 md:border-r">
           <div>
             <div className="text-ink-dim">Date</div>
             <div className="font-display text-3xl leading-tight text-ink">{fmtDate(image.capturedAt)}</div>
