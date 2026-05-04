@@ -231,7 +231,7 @@ export default function Archive() {
       <div className="px-[4vw]">
         <div
           ref={parentRef}
-          className="relative overflow-hidden rounded-[24px] bg-background"
+          className="relative overflow-hidden rounded-[24px] bg-black"
         >
           <div style={{ height: rowVirtualizer.getTotalSize(), position: "relative" }}>
           {rowVirtualizer.getVirtualItems().map((vr) => {
