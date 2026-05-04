@@ -172,7 +172,8 @@ export default function Archive() {
   }, []);
   const COL_OVERLAP = 1;
   const ROW_OVERLAP = 2;
-  const tileSize = containerW > 0 ? (containerW + COL_OVERLAP * (cols - 1)) / cols : 200;
+  const rawTileSize = containerW > 0 ? (containerW + COL_OVERLAP * (cols - 1)) / cols : 200;
+  const tileSize = Math.ceil(rawTileSize);
   const rowSize = tileSize - ROW_OVERLAP;
   const rows = Math.ceil(visible.length / cols);
   // Use the page (window) scroll instead of an inner scroll container.
@@ -237,11 +238,11 @@ export default function Archive() {
           {rowVirtualizer.getVirtualItems().map((vr) => {
             const start = vr.index * cols;
             const slice = visible.slice(start, start + cols);
-            const top = vr.start - rowVirtualizer.options.scrollMargin;
+            const top = Math.round(vr.start - rowVirtualizer.options.scrollMargin);
             return (
               <div
                 key={vr.key}
-                style={{ position: "absolute", top: 0, left: 0, width: "100%", transform: `translateY(${top}px)`, height: tileSize }}
+                style={{ position: "absolute", top, left: 0, width: "100%", height: tileSize }}
               >
                 <div
                   className="grid"
