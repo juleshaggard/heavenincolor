@@ -64,7 +64,7 @@ export function Nav() {
               </p>
             </div>
             <a
-              href="https://www.jonathanhaggard.com/"
+              href="https://www.haggard.design/"
               target="_blank"
               rel="noreferrer"
               className="mt-8 inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-[13px] text-paper transition-colors hover:bg-ink-dim"
