@@ -314,7 +314,7 @@ function CircleRevealSequence({ images, index }: { images: SkyImage[]; index: nu
 }
 
 function GridTile({
-  img, palette: p, vt, tileSize, cols, isOpen, onOpen,
+  img, palette: p, vt, tileSize, cols, isOpen, onOpen, eager,
 }: {
   img: SkyImage;
   palette?: Palette;
@@ -323,6 +323,7 @@ function GridTile({
   cols: number;
   isOpen: boolean;
   onOpen: () => void;
+  eager?: boolean;
 }) {
   const [origin, setOrigin] = useState<{ x: number; y: number }>({ x: 50, y: 100 });
   const [hovered, setHovered] = useState(false);
@@ -354,7 +355,7 @@ function GridTile({
         viewTransitionName: isOpen ? vt : undefined,
       }}
     >
-      <SkyThumb image={img} width={400} className="block h-full w-full" />
+      <SkyThumb image={img} width={400} className="block h-full w-full" eager={eager} />
       {p && (
         <div
           className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 transition-[clip-path,opacity] ease-out"
