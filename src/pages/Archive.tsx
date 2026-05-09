@@ -49,37 +49,6 @@ export default function Archive() {
   // Progressive reveal: count animates up as the grid populates.
   const [revealCount, setRevealCount] = useState(0);
 
-  // Preloader: wait until at least 100 photos have loaded before revealing the page.
-  const PRELOAD_TARGET = 100;
-  const [preloaded, setPreloaded] = useState(0);
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    if (!images || images.length === 0) return;
-    const target = Math.min(PRELOAD_TARGET, images.length);
-    const subset = images.slice(0, target);
-    let cancelled = false;
-    let done = 0;
-    const bump = () => {
-      if (cancelled) return;
-      done += 1;
-      setPreloaded(done);
-      if (done >= target) setReady(true);
-    };
-    subset.forEach((img) => {
-      if (isDemo(img)) {
-        // Demo frames render as CSS gradients — no network load required.
-        bump();
-        return;
-      }
-      const el = new Image();
-      el.onload = bump;
-      el.onerror = bump;
-      el.src = cldUrl(img.public_id, { w: 400 });
-    });
-    return () => { cancelled = true; };
-  }, [images]);
-  const loadTarget = images ? Math.min(PRELOAD_TARGET, images.length) : PRELOAD_TARGET;
-
   // Last-10 cycling sequence for the inline headline swatch
   const recent = useMemo(() => {
     if (!images) return [];
