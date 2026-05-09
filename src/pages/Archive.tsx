@@ -240,7 +240,6 @@ export default function Archive() {
           </h2>
         </BlurFollowText>
       </footer>
-      </div>
 
       {/* Corner controls — editorial style */}
       <FilterCorner tod={tod} setTod={setTod} sort={sort} setSort={setSort} />
