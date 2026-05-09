@@ -160,16 +160,6 @@ export default function Archive() {
 
   return (
     <div>
-      {!ready && (
-        <SitePreloader loaded={preloaded} target={loadTarget} />
-      )}
-      <div
-        aria-hidden={!ready}
-        className={cn(
-          "transition-opacity duration-700 ease-out",
-          ready ? "opacity-100" : "pointer-events-none opacity-0",
-        )}
-      >
       <header className="px-[4vw] pt-[6vh] pb-[6vh] text-center">
         <BlurFollowText>
           <h1 className="font-display leading-[0.95] tracking-[-0.02em] text-[clamp(3rem,9vw,9rem)]">
