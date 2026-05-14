@@ -43,7 +43,12 @@ export default function Archive() {
   const [palettes, setPalettes] = useState<Record<string, Palette>>({});
   const [open, setOpen] = useState<SkyImage | null>(null);
   // cols == zoom level. 6 = max zoom in (largest tiles). 100 = max zoom out.
-  const [zoom, setZoom] = useState(13);
+  const [zoom, setZoom] = useState(() => {
+    if (typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches) {
+      return 47;
+    }
+    return 13;
+  });
   const cols = Math.max(6, Math.min(100, zoom));
 
   // Progressive reveal: count animates up as the grid populates.
