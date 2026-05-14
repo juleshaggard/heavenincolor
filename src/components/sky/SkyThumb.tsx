@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { cldUrl, demoSkyColor, isDemo, type SkyImage } from "@/lib/cloudinary";
 import { cn } from "@/lib/utils";
 
@@ -10,11 +9,18 @@ type Props = {
   hero?: boolean;
   alt?: string;
   flatColor?: string;
+  eager?: boolean;
 };
 
-export function SkyThumb({ image, width = 320, className, rounded, hero, alt, flatColor }: Props) {
-  const [loaded, setLoaded] = useState(false);
+// Snap to a small set of widths so Cloudinary's CDN cache hits across users
+// instead of generating a unique transform per pixel size.
+const WIDTH_BUCKETS = [64, 96, 160, 240, 400, 640, 960, 1280, 1600];
+function bucket(w: number): number {
+  for (const b of WIDTH_BUCKETS) if (w <= b) return b;
+  return WIDTH_BUCKETS[WIDTH_BUCKETS.length - 1];
+}
 
+export function SkyThumb({ image, width = 240, className, rounded, hero, alt, flatColor, eager }: Props) {
   if (flatColor) {
     return (
       <div
@@ -46,14 +52,14 @@ export function SkyThumb({ image, width = 320, className, rounded, hero, alt, fl
     );
   }
 
-  const src = cldUrl(image.public_id, { w: width });
-  const blur = cldUrl(image.public_id, { w: 24, q: 30, blur: 800 });
+  const src = cldUrl(image.public_id, { w: bucket(width) });
   return (
     <div className={cn("relative overflow-hidden", rounded && "rounded-sm", className)}>
       <img
         src={src}
         alt={alt ?? "Sky"}
-        onLoad={() => setLoaded(true)}
+        loading={eager ? "eager" : "lazy"}
+        decoding="async"
         className={cn(
           "relative h-full w-full object-cover",
           hero && "ken-burns",
