@@ -353,7 +353,7 @@ function GridTile({
         viewTransitionName: isOpen ? vt : undefined,
       }}
     >
-      <SkyThumb image={img} width={400} className="block h-full w-full" />
+      <SkyThumb image={img} width={240} className="block h-full w-full" />
       {p && (
         <div
           className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 transition-[clip-path,opacity] ease-out"
@@ -585,7 +585,7 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
         </aside>
         <div className="relative h-full w-full overflow-hidden bg-background">
           <div className="absolute inset-0" style={{ viewTransitionName: vt }}>
-            <SkyThumb image={image} width={1800} className="h-full w-full" />
+            <SkyThumb image={image} width={320} className="h-full w-full" />
           </div>
         </div>
       </div>
