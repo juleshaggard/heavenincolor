@@ -353,7 +353,11 @@ function GridTile({
         viewTransitionName: isOpen ? vt : undefined,
       }}
     >
-      <SkyThumb image={img} width={240} className="block h-full w-full" />
+      <SkyThumb
+        image={img}
+        width={Math.ceil(tileSize * (typeof window !== "undefined" ? Math.min(2, window.devicePixelRatio || 1) : 1))}
+        className="block h-full w-full"
+      />
       {p && (
         <div
           className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 transition-[clip-path,opacity] ease-out"
