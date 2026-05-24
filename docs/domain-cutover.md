@@ -6,14 +6,18 @@
 - GitHub Pages default domain: `juleshaggard.github.io`
 - GitHub Pages repository: `juleshaggard/heavenincolor`
 - GitHub Pages custom domain setting: `heavenincolor.com`
-- GitHub Pages status as of 2026-05-24: custom domain configured, HTTPS enforcement pending DNS cutover
+- GitHub Pages status as of 2026-05-24: custom domain configured, DNS cutover complete, HTTPS enforcement pending GitHub certificate provisioning
 
 ## Current DNS
 
-As of 2026-05-24, the apex domain still points to the previous host:
+As of 2026-05-24, the authoritative nameservers return GitHub Pages records for the apex domain:
 
 ```text
-heavenincolor.com A 185.158.133.1
+heavenincolor.com A 185.199.108.153
+heavenincolor.com A 185.199.109.153
+heavenincolor.com A 185.199.110.153
+heavenincolor.com A 185.199.111.153
+www.heavenincolor.com CNAME juleshaggard.github.io
 ```
 
 Name servers:
@@ -23,9 +27,15 @@ dns1.registrar-servers.com
 dns2.registrar-servers.com
 ```
 
+Some recursive resolvers may briefly retain the previous apex record during propagation:
+
+```text
+heavenincolor.com A 185.158.133.1
+```
+
 ## Required DNS
 
-At the DNS provider, replace the existing apex `A` record with GitHub Pages records:
+At the DNS provider, the apex `A` record should be GitHub Pages records:
 
 ```text
 @ A 185.199.108.153
@@ -43,7 +53,7 @@ Add IPv6 records if the provider supports them:
 @ AAAA 2606:50c0:8003::153
 ```
 
-Add the `www` redirect target:
+The `www` redirect target should be:
 
 ```text
 www CNAME juleshaggard.github.io
@@ -53,7 +63,7 @@ Do not add wildcard records.
 
 ## Verification
 
-After DNS propagation:
+After DNS propagation and GitHub certificate provisioning:
 
 ```bash
 dig heavenincolor.com +short A
@@ -63,7 +73,7 @@ curl -I https://heavenincolor.com/
 curl -I https://heavenincolor.com/social-preview.jpg
 ```
 
-When GitHub reports the certificate is ready, enable Enforce HTTPS for the Pages site.
+When GitHub reports the certificate is ready, enable Enforce HTTPS for the Pages site. The attempted enablement on 2026-05-24 failed with `The certificate does not exist yet`, which means GitHub has not finished issuing the Pages certificate for the custom domain.
 
 ## Rollback
 
