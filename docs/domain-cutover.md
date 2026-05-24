@@ -6,7 +6,7 @@
 - GitHub Pages default domain: `juleshaggard.github.io`
 - GitHub Pages repository: `juleshaggard/heavenincolor`
 - GitHub Pages custom domain setting: `heavenincolor.com`
-- GitHub Pages status as of 2026-05-24: custom domain configured, DNS cutover complete, HTTPS enforcement pending GitHub certificate provisioning
+- GitHub Pages status as of 2026-05-24: custom domain configured, DNS cutover complete, HTTPS enforced
 
 ## Current DNS
 
@@ -27,7 +27,7 @@ dns1.registrar-servers.com
 dns2.registrar-servers.com
 ```
 
-Some recursive resolvers may briefly retain the previous apex record during propagation:
+During cutover, some recursive resolvers briefly retained the previous apex record:
 
 ```text
 heavenincolor.com A 185.158.133.1
@@ -63,17 +63,18 @@ Do not add wildcard records.
 
 ## Verification
 
-After DNS propagation and GitHub certificate provisioning:
+Verified on 2026-05-24:
 
 ```bash
 dig heavenincolor.com +short A
 dig heavenincolor.com +short AAAA
 dig www.heavenincolor.com +short CNAME
 curl -I https://heavenincolor.com/
+curl -I https://www.heavenincolor.com/
 curl -I https://heavenincolor.com/social-preview.jpg
 ```
 
-When GitHub reports the certificate is ready, enable Enforce HTTPS for the Pages site. The attempted enablement on 2026-05-24 failed with `The certificate does not exist yet`, which means GitHub has not finished issuing the Pages certificate for the custom domain.
+The GitHub Pages certificate is approved for `heavenincolor.com` and `www.heavenincolor.com`, and Enforce HTTPS is enabled. The `www` subdomain redirects to the apex domain.
 
 ## Rollback
 
