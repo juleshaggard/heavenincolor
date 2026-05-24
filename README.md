@@ -2,13 +2,13 @@
 
 Static React/Vite site for the sky archive captured by the Raspberry Pi.
 
-## Staging
+## Site
 
-GitHub Pages staging deploys from `main` to:
+GitHub Pages deploys from `main` to:
 
-https://juleshaggard.github.io/heavenincolor/
+https://heavenincolor.com/
 
-The staging workflow intentionally does not configure a custom domain. Cut the domain over only after the GitHub Pages version is verified.
+The fallback GitHub Pages URL is `https://juleshaggard.github.io/heavenincolor/`, but the production build is rooted for the custom domain.
 
 ## Images
 

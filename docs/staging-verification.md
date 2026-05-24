@@ -26,8 +26,8 @@
 
 - Site repository: `juleshaggard/heavenincolor`
 - Repository visibility: public, so GitHub Pages can serve the staged build
-- Staging URL: `https://juleshaggard.github.io/heavenincolor/`
-- Custom domain: not configured for staging
+- Staging URL before cutover: `https://juleshaggard.github.io/heavenincolor/`
+- Custom domain after cutover: `https://heavenincolor.com/`
 - Pages build type: workflow
 - Latest Pages workflow: passed
 - Runtime checks on staging passed for `/`, `/now`, `/calendar`, `/compare`, and `/archive`

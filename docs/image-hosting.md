@@ -46,7 +46,7 @@ The current publisher caps `images/` files at 128px wide and `thumbs/` files at 
 }
 ```
 
-All relative URLs are resolved under Vite's `BASE_URL`, so the same manifest works locally, on `https://juleshaggard.github.io/heavenincolor/`, and later on the custom domain.
+All relative URLs are resolved under Vite's `BASE_URL`, so the same manifest works locally and on the custom domain.
 
 ## Pi Publishing
 

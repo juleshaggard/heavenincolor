@@ -1,4 +1,4 @@
-name: Deploy GitHub Pages staging
+name: Deploy GitHub Pages
 
 on:
   push:
@@ -39,7 +39,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_BASE_PATH: /heavenincolor/
+          VITE_BASE_PATH: /
 
       - name: Add SPA fallback
         run: cp dist/index.html dist/404.html
