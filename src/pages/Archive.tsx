@@ -45,7 +45,7 @@ export default function Archive() {
   // cols == zoom level. 6 = max zoom in (largest tiles). 100 = max zoom out.
   const [zoom, setZoom] = useState(() => {
     if (typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches) {
-      return 47;
+      return 48;
     }
     return 13;
   });
