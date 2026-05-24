@@ -24,6 +24,14 @@
 
 ## GitHub Pages
 
-- Site commit pushed to `juleshaggard/heavenincolor`.
-- First Pages workflow failed because GitHub Pages is not enabled and the repository is currently private on a plan that does not support private Pages.
-- Next step: make `juleshaggard/heavenincolor` public, then rerun the Pages workflow.
+- Site repository: `juleshaggard/heavenincolor`
+- Repository visibility: public, so GitHub Pages can serve the staged build
+- Staging URL: `https://juleshaggard.github.io/heavenincolor/`
+- Custom domain: not configured for staging
+- Pages build type: workflow
+- Latest Pages workflow: passed
+- Runtime checks on staging passed for `/`, `/now`, `/calendar`, `/compare`, and `/archive`
+- Browser image check on staging: 0 broken images on checked routes
+- Runtime Cloudinary/Lovable references on staging: none found
+- App rendering source: full `public/sky/manifest.json` list, with no date cutoff filter
+- Staging screenshot: `docs/staging-home.png`
