@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { hexToHsl } from "@/lib/cloudinary";
+import { hexToHsl } from "@/lib/color";
 
 /** Drives --sky-h/s/l on <html> from a hex string. */
 export function useAmbientTint(hex: string | null | undefined) {

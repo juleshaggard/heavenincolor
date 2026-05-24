@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { SkyImage } from "@/lib/cloudinary";
+import type { SkyImage } from "@/lib/skyImages";
 import { getPalette } from "@/lib/palette";
 import { cn } from "@/lib/utils";
 

@@ -20,7 +20,7 @@ export function fmtShort(d: Date): string {
 }
 
 import { timeOfDay } from "./palette";
-import { hexToHsl } from "./cloudinary";
+import { hexToHsl } from "./color";
 
 export function captionFor(d: Date, hex?: string): string {
   if (hex) return nameColor(hex);

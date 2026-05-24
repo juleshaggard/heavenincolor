@@ -4,12 +4,13 @@ import { SkyThumb } from "@/components/sky/SkyThumb";
 import { ColorRibbon } from "@/components/sky/ColorRibbon";
 import { getPalette } from "@/lib/palette";
 import { deltaE } from "@/lib/palette";
+import type { SkyImage } from "@/lib/skyImages";
 import { fmtDate, fmtTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export default function ComparePage() {
   const { images } = useSkyImages();
-  const byDay = useMemo(() => (images ? imagesByDay(images) : new Map<string, any[]>()), [images]);
+  const byDay = useMemo(() => (images ? imagesByDay(images) : new Map<string, SkyImage[]>()), [images]);
   const dayKeys = useMemo(() => Array.from(byDay.keys()).sort(), [byDay]);
   const [a, setA] = useState<string | null>(null);
   const [b, setB] = useState<string | null>(null);
@@ -106,7 +107,7 @@ function DaySelect({ value, onChange, options, label }: { value: string | null; 
   );
 }
 
-function Pane({ label, date, img }: { label: string; date: string | null; img: any }) {
+function Pane({ label, date, img }: { label: string; date: string | null; img?: SkyImage }) {
   return (
     <div className="relative bg-background">
       {img ? <SkyThumb image={img} width={1200} className="aspect-[4/3]" /> : <div className="aspect-[4/3]" />}
@@ -127,7 +128,7 @@ function Pane({ label, date, img }: { label: string; date: string | null; img: a
   );
 }
 
-function Strip({ label, list }: { label: string; list: any[] }) {
+function Strip({ label, list }: { label: string; list: SkyImage[] }) {
   return (
     <div className="space-y-1">
       <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">{label}</div>

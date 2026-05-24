@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import { demoSkyColor, isDemo, cldUrl, type SkyImage } from "@/lib/cloudinary";
+import type { SkyImage } from "@/lib/skyImages";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -11,8 +11,7 @@ type Props = {
   className?: string;
 };
 
-/** A horizontal, draggable filmstrip with a fixed center playhead.
- *  Real frames render from Cloudinary; demo frames render as procedural sky gradients. */
+/** A horizontal, draggable filmstrip with a fixed center playhead. */
 export function Filmstrip({ images, index, onScrub, thumbWidth = 56, height = 96, className }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
@@ -83,7 +82,7 @@ export function Filmstrip({ images, index, onScrub, thumbWidth = 56, height = 96
           <div style={{ position: "absolute", left: lo * thumbWidth, top: 0, bottom: 0, display: "flex" }}>
             {slice.map(({ img, i }) => (
               <FilmFrame
-                key={img.public_id}
+                key={img.id}
                 img={img}
                 width={thumbWidth}
                 active={i === index}
@@ -97,19 +96,6 @@ export function Filmstrip({ images, index, onScrub, thumbWidth = 56, height = 96
 }
 
 function FilmFrame({ img, width, active }: { img: SkyImage; width: number; active: boolean }) {
-  if (isDemo(img)) {
-    const { hex, palette } = demoSkyColor(img.capturedAt);
-    const grad = `linear-gradient(180deg, ${palette[4]} 0%, ${palette[3]} 35%, ${hex} 60%, ${palette[1]} 85%, ${palette[0]} 100%)`;
-    return (
-      <div
-        className={cn(
-          "h-full shrink-0 border-r border-paper/30 transition-[transform,filter] duration-200",
-          active ? "scale-y-100" : "scale-y-[0.78] opacity-80",
-        )}
-        style={{ width, background: grad }}
-      />
-    );
-  }
   return (
     <div
       className={cn(
@@ -119,7 +105,7 @@ function FilmFrame({ img, width, active }: { img: SkyImage; width: number; activ
       style={{ width }}
     >
       <img
-        src={cldUrl(img.public_id, { w: 80 })}
+        src={img.thumbUrl}
         alt=""
         loading="lazy"
         className="h-full w-full object-cover"

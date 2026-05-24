@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSkyImages, imagesByDay } from "@/hooks/useSkyImages";
 import { getPalette } from "@/lib/palette";
+import type { SkyImage } from "@/lib/skyImages";
 import { cn } from "@/lib/utils";
 
 const MONTHS_BACK = 3; // show last N months including current
@@ -51,8 +52,8 @@ export default function CalendarPage() {
       const out: Record<string, string[]> = {};
       const BINS = 12; // 2h each, 0..23
       for (const [k, list] of byDay) {
-        const buckets: any[][] = Array.from({ length: BINS }, () => []);
-        for (const img of list as any[]) {
+        const buckets: SkyImage[][] = Array.from({ length: BINS }, () => []);
+        for (const img of list) {
           const h = img.capturedAt.getHours();
           buckets[Math.floor(h / 2)].push(img);
         }

@@ -1,5 +1,6 @@
-// Tiny client-side palette extractor: downsample 64×64, k-means in RGB, persist in localStorage.
-import { cldUrl, demoSkyColor, hexToHsl, isDemo, type SkyImage } from "./cloudinary";
+// Tiny client-side palette extractor: downsample 64x64, k-means in RGB, persist in localStorage.
+import { hexToHsl, hslToHex } from "./color";
+import type { SkyImage } from "./skyImages";
 
 export type Palette = {
   hex: string;          // dominant
@@ -109,18 +110,18 @@ function enqueue<T>(fn: () => Promise<T>): Promise<T> {
 }
 
 export async function getPalette(img: SkyImage): Promise<Palette> {
-  const cached = memCache[img.public_id];
+  const cached = memCache[img.id];
   if (cached) return cached;
 
-  if (isDemo(img)) {
-    const { hex, palette } = demoSkyColor(img.capturedAt);
-    const out: Palette = { hex, swatches: palette, hsl: hexToHsl(hex) };
-    memCache[img.public_id] = out;
+  if (img.averageHex) {
+    const swatches = img.palette?.length ? img.palette : swatchesFromHex(img.averageHex);
+    const out: Palette = { hex: img.averageHex, swatches, hsl: hexToHsl(img.averageHex) };
+    memCache[img.id] = out;
     persist();
     return out;
   }
 
-  const url = cldUrl(img.public_id, { w: 64, h: 64, q: 60 });
+  const url = img.thumbUrl || img.imageUrl;
   return enqueue(async () => {
     try {
       const el = await loadImage(url);
@@ -140,7 +141,7 @@ export async function getPalette(img: SkyImage): Promise<Palette> {
       // dominant = the swatch with highest count proxy → middle-bright cluster
       const hex = swatches[Math.floor(swatches.length / 2)];
       const out: Palette = { hex, swatches, hsl: hexToHsl(hex) };
-      memCache[img.public_id] = out;
+      memCache[img.id] = out;
       persist();
       return out;
     } catch {
@@ -148,6 +149,17 @@ export async function getPalette(img: SkyImage): Promise<Palette> {
       return fallback;
     }
   });
+}
+
+function swatchesFromHex(hex: string): string[] {
+  const [h, s, l] = hexToHsl(hex);
+  return [
+    hslToHex(h - 18, Math.max(10, s - 8), Math.max(8, l - 24)),
+    hslToHex(h - 8, Math.max(10, s - 4), Math.max(12, l - 12)),
+    hex,
+    hslToHex(h + 8, Math.max(12, s - 6), Math.min(92, l + 12)),
+    hslToHex(h + 18, Math.max(10, s - 12), Math.min(96, l + 24)),
+  ];
 }
 
 export function timeOfDay(d: Date): "dawn" | "day" | "golden" | "dusk" | "night" {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { listSkyImages, type SkyImage } from "@/lib/cloudinary";
+import { listSkyImages, type SkyImage } from "@/lib/skyImages";
 
 // Hide any frames captured before Friday, April 24, 2026 (local time).
 const MIN_CAPTURED_AT = new Date(2026, 3, 24, 0, 0, 0, 0).getTime();

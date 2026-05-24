@@ -5,7 +5,6 @@ import { getPalette, type Palette } from "@/lib/palette";
 import { SkyThumb } from "@/components/sky/SkyThumb";
 import { TiltPill } from "@/components/sky/TiltPill";
 import { captionFor, fmtTime } from "@/lib/format";
-import { cldUrl, isDemo } from "@/lib/cloudinary";
 import { useTimeFormat } from "@/hooks/useTimeFormat";
 import { cn } from "@/lib/utils";
 const PILL_HEIGHT_FULL = 384; // px, hero (80% of 480)
@@ -49,9 +48,9 @@ export default function Now() {
   useEffect(() => {
     for (let k = -2; k <= 4; k++) {
       const img = subset[idx + k];
-      if (img && !isDemo(img)) {
+      if (img) {
         const im = new Image();
-        im.src = cldUrl(img.public_id, { w: 1200 });
+        im.src = img.imageUrl;
       }
     }
   }, [idx, subset]);
@@ -150,8 +149,8 @@ export default function Now() {
           />
           {showOriginal ? (
             <img
-              src={cldUrl(current.public_id, { w: 1800 })}
-              alt="Original sky photograph"
+              src={current.imageUrl}
+              alt="Sky photograph"
               className="absolute inset-0 h-full w-full object-cover"
             />
           ) : (
@@ -183,7 +182,7 @@ export default function Now() {
             onClick={() => setShowOriginal((v) => !v)}
             className="text-[13px] text-ink-dim underline-offset-4 hover:text-ink hover:underline"
           >
-            {showOriginal ? "Show overall color" : "Show original photo"}
+            {showOriginal ? "Show overall color" : "Show photo"}
           </button>
         </div>
       </section>

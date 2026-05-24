@@ -5,7 +5,7 @@ import { SkyThumb } from "@/components/sky/SkyThumb";
 import { Swatches } from "@/components/sky/Swatches";
 import { getPalette, timeOfDay, type Palette } from "@/lib/palette";
 import { fmtDate, fmtTime, captionFor, nameColor } from "@/lib/format";
-import { cldUrl, isDemo, type SkyImage } from "@/lib/cloudinary";
+import type { SkyImage } from "@/lib/skyImages";
 import { cn } from "@/lib/utils";
 import { X, ArrowUpRight } from "lucide-react";
 import { LOCATION } from "@/hooks/useWeather";
@@ -82,10 +82,10 @@ export default function Archive() {
     let cancel = false;
     (async () => {
       for (const img of filtered.slice(0, 200)) {
-        if (palettes[img.public_id]) continue;
+        if (palettes[img.id]) continue;
         const p = await getPalette(img);
         if (cancel) return;
-        setPalettes((s) => ({ ...s, [img.public_id]: p }));
+        setPalettes((s) => ({ ...s, [img.id]: p }));
       }
     })();
     return () => { cancel = true; };
@@ -95,7 +95,7 @@ export default function Archive() {
   const sorted = useMemo(() => {
     if (sort === "Chronological") return filtered;
     const score = (img: SkyImage) => {
-      const p = palettes[img.public_id];
+      const p = palettes[img.id];
       if (!p) return 0;
       if (sort === "Saturation") return p.hsl[1];
       if (sort === "Warmth") {
@@ -213,17 +213,17 @@ export default function Archive() {
                   style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "0px", marginRight: "-1px" }}
                 >
                   {slice.map((img) => {
-                    const p = palettes[img.public_id];
-                    const vt = `sky-${img.public_id.replace(/[^a-z0-9_-]/gi, "_")}`;
+                    const p = palettes[img.id];
+                    const vt = `sky-${img.id.replace(/[^a-z0-9_-]/gi, "_")}`;
                     return (
                       <GridTile
-                        key={img.public_id}
+                        key={img.id}
                         img={img}
                         palette={p}
                         vt={vt}
                         tileSize={tileSize}
                         cols={cols}
-                        isOpen={open?.public_id === img.public_id}
+                        isOpen={open?.id === img.id}
                         onOpen={() => openWithTransition(img, vt, setOpen)}
                       />
                     );
@@ -236,7 +236,7 @@ export default function Archive() {
         </div>
       </div>
 
-      {open && <Lightbox image={open} palette={palettes[open.public_id]} onClose={() => setOpen(null)} />}
+      {open && <Lightbox image={open} palette={palettes[open.id]} onClose={() => setOpen(null)} />}
 
       <footer className="px-[4vw] pt-[6vh] pb-[6vh] text-center">
         <BlurFollowText>
@@ -527,7 +527,7 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
       onClose();
     }
   };
-  const vt = `sky-${image.public_id.replace(/[^a-z0-9_-]/gi, "_")}`;
+  const vt = `sky-${image.id.replace(/[^a-z0-9_-]/gi, "_")}`;
   return (
     <div
       className="fixed inset-0 z-[60] flex h-screen w-screen items-stretch bg-background/98 backdrop-blur-md animate-fade-in"
@@ -575,17 +575,15 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
               </div>
             </div>
           )}
-          {!isDemo(image) && (
-            <a
-              href={cldUrl(image.public_id, { w: 2400 })}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 self-start rounded-full bg-ink px-5 py-2.5 text-[13px] text-paper transition-colors hover:bg-ink-dim"
-            >
-              Open original
-              <ArrowUpRight className="h-4 w-4" strokeWidth={1.75} />
-            </a>
-          )}
+          <a
+            href={image.imageUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center gap-2 self-start rounded-full bg-ink px-5 py-2.5 text-[13px] text-paper transition-colors hover:bg-ink-dim"
+          >
+            Open hosted image
+            <ArrowUpRight className="h-4 w-4" strokeWidth={1.75} />
+          </a>
         </aside>
         <div className="relative h-full w-full overflow-hidden bg-background">
           <div className="absolute inset-0" style={{ viewTransitionName: vt }}>

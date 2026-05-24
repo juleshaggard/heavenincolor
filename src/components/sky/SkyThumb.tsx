@@ -1,4 +1,4 @@
-import { cldUrl, demoSkyColor, isDemo, type SkyImage } from "@/lib/cloudinary";
+import type { SkyImage } from "@/lib/skyImages";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -12,8 +12,6 @@ type Props = {
   eager?: boolean;
 };
 
-// Snap to a small set of widths so Cloudinary's CDN cache hits across users
-// instead of generating a unique transform per pixel size.
 const WIDTH_BUCKETS = [64, 96, 160, 240, 400, 640, 960, 1280, 1600];
 function bucket(w: number): number {
   for (const b of WIDTH_BUCKETS) if (w <= b) return b;
@@ -31,28 +29,7 @@ export function SkyThumb({ image, width = 240, className, rounded, hero, alt, fl
     );
   }
 
-  if (isDemo(image)) {
-    const { hex, palette } = demoSkyColor(image.capturedAt);
-    const grad = `linear-gradient(180deg, ${palette[4]} 0%, ${palette[3]} 35%, ${hex} 60%, ${palette[1]} 85%, ${palette[0]} 100%)`;
-    return (
-      <div
-        className={cn("relative overflow-hidden", rounded && "rounded-sm", className)}
-        style={{ background: grad }}
-        aria-label={alt}
-      >
-        {hero && (
-          <div
-            className="absolute inset-0 opacity-60 mix-blend-screen"
-            style={{
-              background: `radial-gradient(80% 50% at 50% 75%, ${palette[3]}99, transparent 70%)`,
-            }}
-          />
-        )}
-      </div>
-    );
-  }
-
-  const src = cldUrl(image.public_id, { w: bucket(width) });
+  const src = bucket(width) <= 400 ? image.thumbUrl : image.imageUrl;
   return (
     <div className={cn("relative overflow-hidden", rounded && "rounded-sm", className)}>
       <img

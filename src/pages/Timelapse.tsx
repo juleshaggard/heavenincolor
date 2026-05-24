@@ -5,7 +5,6 @@ import { getPalette, type Palette } from "@/lib/palette";
 import { SkyThumb } from "@/components/sky/SkyThumb";
 import { Swatches } from "@/components/sky/Swatches";
 import { ColorRibbon } from "@/components/sky/ColorRibbon";
-import { cldUrl, isDemo } from "@/lib/cloudinary";
 import { captionFor, fmtTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -39,9 +38,9 @@ export default function Timelapse() {
     for (let k = -3; k <= 6; k++) {
       const i = idx + k;
       const img = subset[i];
-      if (img && !isDemo(img)) {
+      if (img) {
         const im = new Image();
-        im.src = cldUrl(img.public_id, { w: 800 });
+        im.src = img.thumbUrl;
       }
     }
   }, [idx, subset]);
