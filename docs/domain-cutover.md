@@ -6,6 +6,7 @@
 - GitHub Pages default domain: `juleshaggard.github.io`
 - GitHub Pages repository: `juleshaggard/heavenincolor`
 - GitHub Pages custom domain setting: `heavenincolor.com`
+- GitHub Pages status as of 2026-05-24: custom domain configured, HTTPS enforcement pending DNS cutover
 
 ## Current DNS
 
