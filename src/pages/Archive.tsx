@@ -247,8 +247,7 @@ export default function Archive() {
   const COL_OVERLAP = 1;
   const rawTileSize = timelineW > 0 ? (timelineW + COL_OVERLAP * (DAY_SLOT_COUNT - 1)) / DAY_SLOT_COUNT : 28;
   const tileSize = Math.max(6, Math.ceil(rawTileSize));
-  const dayGap = Math.max(2, Math.round(tileSize * 0.12));
-  const rowSize = tileSize + dayGap;
+  const rowSize = tileSize;
   // Use the page (window) scroll instead of an inner scroll container.
   const rowVirtualizer = useWindowVirtualizer({
     count: dayRows.length,
@@ -261,6 +260,8 @@ export default function Archive() {
     rowVirtualizer.measure();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rowSize, dayRows.length]);
+  const virtualRows = rowVirtualizer.getVirtualItems();
+  const totalRowsSize = rowVirtualizer.getTotalSize();
 
   return (
     <div>
@@ -295,27 +296,44 @@ export default function Archive() {
       <div className="px-[4vw]">
         <div ref={parentRef} className="relative">
           <div className="grid grid-cols-[minmax(3rem,4.75rem)_minmax(0,1fr)_minmax(3rem,4.75rem)] gap-x-2 sm:gap-x-3">
-            <div />
-            <div ref={timelineMeasureRef} className="h-px" />
-            <div />
+            <div style={{ height: totalRowsSize }} />
+            <div
+              ref={timelineMeasureRef}
+              className="relative overflow-hidden rounded-[24px] bg-black"
+              style={{ height: totalRowsSize }}
+            >
+              {virtualRows.map((vr) => {
+                const row = dayRows[vr.index];
+                if (!row) return null;
+                const top = Math.round(vr.start - rowVirtualizer.options.scrollMargin);
+                return (
+                  <TimelineStrip
+                    key={vr.key}
+                    row={row}
+                    palettes={palettes}
+                    openId={open?.id}
+                    tileSize={tileSize}
+                    onOpen={(img, vt) => openWithTransition(img, vt, setOpen)}
+                    style={{ position: "absolute", top, left: 0, width: "100%", height: tileSize }}
+                  />
+                );
+              })}
+            </div>
+            <div style={{ height: totalRowsSize }} />
           </div>
-          <div style={{ height: rowVirtualizer.getTotalSize(), position: "relative" }}>
-          {rowVirtualizer.getVirtualItems().map((vr) => {
-            const row = dayRows[vr.index];
-            if (!row) return null;
-            const top = Math.round(vr.start - rowVirtualizer.options.scrollMargin);
-            return (
-              <DayStrip
-                key={vr.key}
-                row={row}
-                palettes={palettes}
-                openId={open?.id}
-                tileSize={tileSize}
-                onOpen={(img, vt) => openWithTransition(img, vt, setOpen)}
-                style={{ position: "absolute", top, left: 0, width: "100%", height: tileSize }}
-              />
-            );
-          })}
+          <div className="pointer-events-none absolute inset-x-0 top-0" style={{ height: totalRowsSize }}>
+            {virtualRows.map((vr) => {
+              const row = dayRows[vr.index];
+              if (!row) return null;
+              const top = Math.round(vr.start - rowVirtualizer.options.scrollMargin);
+              return (
+                <DayLabelStrip
+                  key={`label-${vr.key}`}
+                  row={row}
+                  style={{ position: "absolute", top, left: 0, width: "100%", height: tileSize }}
+                />
+              );
+            })}
           </div>
         </div>
       </div>
@@ -395,7 +413,7 @@ function CircleRevealSequence({ images, index }: { images: SkyImage[]; index: nu
   );
 }
 
-function DayStrip({
+function TimelineStrip({
   row,
   palettes,
   openId,
@@ -413,42 +431,54 @@ function DayStrip({
   return (
     <div
       data-archive-day-row={row.key}
-      className="grid grid-cols-[minmax(3rem,4.75rem)_minmax(0,1fr)_minmax(3rem,4.75rem)] gap-x-2 sm:gap-x-3"
-      style={style}
+      className="grid bg-black"
+      style={{
+        ...style,
+        gridTemplateColumns: `repeat(${DAY_SLOT_COUNT}, minmax(0, 1fr))`,
+        gap: "0px",
+        marginRight: "-1px",
+      }}
+      aria-label={row.label}
     >
-      <DayLabel row={row} side="left" />
-      <div
-        className="grid overflow-hidden bg-black"
-        style={{ gridTemplateColumns: `repeat(${DAY_SLOT_COUNT}, minmax(0, 1fr))`, gap: "0px", marginRight: "-1px" }}
-        aria-label={row.label}
-      >
-        {row.slots.map((img, slot) => {
-          if (!img) {
-            return (
-              <span
-                key={`${row.key}-${slot}`}
-                aria-hidden
-                className="block bg-black"
-                style={{ height: tileSize, marginRight: "-1px" }}
-              />
-            );
-          }
-          const p = palettes[img.id];
-          const vt = `sky-${img.id.replace(/[^a-z0-9_-]/gi, "_")}`;
+      {row.slots.map((img, slot) => {
+        if (!img) {
           return (
-            <GridTile
-              key={img.id}
-              img={img}
-              palette={p}
-              vt={vt}
-              tileSize={tileSize}
-              cols={DAY_SLOT_COUNT}
-              isOpen={openId === img.id}
-              onOpen={() => onOpen(img, vt)}
+            <span
+              key={`${row.key}-${slot}`}
+              aria-hidden
+              className="block bg-black"
+              style={{ height: tileSize, marginRight: "-1px" }}
             />
           );
-        })}
-      </div>
+        }
+        const p = palettes[img.id];
+        const vt = `sky-${img.id.replace(/[^a-z0-9_-]/gi, "_")}`;
+        return (
+          <GridTile
+            key={img.id}
+            img={img}
+            palette={p}
+            vt={vt}
+            tileSize={tileSize}
+            cols={DAY_SLOT_COUNT}
+            isOpen={openId === img.id}
+            onOpen={() => onOpen(img, vt)}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function DayLabelStrip({ row, style }: { row: ArchiveDayRow; style: React.CSSProperties }) {
+  return (
+    <div
+      className="grid grid-cols-[minmax(3rem,4.75rem)_minmax(0,1fr)_minmax(3rem,4.75rem)] gap-x-2 sm:gap-x-3"
+      style={style}
+      aria-hidden
+    >
+      <DayLabel row={row} side="left" />
+      <div />
       <DayLabel row={row} side="right" />
     </div>
   );
