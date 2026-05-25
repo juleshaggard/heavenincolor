@@ -36,6 +36,7 @@ function readableInk(hex: string): string {
 const TODS = ["All", "Dawn", "Day", "Golden", "Dusk", "Night"] as const;
 const ARCHIVE_TIME_ZONE = "America/Los_Angeles";
 const ARCHIVE_MIN_DAY_KEY = "2026-04-25";
+const ARCHIVE_EMPTY_BACKGROUND = "#e7e7e7";
 const DAY_SLOT_COUNT = 48;
 
 type ArchiveParts = {
@@ -332,8 +333,8 @@ export default function Archive() {
             <div style={{ height: totalRowsSize }} />
             <div
               ref={timelineMeasureRef}
-              className="relative overflow-hidden rounded-[24px] bg-black"
-              style={{ height: totalRowsSize }}
+              className="relative overflow-hidden rounded-[24px]"
+              style={{ height: totalRowsSize, background: ARCHIVE_EMPTY_BACKGROUND }}
             >
               {virtualRows.map((vr) => {
                 const row = dayRows[vr.index];
@@ -464,7 +465,7 @@ function TimelineStrip({
   return (
     <div
       data-archive-day-row={row.key}
-      className="grid bg-black"
+      className="grid"
       style={{
         ...style,
         gridTemplateColumns: `repeat(${DAY_SLOT_COUNT}, minmax(0, 1fr))`,
@@ -479,7 +480,7 @@ function TimelineStrip({
             <span
               key={`${row.key}-${slot}`}
               aria-hidden
-              className="block bg-black"
+              className="block"
               style={{ height: tileSize, marginRight: "-1px" }}
             />
           );
@@ -565,7 +566,7 @@ function GridTile({
       onPointerEnter={handleEnter}
       onPointerLeave={handleLeave}
       aria-label={`${fmtDate(img.capturedAt)} ${fmtTime(img.capturedAt)}`}
-      className="group relative block overflow-hidden bg-black p-0 text-left leading-none align-top transition-shadow duration-300 ease-out hover:z-10 hover:shadow-xl"
+      className="group relative block overflow-hidden p-0 text-left leading-none align-top transition-shadow duration-300 ease-out hover:z-10 hover:shadow-xl"
       style={{
         height: tileSize,
         marginRight: "-1px",
