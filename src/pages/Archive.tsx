@@ -35,6 +35,7 @@ function readableInk(hex: string): string {
 
 const TODS = ["All", "Dawn", "Day", "Golden", "Dusk", "Night"] as const;
 const ARCHIVE_TIME_ZONE = "America/Los_Angeles";
+const ARCHIVE_MIN_DAY_KEY = "2026-04-25";
 const DAY_SLOT_COUNT = 48;
 
 type ArchiveParts = {
@@ -96,6 +97,10 @@ function archiveSlotMinute(parts: ArchiveParts): number {
   return parts.hour * 60 + parts.minute;
 }
 
+function archiveDayKeyForDate(date: Date): string {
+  return archiveDayKey(getArchiveParts(date));
+}
+
 function archiveTimeOfDay(date: Date): "dawn" | "day" | "golden" | "dusk" | "night" {
   const parts = getArchiveParts(date);
   const h = parts.hour + parts.minute / 60;
@@ -105,6 +110,31 @@ function archiveTimeOfDay(date: Date): "dawn" | "day" | "golden" | "dusk" | "nig
   if (h < 19) return "golden";
   if (h < 21) return "dusk";
   return "night";
+}
+
+function fillInteriorDaySlots(slots: Array<SkyImage | null>): Array<SkyImage | null> {
+  const filled = [...slots];
+  const first = filled.findIndex(Boolean);
+  if (first < 0) return filled;
+  const last = filled.length - 1 - [...filled].reverse().findIndex(Boolean);
+
+  for (let index = first; index <= last; index++) {
+    if (filled[index]) continue;
+    let previous = index - 1;
+    while (previous >= first && !filled[previous]) previous--;
+    let next = index + 1;
+    while (next <= last && !filled[next]) next++;
+
+    const previousImage = previous >= first ? filled[previous] : null;
+    const nextImage = next <= last ? filled[next] : null;
+    if (previousImage && nextImage) {
+      filled[index] = index - previous <= next - index ? previousImage : nextImage;
+    } else {
+      filled[index] = previousImage ?? nextImage;
+    }
+  }
+
+  return filled;
 }
 
 function orderImagesByArchiveRows(images: SkyImage[]): SkyImage[] {
@@ -147,7 +177,9 @@ function buildArchiveDayRows(images: SkyImage[]): ArchiveDayRow[] {
     row.images.push(img);
   }
 
-  return [...rows.values()].sort((a, b) => b.sortKey - a.sortKey);
+  return [...rows.values()]
+    .map((row) => ({ ...row, slots: fillInteriorDaySlots(row.slots) }))
+    .sort((a, b) => b.sortKey - a.sortKey);
 }
 
 export default function Archive() {
@@ -182,6 +214,7 @@ export default function Archive() {
   const filtered = useMemo(() => {
     if (!images) return [];
     let out = images;
+    out = out.filter((i) => archiveDayKeyForDate(i.capturedAt) >= ARCHIVE_MIN_DAY_KEY);
     if (tod !== "All") out = out.filter((i) => archiveTimeOfDay(i.capturedAt) === tod.toLowerCase());
     return out;
   }, [images, tod]);
@@ -455,7 +488,7 @@ function TimelineStrip({
         const vt = `sky-${img.id.replace(/[^a-z0-9_-]/gi, "_")}`;
         return (
           <GridTile
-            key={img.id}
+            key={`${row.key}-${slot}-${img.id}`}
             img={img}
             palette={p}
             vt={vt}
