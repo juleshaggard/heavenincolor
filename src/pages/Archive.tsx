@@ -48,7 +48,6 @@ type ArchiveParts = {
 type ArchiveDayRow = {
   key: string;
   label: string;
-  year: string;
   sortKey: number;
   slots: Array<SkyImage | null>;
   images: SkyImage[];
@@ -62,18 +61,6 @@ const archivePartsFormatter = new Intl.DateTimeFormat("en-US", {
   hour: "2-digit",
   minute: "2-digit",
   hourCycle: "h23",
-});
-
-const archiveDayFormatter = new Intl.DateTimeFormat("en-US", {
-  timeZone: ARCHIVE_TIME_ZONE,
-  weekday: "short",
-  month: "short",
-  day: "numeric",
-});
-
-const archiveYearFormatter = new Intl.DateTimeFormat("en-US", {
-  timeZone: ARCHIVE_TIME_ZONE,
-  year: "numeric",
 });
 
 function getArchiveParts(date: Date): ArchiveParts {
@@ -91,6 +78,10 @@ function getArchiveParts(date: Date): ArchiveParts {
 
 function archiveDayKey(parts: ArchiveParts): string {
   return `${parts.year}-${String(parts.month).padStart(2, "0")}-${String(parts.day).padStart(2, "0")}`;
+}
+
+function archiveDayLabel(parts: ArchiveParts): string {
+  return `${String(parts.month).padStart(2, "0")}/${String(parts.day).padStart(2, "0")}/${String(parts.year).slice(-2)}`;
 }
 
 function archiveSortKey(parts: ArchiveParts): number {
@@ -135,8 +126,7 @@ function buildArchiveDayRows(images: SkyImage[]): ArchiveDayRow[] {
     if (!row) {
       row = {
         key,
-        label: archiveDayFormatter.format(img.capturedAt),
-        year: archiveYearFormatter.format(img.capturedAt),
+        label: archiveDayLabel(parts),
         sortKey: archiveSortKey(parts),
         slots: Array.from({ length: DAY_SLOT_COUNT }, () => null),
         images: [],
@@ -430,7 +420,7 @@ function DayStrip({
       <div
         className="grid overflow-hidden bg-black"
         style={{ gridTemplateColumns: `repeat(${DAY_SLOT_COUNT}, minmax(0, 1fr))`, gap: "0px", marginRight: "-1px" }}
-        aria-label={`${row.label} ${row.year}`}
+        aria-label={row.label}
       >
         {row.slots.map((img, slot) => {
           if (!img) {
@@ -468,12 +458,11 @@ function DayLabel({ row, side }: { row: ArchiveDayRow; side: "left" | "right" })
   return (
     <div
       className={cn(
-        "flex h-full flex-col justify-center overflow-hidden font-mono text-[9px] leading-tight text-ink-faint sm:text-[10px]",
+        "flex h-full flex-col justify-center overflow-hidden font-mono text-[8px] leading-none text-ink-faint tabular-nums sm:text-[9px]",
         side === "left" ? "items-end text-right" : "items-start text-left",
       )}
     >
-      <span className="max-w-full truncate text-ink-dim">{row.label}</span>
-      <span className="max-w-full truncate">{row.year}</span>
+      <span className="max-w-full truncate">{row.label}</span>
     </div>
   );
 }
