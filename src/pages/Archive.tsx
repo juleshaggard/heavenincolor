@@ -3,7 +3,7 @@ import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useSkyImages } from "@/hooks/useSkyImages";
 import { SkyThumb } from "@/components/sky/SkyThumb";
 import { Swatches } from "@/components/sky/Swatches";
-import { getPalette, timeOfDay, type Palette } from "@/lib/palette";
+import { getPalette, type Palette } from "@/lib/palette";
 import { fmtDate, fmtTime, captionFor, nameColor } from "@/lib/format";
 import type { SkyImage } from "@/lib/skyImages";
 import { cn } from "@/lib/utils";
@@ -34,22 +34,142 @@ function readableInk(hex: string): string {
 }
 
 const TODS = ["All", "Dawn", "Day", "Golden", "Dusk", "Night"] as const;
-const SORTS = ["Chronological", "Saturation", "Warmth", "Unusual"] as const;
+const ARCHIVE_TIME_ZONE = "America/Los_Angeles";
+const DAY_SLOT_COUNT = 48;
+
+type ArchiveParts = {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+};
+
+type ArchiveDayRow = {
+  key: string;
+  label: string;
+  year: string;
+  sortKey: number;
+  slots: Array<SkyImage | null>;
+  images: SkyImage[];
+};
+
+const archivePartsFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: ARCHIVE_TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+});
+
+const archiveDayFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: ARCHIVE_TIME_ZONE,
+  weekday: "short",
+  month: "short",
+  day: "numeric",
+});
+
+const archiveYearFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: ARCHIVE_TIME_ZONE,
+  year: "numeric",
+});
+
+function getArchiveParts(date: Date): ArchiveParts {
+  const parts = Object.fromEntries(
+    archivePartsFormatter.formatToParts(date).map((part) => [part.type, part.value]),
+  );
+  return {
+    year: Number(parts.year),
+    month: Number(parts.month),
+    day: Number(parts.day),
+    hour: Number(parts.hour),
+    minute: Number(parts.minute),
+  };
+}
+
+function archiveDayKey(parts: ArchiveParts): string {
+  return `${parts.year}-${String(parts.month).padStart(2, "0")}-${String(parts.day).padStart(2, "0")}`;
+}
+
+function archiveSortKey(parts: ArchiveParts): number {
+  return parts.year * 10000 + parts.month * 100 + parts.day;
+}
+
+function archiveSlotIndex(parts: ArchiveParts): number {
+  return Math.max(0, Math.min(DAY_SLOT_COUNT - 1, parts.hour * 2 + (parts.minute >= 30 ? 1 : 0)));
+}
+
+function archiveSlotMinute(parts: ArchiveParts): number {
+  return parts.hour * 60 + parts.minute;
+}
+
+function archiveTimeOfDay(date: Date): "dawn" | "day" | "golden" | "dusk" | "night" {
+  const parts = getArchiveParts(date);
+  const h = parts.hour + parts.minute / 60;
+  if (h < 5.5) return "night";
+  if (h < 7.5) return "dawn";
+  if (h < 16.5) return "day";
+  if (h < 19) return "golden";
+  if (h < 21) return "dusk";
+  return "night";
+}
+
+function orderImagesByArchiveRows(images: SkyImage[]): SkyImage[] {
+  return [...images].sort((a, b) => {
+    const aParts = getArchiveParts(a.capturedAt);
+    const bParts = getArchiveParts(b.capturedAt);
+    const dayDelta = archiveSortKey(bParts) - archiveSortKey(aParts);
+    if (dayDelta !== 0) return dayDelta;
+    return archiveSlotMinute(aParts) - archiveSlotMinute(bParts);
+  });
+}
+
+function buildArchiveDayRows(images: SkyImage[]): ArchiveDayRow[] {
+  const rows = new Map<string, ArchiveDayRow>();
+  for (const img of images) {
+    const parts = getArchiveParts(img.capturedAt);
+    const key = archiveDayKey(parts);
+    let row = rows.get(key);
+    if (!row) {
+      row = {
+        key,
+        label: archiveDayFormatter.format(img.capturedAt),
+        year: archiveYearFormatter.format(img.capturedAt),
+        sortKey: archiveSortKey(parts),
+        slots: Array.from({ length: DAY_SLOT_COUNT }, () => null),
+        images: [],
+      };
+      rows.set(key, row);
+    }
+
+    const slot = archiveSlotIndex(parts);
+    const existing = row.slots[slot];
+    if (!existing) {
+      row.slots[slot] = img;
+    } else {
+      const slotStart = Math.floor(slot / 2) * 60 + (slot % 2) * 30;
+      const existingDistance = Math.abs(archiveSlotMinute(getArchiveParts(existing.capturedAt)) - slotStart);
+      const nextDistance = Math.abs(archiveSlotMinute(parts) - slotStart);
+      if (nextDistance <= existingDistance) row.slots[slot] = img;
+    }
+    row.images.push(img);
+  }
+
+  return [...rows.values()].sort((a, b) => b.sortKey - a.sortKey);
+}
 
 export default function Archive() {
   const { images } = useSkyImages();
   const [tod, setTod] = useState<(typeof TODS)[number]>("All");
-  const [sort, setSort] = useState<(typeof SORTS)[number]>("Chronological");
   const [palettes, setPalettes] = useState<Record<string, Palette>>({});
+  const palettesRef = useRef<Record<string, Palette>>({});
   const [open, setOpen] = useState<SkyImage | null>(null);
-  // cols == zoom level. 6 = max zoom in (largest tiles). 100 = max zoom out.
-  const [zoom, setZoom] = useState(() => {
-    if (typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches) {
-      return 48;
-    }
-    return 13;
-  });
-  const cols = Math.max(6, Math.min(100, zoom));
+
+  useEffect(() => {
+    palettesRef.current = palettes;
+  }, [palettes]);
 
   // Progressive reveal: count animates up as the grid populates.
   const [revealCount, setRevealCount] = useState(0);
@@ -72,45 +192,33 @@ export default function Archive() {
   const filtered = useMemo(() => {
     if (!images) return [];
     let out = images;
-    if (tod !== "All") out = out.filter((i) => timeOfDay(i.capturedAt) === tod.toLowerCase());
-    if (sort === "Chronological") out = [...out].reverse();
+    if (tod !== "All") out = out.filter((i) => archiveTimeOfDay(i.capturedAt) === tod.toLowerCase());
     return out;
-  }, [images, tod, sort]);
+  }, [images, tod]);
+
+  const ordered = useMemo(() => orderImagesByArchiveRows(filtered), [filtered]);
 
   // background-fetch palettes for visible-ish chunk
   useEffect(() => {
     let cancel = false;
     (async () => {
-      for (const img of filtered.slice(0, 200)) {
-        if (palettes[img.id]) continue;
+      for (const img of ordered.slice(0, 200)) {
+        if (palettesRef.current[img.id]) continue;
         const p = await getPalette(img);
         if (cancel) return;
-        setPalettes((s) => ({ ...s, [img.id]: p }));
+        setPalettes((s) => {
+          const next = { ...s, [img.id]: p };
+          palettesRef.current = next;
+          return next;
+        });
       }
     })();
     return () => { cancel = true; };
-  }, [filtered]);
+  }, [ordered]);
 
-  // sort post-palette
-  const sorted = useMemo(() => {
-    if (sort === "Chronological") return filtered;
-    const score = (img: SkyImage) => {
-      const p = palettes[img.id];
-      if (!p) return 0;
-      if (sort === "Saturation") return p.hsl[1];
-      if (sort === "Warmth") {
-        const h = p.hsl[0];
-        return Math.cos(((h - 30) * Math.PI) / 180);
-      }
-      // unusual: distance from neutral grey
-      return Math.abs(p.hsl[1] - 30) + Math.abs(p.hsl[2] - 50);
-    };
-    return [...filtered].sort((a, b) => score(b) - score(a));
-  }, [filtered, sort, palettes]);
-
-  // Animate revealCount from current value up to sorted.length when it changes.
+  // Animate revealCount from current value up to ordered.length when it changes.
   useEffect(() => {
-    const target = sorted.length;
+    const target = ordered.length;
     if (target === 0) {
       setRevealCount(0);
       return;
@@ -131,37 +239,38 @@ export default function Archive() {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [sorted.length]);
+  }, [ordered.length]);
 
-  const visible = useMemo(() => sorted.slice(0, revealCount), [sorted, revealCount]);
+  const visible = useMemo(() => ordered.slice(0, revealCount), [ordered, revealCount]);
+  const dayRows = useMemo(() => buildArchiveDayRows(visible), [visible]);
 
   const parentRef = useRef<HTMLDivElement>(null);
-  const [containerW, setContainerW] = useState(0);
+  const timelineMeasureRef = useRef<HTMLDivElement>(null);
+  const [timelineW, setTimelineW] = useState(0);
   useEffect(() => {
-    const el = parentRef.current;
+    const el = timelineMeasureRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(([entry]) => setContainerW(entry.contentRect.width));
+    const ro = new ResizeObserver(([entry]) => setTimelineW(entry.contentRect.width));
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
   const COL_OVERLAP = 1;
-  const ROW_OVERLAP = 2;
-  const rawTileSize = containerW > 0 ? (containerW + COL_OVERLAP * (cols - 1)) / cols : 200;
-  const tileSize = Math.ceil(rawTileSize);
-  const rowSize = tileSize - ROW_OVERLAP;
-  const rows = Math.ceil(visible.length / cols);
+  const rawTileSize = timelineW > 0 ? (timelineW + COL_OVERLAP * (DAY_SLOT_COUNT - 1)) / DAY_SLOT_COUNT : 28;
+  const tileSize = Math.max(6, Math.ceil(rawTileSize));
+  const dayGap = Math.max(2, Math.round(tileSize * 0.12));
+  const rowSize = tileSize + dayGap;
   // Use the page (window) scroll instead of an inner scroll container.
   const rowVirtualizer = useWindowVirtualizer({
-    count: rows,
+    count: dayRows.length,
     estimateSize: () => rowSize,
     overscan: 4,
     scrollMargin: parentRef.current?.offsetTop ?? 0,
   });
-  // re-measure when cols/width changes
+  // Re-measure when the fixed day strips change size.
   useEffect(() => {
     rowVirtualizer.measure();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rowSize, cols]);
+  }, [rowSize, dayRows.length]);
 
   return (
     <div>
@@ -192,44 +301,29 @@ export default function Archive() {
         </BlurFollowText>
       </header>
 
-      {/* Grid with comfortable side breathing room */}
+      {/* Daily archive matrix */}
       <div className="px-[4vw]">
-        <div
-          ref={parentRef}
-          className="relative overflow-hidden rounded-[24px] bg-black"
-        >
+        <div ref={parentRef} className="relative">
+          <div className="grid grid-cols-[minmax(3rem,4.75rem)_minmax(0,1fr)_minmax(3rem,4.75rem)] gap-x-2 sm:gap-x-3">
+            <div />
+            <div ref={timelineMeasureRef} className="h-px" />
+            <div />
+          </div>
           <div style={{ height: rowVirtualizer.getTotalSize(), position: "relative" }}>
           {rowVirtualizer.getVirtualItems().map((vr) => {
-            const start = vr.index * cols;
-            const slice = visible.slice(start, start + cols);
+            const row = dayRows[vr.index];
+            if (!row) return null;
             const top = Math.round(vr.start - rowVirtualizer.options.scrollMargin);
             return (
-              <div
+              <DayStrip
                 key={vr.key}
+                row={row}
+                palettes={palettes}
+                openId={open?.id}
+                tileSize={tileSize}
+                onOpen={(img, vt) => openWithTransition(img, vt, setOpen)}
                 style={{ position: "absolute", top, left: 0, width: "100%", height: tileSize }}
-              >
-                <div
-                  className="grid"
-                  style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "0px", marginRight: "-1px" }}
-                >
-                  {slice.map((img) => {
-                    const p = palettes[img.id];
-                    const vt = `sky-${img.id.replace(/[^a-z0-9_-]/gi, "_")}`;
-                    return (
-                      <GridTile
-                        key={img.id}
-                        img={img}
-                        palette={p}
-                        vt={vt}
-                        tileSize={tileSize}
-                        cols={cols}
-                        isOpen={open?.id === img.id}
-                        onOpen={() => openWithTransition(img, vt, setOpen)}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
+              />
             );
           })}
           </div>
@@ -247,8 +341,7 @@ export default function Archive() {
       </footer>
 
       {/* Corner controls — editorial style */}
-      <FilterCorner tod={tod} setTod={setTod} sort={sort} setSort={setSort} />
-      <ZoomCorner zoom={zoom} setZoom={setZoom} cols={cols} />
+      <FilterCorner tod={tod} setTod={setTod} />
     </div>
   );
 }
@@ -312,6 +405,79 @@ function CircleRevealSequence({ images, index }: { images: SkyImage[]; index: nu
   );
 }
 
+function DayStrip({
+  row,
+  palettes,
+  openId,
+  tileSize,
+  onOpen,
+  style,
+}: {
+  row: ArchiveDayRow;
+  palettes: Record<string, Palette>;
+  openId?: string;
+  tileSize: number;
+  onOpen: (img: SkyImage, vt: string) => void;
+  style: React.CSSProperties;
+}) {
+  return (
+    <div
+      data-archive-day-row={row.key}
+      className="grid grid-cols-[minmax(3rem,4.75rem)_minmax(0,1fr)_minmax(3rem,4.75rem)] gap-x-2 sm:gap-x-3"
+      style={style}
+    >
+      <DayLabel row={row} side="left" />
+      <div
+        className="grid overflow-hidden bg-black"
+        style={{ gridTemplateColumns: `repeat(${DAY_SLOT_COUNT}, minmax(0, 1fr))`, gap: "0px", marginRight: "-1px" }}
+        aria-label={`${row.label} ${row.year}`}
+      >
+        {row.slots.map((img, slot) => {
+          if (!img) {
+            return (
+              <span
+                key={`${row.key}-${slot}`}
+                aria-hidden
+                className="block bg-black"
+                style={{ height: tileSize, marginRight: "-1px" }}
+              />
+            );
+          }
+          const p = palettes[img.id];
+          const vt = `sky-${img.id.replace(/[^a-z0-9_-]/gi, "_")}`;
+          return (
+            <GridTile
+              key={img.id}
+              img={img}
+              palette={p}
+              vt={vt}
+              tileSize={tileSize}
+              cols={DAY_SLOT_COUNT}
+              isOpen={openId === img.id}
+              onOpen={() => onOpen(img, vt)}
+            />
+          );
+        })}
+      </div>
+      <DayLabel row={row} side="right" />
+    </div>
+  );
+}
+
+function DayLabel({ row, side }: { row: ArchiveDayRow; side: "left" | "right" }) {
+  return (
+    <div
+      className={cn(
+        "flex h-full flex-col justify-center overflow-hidden font-mono text-[9px] leading-tight text-ink-faint sm:text-[10px]",
+        side === "left" ? "items-end text-right" : "items-start text-left",
+      )}
+    >
+      <span className="max-w-full truncate text-ink-dim">{row.label}</span>
+      <span className="max-w-full truncate">{row.year}</span>
+    </div>
+  );
+}
+
 function GridTile({
   img, palette: p, vt, tileSize, cols, isOpen, onOpen,
 }: {
@@ -346,6 +512,7 @@ function GridTile({
       onClick={onOpen}
       onPointerEnter={handleEnter}
       onPointerLeave={handleLeave}
+      aria-label={`${fmtDate(img.capturedAt)} ${fmtTime(img.capturedAt)}`}
       className="group relative block overflow-hidden bg-black p-0 text-left leading-none align-top transition-shadow duration-300 ease-out hover:z-10 hover:shadow-xl"
       style={{
         height: tileSize,
@@ -394,12 +561,10 @@ function GridTile({
 }
 
 function FilterCorner({
-  tod, setTod, sort, setSort,
+  tod, setTod,
 }: {
   tod: (typeof TODS)[number];
   setTod: (t: (typeof TODS)[number]) => void;
-  sort: (typeof SORTS)[number];
-  setSort: (s: (typeof SORTS)[number]) => void;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -414,39 +579,12 @@ function FilterCorner({
               <Chip key={t} active={tod === t} onClick={() => setTod(t)}>{t}</Chip>
             ))}
           </div>
-          <span className="text-ink-faint">·</span>
-          <div className="flex items-center gap-3 text-ink-dim">
-            {SORTS.map((s) => (
-              <Chip key={s} active={sort === s} onClick={() => setSort(s)}>{s}</Chip>
-            ))}
-          </div>
         </div>
       ) : (
         <button onClick={() => setOpen(true)} className="text-ink hover:underline underline-offset-4">
           Filter
         </button>
       )}
-    </div>
-  );
-}
-
-function ZoomCorner({
-  zoom, setZoom, cols,
-}: { zoom: number; setZoom: (n: number) => void; cols: number }) {
-  return (
-    <div className="pointer-events-none fixed inset-x-0 top-5 z-40 flex items-center justify-center gap-3 text-[13px]">
-      <span className="text-ink-dim">Zoom</span>
-      <input
-        type="range"
-        min={6}
-        max={100}
-        step={1}
-        value={zoom}
-        onChange={(e) => setZoom(Number(e.target.value))}
-        className="pointer-events-auto h-1 w-32 cursor-ew-resize accent-ink"
-        aria-label="Grid zoom"
-      />
-      <span className="tabular-nums text-ink-faint">{cols}×</span>
     </div>
   );
 }
