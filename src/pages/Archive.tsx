@@ -37,6 +37,8 @@ const TODS = ["All", "Dawn", "Day", "Golden", "Dusk", "Night"] as const;
 const ARCHIVE_TIME_ZONE = "America/Los_Angeles";
 const ARCHIVE_MIN_DAY_KEY = "2026-04-25";
 const ARCHIVE_EMPTY_BACKGROUND = "#e7e7e7";
+const ARCHIVE_DATE_GRID_CLASS =
+  "grid grid-cols-[2.35rem_minmax(0,1fr)_2.35rem] gap-x-1 sm:grid-cols-[minmax(3rem,4.75rem)_minmax(0,1fr)_minmax(3rem,4.75rem)] sm:gap-x-3";
 const DAY_SLOT_COUNT = 48;
 
 type ArchiveParts = {
@@ -327,9 +329,9 @@ export default function Archive() {
       </header>
 
       {/* Daily archive matrix */}
-      <div className="px-[4vw]">
+      <div className="px-0 sm:px-[4vw]">
         <div ref={parentRef} className="relative">
-          <div className="grid grid-cols-[minmax(3rem,4.75rem)_minmax(0,1fr)_minmax(3rem,4.75rem)] gap-x-2 sm:gap-x-3">
+          <div className={ARCHIVE_DATE_GRID_CLASS}>
             <div style={{ height: totalRowsSize }} />
             <div
               ref={timelineMeasureRef}
@@ -507,7 +509,7 @@ function TimelineStrip({
 function DayLabelStrip({ row, style }: { row: ArchiveDayRow; style: React.CSSProperties }) {
   return (
     <div
-      className="grid grid-cols-[minmax(3rem,4.75rem)_minmax(0,1fr)_minmax(3rem,4.75rem)] gap-x-2 sm:gap-x-3"
+      className={ARCHIVE_DATE_GRID_CLASS}
       style={style}
       aria-hidden
     >
@@ -522,11 +524,11 @@ function DayLabel({ row, side }: { row: ArchiveDayRow; side: "left" | "right" })
   return (
     <div
       className={cn(
-        "flex h-full flex-col justify-center overflow-hidden font-mono text-[8px] leading-none text-ink-faint tabular-nums sm:text-[9px]",
+        "flex h-full flex-col justify-center overflow-hidden font-mono text-[7px] leading-none text-ink-faint tabular-nums sm:text-[9px]",
         side === "left" ? "items-end text-right" : "items-start text-left",
       )}
     >
-      <span className="max-w-full truncate">{row.label}</span>
+      <span data-archive-day-label className="max-w-full truncate">{row.label}</span>
     </div>
   );
 }
@@ -621,20 +623,20 @@ function FilterCorner({
 }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="fixed top-5 left-6 z-40 text-[13px]">
+    <div className="pointer-events-none fixed left-4 right-4 top-5 z-50 text-[12px] sm:left-6 sm:right-auto sm:text-[13px]">
       {open ? (
-        <div className="flex items-center gap-6 rounded-full border border-hairline bg-paper px-4 py-2 shadow-sm">
+        <div className="pointer-events-auto flex max-w-full items-center gap-3 overflow-x-auto rounded-full border border-hairline bg-paper px-3 py-2 shadow-sm no-scrollbar sm:gap-6 sm:px-4">
           <button onClick={() => setOpen(false)} className="font-medium text-ink underline underline-offset-4">
             Filter
           </button>
-          <div className="flex items-center gap-3 text-ink-dim">
+          <div className="flex shrink-0 items-center gap-2 text-ink-dim sm:gap-3">
             {TODS.map((t) => (
               <Chip key={t} active={tod === t} onClick={() => setTod(t)}>{t}</Chip>
             ))}
           </div>
         </div>
       ) : (
-        <button onClick={() => setOpen(true)} className="text-ink hover:underline underline-offset-4">
+        <button onClick={() => setOpen(true)} className="pointer-events-auto text-ink hover:underline underline-offset-4">
           Filter
         </button>
       )}
