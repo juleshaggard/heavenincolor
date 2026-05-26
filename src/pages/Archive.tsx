@@ -564,10 +564,9 @@ function DayLabelStrip({
     <div
       className={cn(
         ARCHIVE_DATE_GRID_CLASS,
-        "transition-opacity ease-out",
-        visible ? "opacity-100" : "opacity-0",
+        visible ? "opacity-100 transition-none" : "opacity-0 transition-opacity ease-out",
       )}
-      style={{ ...style, transitionDuration: visible ? "0ms" : "2000ms" }}
+      style={{ ...style, transitionDuration: visible ? undefined : "2000ms" }}
       aria-hidden
     >
       <DayLabel row={row} side="left" />
