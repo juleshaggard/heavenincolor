@@ -896,13 +896,9 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
   const meshColors = meshColorsFor(colors);
   const primaryColor = colors[0];
   const textColor = readableInk(primaryColor);
-  const quietTextColor = hexWithAlpha(textColor, 0.72);
   const imageWidth = Math.max(32, image.width ?? 128);
   const imageHeight = Math.max(24, image.height ?? Math.round(imageWidth * 9 / 16));
   const imageCropSize = Math.min(imageWidth, imageHeight);
-  const textShadow = textColor === "#ffffff"
-    ? "0 1px 24px rgba(0,0,0,0.35)"
-    : "0 1px 24px rgba(255,255,255,0.28)";
 
   useGSAP(() => {
     const modal = modalRef.current;
@@ -1009,17 +1005,6 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
                 transform: "translate(-50%, -50%)",
               }}
             />
-          </div>
-          <div className="text-center" style={{ color: textColor, textShadow }}>
-            <div className="font-display text-[clamp(2.5rem,7vw,7rem)] italic leading-[0.85]">
-              {nameColor(primaryColor)}
-            </div>
-            <div className="mt-3 font-mono text-[10px] uppercase tracking-[0.18em] sm:text-[11px]" style={{ color: quietTextColor }}>
-              Computed color
-            </div>
-            <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] sm:text-[11px]" style={{ color: hexWithAlpha(textColor, 0.58) }}>
-              {fmtDate(image.capturedAt)} / {fmtTime(image.capturedAt)}
-            </div>
           </div>
         </div>
       </div>
