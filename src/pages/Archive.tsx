@@ -204,6 +204,7 @@ export default function Archive() {
   const [palettes, setPalettes] = useState<Record<string, Palette>>({});
   const palettesRef = useRef<Record<string, Palette>>({});
   const [open, setOpen] = useState<SkyImage | null>(null);
+  const [hoveredDayKey, setHoveredDayKey] = useState<string | null>(null);
 
   useEffect(() => {
     palettesRef.current = palettes;
@@ -362,6 +363,7 @@ export default function Archive() {
                     tileSize={tileSize}
                     slotCount={slotCount}
                     onOpen={(img, vt) => openWithTransition(img, vt, setOpen)}
+                    onHoverChange={setHoveredDayKey}
                     style={{ position: "absolute", top, left: 0, width: "100%", height: tileSize }}
                   />
                 );
@@ -378,6 +380,7 @@ export default function Archive() {
                 <DayLabelStrip
                   key={`label-${vr.key}`}
                   row={row}
+                  visible={hoveredDayKey === row.key}
                   style={{ position: "absolute", top, left: 0, width: "100%", height: tileSize }}
                 />
               );
@@ -454,6 +457,7 @@ function TimelineStrip({
   tileSize,
   slotCount,
   onOpen,
+  onHoverChange,
   style,
 }: {
   row: ArchiveDayRow;
@@ -462,12 +466,21 @@ function TimelineStrip({
   tileSize: number;
   slotCount: number;
   onOpen: (img: SkyImage, vt: string) => void;
+  onHoverChange: (key: string | null) => void;
   style: React.CSSProperties;
 }) {
   return (
     <div
       data-archive-day-row={row.key}
       className="grid"
+      onPointerEnter={() => onHoverChange(row.key)}
+      onPointerLeave={() => onHoverChange(null)}
+      onFocus={() => onHoverChange(row.key)}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+          onHoverChange(null);
+        }
+      }}
       style={{
         ...style,
         gridTemplateColumns: `repeat(${slotCount}, minmax(0, 1fr))`,
@@ -506,10 +519,22 @@ function TimelineStrip({
   );
 }
 
-function DayLabelStrip({ row, style }: { row: ArchiveDayRow; style: React.CSSProperties }) {
+function DayLabelStrip({
+  row,
+  visible,
+  style,
+}: {
+  row: ArchiveDayRow;
+  visible: boolean;
+  style: React.CSSProperties;
+}) {
   return (
     <div
-      className={ARCHIVE_DATE_GRID_CLASS}
+      className={cn(
+        ARCHIVE_DATE_GRID_CLASS,
+        "transition-opacity duration-150 ease-out",
+        visible ? "opacity-100" : "opacity-0",
+      )}
       style={style}
       aria-hidden
     >
