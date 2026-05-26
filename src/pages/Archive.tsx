@@ -976,9 +976,6 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
             <div className="font-display text-[clamp(2.5rem,7vw,7rem)] italic leading-[0.85]">
               {nameColor(primaryColor)}
             </div>
-            <div className="mt-3 font-mono text-[11px] uppercase tracking-[0.18em]" style={{ color: quietTextColor }}>
-              {primaryColor.toUpperCase()} / {imageCropSize} x {imageCropSize} crop
-            </div>
           </div>
         </div>
       </div>
