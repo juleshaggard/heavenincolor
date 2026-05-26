@@ -535,7 +535,7 @@ function DayLabelStrip({
         "transition-opacity ease-out",
         visible ? "opacity-100" : "opacity-0",
       )}
-      style={{ ...style, transitionDuration: visible ? "150ms" : "2000ms" }}
+      style={{ ...style, transitionDuration: visible ? "0ms" : "2000ms" }}
       aria-hidden
     >
       <DayLabel row={row} side="left" />
