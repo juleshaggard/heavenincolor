@@ -659,7 +659,7 @@ function DayLabel({ row, side, visible }: { row: ArchiveDayRow; side: "left" | "
     <div
       className={cn(
         "flex h-full flex-col justify-center overflow-hidden font-mono text-[7px] leading-none tabular-nums sm:text-[9px]",
-        visible ? "text-ink-faint" : "archive-date-fade-color",
+        visible ? "archive-date-visible-color" : "archive-date-fade-color",
         side === "left" ? "items-end text-right" : "items-start text-left",
       )}
     >

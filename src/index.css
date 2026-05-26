@@ -159,10 +159,13 @@ All colors MUST be HSL.
   }
   .aurora { animation: auroraShift 22s ease-in-out infinite; }
 
+  .archive-date-visible-color {
+    color: hsl(214 88% 54%);
+  }
+
   @keyframes archiveDateFadeColor {
-    0% { color: hsl(var(--ink-faint)); }
-    28% { color: hsl(214 88% 54%); }
-    62% { color: hsl(31 92% 52%); }
+    0% { color: hsl(214 88% 54%); }
+    16% { color: hsl(31 92% 52%); }
     100% { color: hsl(2 78% 48%); }
   }
   .archive-date-fade-color {
