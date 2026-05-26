@@ -33,13 +33,14 @@ function readableInk(hex: string): string {
   return lum > 0.55 ? "#0a0a0a" : "#ffffff";
 }
 
-const TODS = ["All", "Dawn", "Day", "Golden", "Dusk", "Night"] as const;
 const ARCHIVE_TIME_ZONE = "America/Los_Angeles";
 const ARCHIVE_MIN_DAY_KEY = "2026-04-25";
 const ARCHIVE_EMPTY_BACKGROUND = "#e7e7e7";
 const ARCHIVE_DATE_GRID_CLASS =
   "grid grid-cols-[2.35rem_minmax(0,1fr)_2.35rem] gap-x-1 sm:grid-cols-[minmax(3rem,4.75rem)_minmax(0,1fr)_minmax(3rem,4.75rem)] sm:gap-x-3";
 const DAY_SLOT_COUNT = 48;
+const DAY_START_MINUTE = 4 * 60 + 30;
+const NIGHT_START_MINUTE = 21 * 60 + 30;
 
 type ArchiveParts = {
   year: number;
@@ -96,6 +97,10 @@ function archiveSlotIndex(parts: ArchiveParts): number {
   return Math.max(0, Math.min(DAY_SLOT_COUNT - 1, parts.hour * 2 + (parts.minute >= 30 ? 1 : 0)));
 }
 
+function archiveSlotStartMinute(slot: number): number {
+  return Math.floor(slot / 2) * 60 + (slot % 2) * 30;
+}
+
 function archiveSlotMinute(parts: ArchiveParts): number {
   return parts.hour * 60 + parts.minute;
 }
@@ -104,15 +109,18 @@ function archiveDayKeyForDate(date: Date): string {
   return archiveDayKey(getArchiveParts(date));
 }
 
-function archiveTimeOfDay(date: Date): "dawn" | "day" | "golden" | "dusk" | "night" {
+function archiveIsNight(date: Date): boolean {
   const parts = getArchiveParts(date);
-  const h = parts.hour + parts.minute / 60;
-  if (h < 5.5) return "night";
-  if (h < 7.5) return "dawn";
-  if (h < 16.5) return "day";
-  if (h < 19) return "golden";
-  if (h < 21) return "dusk";
-  return "night";
+  const minute = archiveSlotMinute(parts);
+  return minute < DAY_START_MINUTE || minute >= NIGHT_START_MINUTE;
+}
+
+function visibleArchiveSlots(includeNight: boolean): number[] {
+  return Array.from({ length: DAY_SLOT_COUNT }, (_, slot) => slot).filter((slot) => {
+    if (includeNight) return true;
+    const minute = archiveSlotStartMinute(slot);
+    return minute >= DAY_START_MINUTE && minute < NIGHT_START_MINUTE;
+  });
 }
 
 function fillInteriorDaySlots(slots: Array<SkyImage | null>): Array<SkyImage | null> {
@@ -150,8 +158,10 @@ function orderImagesByArchiveRows(images: SkyImage[]): SkyImage[] {
   });
 }
 
-function buildArchiveDayRows(images: SkyImage[]): ArchiveDayRow[] {
+function buildArchiveDayRows(images: SkyImage[], slotIndexes: number[]): ArchiveDayRow[] {
   const rows = new Map<string, ArchiveDayRow>();
+  const visibleSlotByArchiveSlot = new Map(slotIndexes.map((slot, index) => [slot, index]));
+
   for (const img of images) {
     const parts = getArchiveParts(img.capturedAt);
     const key = archiveDayKey(parts);
@@ -161,18 +171,21 @@ function buildArchiveDayRows(images: SkyImage[]): ArchiveDayRow[] {
         key,
         label: archiveDayLabel(parts),
         sortKey: archiveSortKey(parts),
-        slots: Array.from({ length: DAY_SLOT_COUNT }, () => null),
+        slots: Array.from({ length: slotIndexes.length }, () => null),
         images: [],
       };
       rows.set(key, row);
     }
 
-    const slot = archiveSlotIndex(parts);
+    const archiveSlot = archiveSlotIndex(parts);
+    const slot = visibleSlotByArchiveSlot.get(archiveSlot);
+    if (slot === undefined) continue;
+
     const existing = row.slots[slot];
     if (!existing) {
       row.slots[slot] = img;
     } else {
-      const slotStart = Math.floor(slot / 2) * 60 + (slot % 2) * 30;
+      const slotStart = archiveSlotStartMinute(archiveSlot);
       const existingDistance = Math.abs(archiveSlotMinute(getArchiveParts(existing.capturedAt)) - slotStart);
       const nextDistance = Math.abs(archiveSlotMinute(parts) - slotStart);
       if (nextDistance <= existingDistance) row.slots[slot] = img;
@@ -187,7 +200,7 @@ function buildArchiveDayRows(images: SkyImage[]): ArchiveDayRow[] {
 
 export default function Archive() {
   const { images } = useSkyImages();
-  const [tod, setTod] = useState<(typeof TODS)[number]>("All");
+  const [includeNight, setIncludeNight] = useState(false);
   const [palettes, setPalettes] = useState<Record<string, Palette>>({});
   const palettesRef = useRef<Record<string, Palette>>({});
   const [open, setOpen] = useState<SkyImage | null>(null);
@@ -199,11 +212,16 @@ export default function Archive() {
   // Progressive reveal: count animates up as the grid populates.
   const [revealCount, setRevealCount] = useState(0);
 
-  // Last-10 cycling sequence for the inline headline swatch
-  const recent = useMemo(() => {
+  const filtered = useMemo(() => {
     if (!images) return [];
-    return images.slice(-10);
-  }, [images]);
+    let out = images;
+    out = out.filter((i) => archiveDayKeyForDate(i.capturedAt) >= ARCHIVE_MIN_DAY_KEY);
+    if (!includeNight) out = out.filter((i) => !archiveIsNight(i.capturedAt));
+    return out;
+  }, [images, includeNight]);
+
+  // Last-10 cycling sequence for the inline headline swatch
+  const recent = useMemo(() => filtered.slice(-10), [filtered]);
   const [seqIdx, setSeqIdx] = useState(0);
   useEffect(() => {
     if (recent.length < 2) return;
@@ -212,15 +230,6 @@ export default function Archive() {
     }, 2000);
     return () => window.clearInterval(id);
   }, [recent.length]);
-  const seqImg = recent[seqIdx];
-
-  const filtered = useMemo(() => {
-    if (!images) return [];
-    let out = images;
-    out = out.filter((i) => archiveDayKeyForDate(i.capturedAt) >= ARCHIVE_MIN_DAY_KEY);
-    if (tod !== "All") out = out.filter((i) => archiveTimeOfDay(i.capturedAt) === tod.toLowerCase());
-    return out;
-  }, [images, tod]);
 
   const ordered = useMemo(() => orderImagesByArchiveRows(filtered), [filtered]);
 
@@ -268,7 +277,9 @@ export default function Archive() {
   }, [ordered.length]);
 
   const visible = useMemo(() => ordered.slice(0, revealCount), [ordered, revealCount]);
-  const dayRows = useMemo(() => buildArchiveDayRows(visible), [visible]);
+  const slotIndexes = useMemo(() => visibleArchiveSlots(includeNight), [includeNight]);
+  const slotCount = slotIndexes.length;
+  const dayRows = useMemo(() => buildArchiveDayRows(visible, slotIndexes), [visible, slotIndexes]);
 
   const parentRef = useRef<HTMLDivElement>(null);
   const timelineMeasureRef = useRef<HTMLDivElement>(null);
@@ -281,7 +292,7 @@ export default function Archive() {
     return () => ro.disconnect();
   }, []);
   const COL_OVERLAP = 1;
-  const rawTileSize = timelineW > 0 ? (timelineW + COL_OVERLAP * (DAY_SLOT_COUNT - 1)) / DAY_SLOT_COUNT : 28;
+  const rawTileSize = timelineW > 0 ? (timelineW + COL_OVERLAP * (slotCount - 1)) / slotCount : 28;
   const tileSize = Math.max(6, Math.ceil(rawTileSize));
   const rowSize = tileSize;
   // Use the page (window) scroll instead of an inner scroll container.
@@ -349,6 +360,7 @@ export default function Archive() {
                     palettes={palettes}
                     openId={open?.id}
                     tileSize={tileSize}
+                    slotCount={slotCount}
                     onOpen={(img, vt) => openWithTransition(img, vt, setOpen)}
                     style={{ position: "absolute", top, left: 0, width: "100%", height: tileSize }}
                   />
@@ -385,22 +397,8 @@ export default function Archive() {
       </footer>
 
       {/* Corner controls — editorial style */}
-      <FilterCorner tod={tod} setTod={setTod} />
+      <NightToggle includeNight={includeNight} setIncludeNight={setIncludeNight} />
     </div>
-  );
-}
-
-function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "transition-colors",
-        active ? "text-ink underline underline-offset-4" : "text-ink-faint hover:text-ink",
-      )}
-    >
-      {children}
-    </button>
   );
 }
 
@@ -454,6 +452,7 @@ function TimelineStrip({
   palettes,
   openId,
   tileSize,
+  slotCount,
   onOpen,
   style,
 }: {
@@ -461,6 +460,7 @@ function TimelineStrip({
   palettes: Record<string, Palette>;
   openId?: string;
   tileSize: number;
+  slotCount: number;
   onOpen: (img: SkyImage, vt: string) => void;
   style: React.CSSProperties;
 }) {
@@ -470,7 +470,7 @@ function TimelineStrip({
       className="grid"
       style={{
         ...style,
-        gridTemplateColumns: `repeat(${DAY_SLOT_COUNT}, minmax(0, 1fr))`,
+        gridTemplateColumns: `repeat(${slotCount}, minmax(0, 1fr))`,
         gap: "0px",
         marginRight: "-1px",
       }}
@@ -496,7 +496,7 @@ function TimelineStrip({
             palette={p}
             vt={vt}
             tileSize={tileSize}
-            cols={DAY_SLOT_COUNT}
+            cols={slotCount}
             isOpen={openId === img.id}
             onOpen={() => onOpen(img, vt)}
           />
@@ -615,31 +615,40 @@ function GridTile({
   );
 }
 
-function FilterCorner({
-  tod, setTod,
+function NightToggle({
+  includeNight,
+  setIncludeNight,
 }: {
-  tod: (typeof TODS)[number];
-  setTod: (t: (typeof TODS)[number]) => void;
+  includeNight: boolean;
+  setIncludeNight: (value: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
   return (
     <div className="pointer-events-none fixed left-4 right-4 top-5 z-50 text-[12px] sm:left-6 sm:right-auto sm:text-[13px]">
-      {open ? (
-        <div className="pointer-events-auto flex max-w-full items-center gap-3 overflow-x-auto rounded-full border border-hairline bg-paper px-3 py-2 shadow-sm no-scrollbar sm:gap-6 sm:px-4">
-          <button onClick={() => setOpen(false)} className="font-medium text-ink underline underline-offset-4">
-            Filter
-          </button>
-          <div className="flex shrink-0 items-center gap-2 text-ink-dim sm:gap-3">
-            {TODS.map((t) => (
-              <Chip key={t} active={tod === t} onClick={() => setTod(t)}>{t}</Chip>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <button onClick={() => setOpen(true)} className="pointer-events-auto text-ink hover:underline underline-offset-4">
-          Filter
-        </button>
-      )}
+      <button
+        type="button"
+        aria-pressed={includeNight}
+        onClick={() => setIncludeNight(!includeNight)}
+        className={cn(
+          "pointer-events-auto inline-flex items-center gap-2 rounded-full border border-transparent px-1 py-1 text-ink transition-colors",
+          includeNight ? "text-ink" : "text-ink-faint hover:text-ink",
+        )}
+      >
+        <span>Night</span>
+        <span
+          aria-hidden
+          className={cn(
+            "relative h-4 w-7 rounded-full border transition-colors",
+            includeNight ? "border-ink/35 bg-ink" : "border-hairline bg-paper",
+          )}
+        >
+          <span
+            className={cn(
+              "absolute top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full transition-transform",
+              includeNight ? "translate-x-[0.875rem] bg-paper" : "translate-x-0.5 bg-ink-faint",
+            )}
+          />
+        </span>
+      </button>
     </div>
   );
 }
