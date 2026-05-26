@@ -569,18 +569,19 @@ function DayLabelStrip({
       style={{ ...style, transitionDuration: visible ? undefined : "2000ms" }}
       aria-hidden
     >
-      <DayLabel row={row} side="left" />
+      <DayLabel row={row} side="left" visible={visible} />
       <div />
-      <DayLabel row={row} side="right" />
+      <DayLabel row={row} side="right" visible={visible} />
     </div>
   );
 }
 
-function DayLabel({ row, side }: { row: ArchiveDayRow; side: "left" | "right" }) {
+function DayLabel({ row, side, visible }: { row: ArchiveDayRow; side: "left" | "right"; visible: boolean }) {
   return (
     <div
       className={cn(
-        "flex h-full flex-col justify-center overflow-hidden font-mono text-[7px] leading-none text-ink-faint tabular-nums sm:text-[9px]",
+        "flex h-full flex-col justify-center overflow-hidden font-mono text-[7px] leading-none tabular-nums sm:text-[9px]",
+        visible ? "text-ink-faint" : "archive-date-fade-color",
         side === "left" ? "items-end text-right" : "items-start text-left",
       )}
     >
