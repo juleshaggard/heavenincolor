@@ -34,11 +34,11 @@ function readableInk(hex: string): string {
 
 const FALLBACK_IMMERSION_COLORS = ["#202734", "#536577", "#8ea1b1", "#d7d6cc", "#f1ebe0"];
 const MESH_POINTS = [
-  { x: 16, y: 20, size: "clamp(5rem, 16vw, 13rem)" },
-  { x: 81, y: 17, size: "clamp(4.5rem, 14vw, 12rem)" },
-  { x: 66, y: 51, size: "clamp(5.5rem, 18vw, 15rem)" },
-  { x: 21, y: 78, size: "clamp(5rem, 15vw, 12rem)" },
-  { x: 84, y: 77, size: "clamp(4.5rem, 13vw, 11rem)" },
+  { x: 16, y: 20 },
+  { x: 81, y: 17 },
+  { x: 66, y: 51 },
+  { x: 21, y: 78 },
+  { x: 84, y: 77 },
 ];
 
 function normalizeHex(color?: string): string | null {
@@ -868,14 +868,14 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
     }
   };
   const copyColor = async (color: string) => {
-    try {
-      await copyText(color.toUpperCase());
-    } catch {
-      return;
-    }
     setCopiedColor(color);
     if (copyTimerRef.current) window.clearTimeout(copyTimerRef.current);
     copyTimerRef.current = window.setTimeout(() => setCopiedColor(null), 1400);
+    try {
+      await copyText(color.toUpperCase());
+    } catch {
+      // Keep the interaction responsive even when a browser blocks clipboard access.
+    }
   };
   const vt = `sky-${image.id.replace(/[^a-z0-9_-]/gi, "_")}`;
   const colors = immersionColorsFor(image, palette);
@@ -885,6 +885,7 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
   const quietTextColor = hexWithAlpha(textColor, 0.72);
   const imageWidth = Math.max(32, image.width ?? 128);
   const imageHeight = Math.max(24, image.height ?? Math.round(imageWidth * 9 / 16));
+  const imageCropSize = Math.min(imageWidth, imageHeight);
   const textShadow = textColor === "#ffffff"
     ? "0 1px 24px rgba(0,0,0,0.35)"
     : "0 1px 24px rgba(255,255,255,0.28)";
@@ -907,50 +908,6 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
             "radial-gradient(ellipse at 50% 46%, transparent 0%, transparent 36%, rgba(0,0,0,0.12) 100%)",
         }}
       />
-
-      {meshColors.map((color, index) => {
-        const point = MESH_POINTS[index];
-        const copied = copiedColor === color;
-        return (
-          <div
-            key={`${color}-${index}`}
-            className="absolute z-[62]"
-            style={{ left: `${point.x}%`, top: `${point.y}%`, transform: "translate(-50%, -50%)" }}
-          >
-            <button
-              type="button"
-              data-palette-mesh-point={color}
-              aria-label={`Copy ${color.toUpperCase()}`}
-              title={color.toUpperCase()}
-              onClick={(e) => {
-                e.stopPropagation();
-                void copyColor(color);
-              }}
-              className="group relative rounded-full transition-transform duration-300 ease-out hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-paper/70 active:scale-95"
-              style={{
-                width: point.size,
-                height: point.size,
-                background: `radial-gradient(circle at 34% 32%, ${hexWithAlpha("#ffffff", 0.48)} 0%, ${hexWithAlpha(color, 0.88)} 42%, ${hexWithAlpha(color, 0.18)} 72%, transparent 100%)`,
-              }}
-            >
-              <span
-                aria-hidden
-                className={cn(
-                  "pointer-events-none absolute left-1/2 top-1/2 rounded-full px-2 py-1 font-mono text-[10px] uppercase tracking-[0.14em] opacity-0 shadow-neu transition-opacity duration-200",
-                  copied ? "opacity-100" : "group-hover:opacity-100",
-                )}
-                style={{
-                  background: hexWithAlpha(color, 0.9),
-                  color: readableInk(color),
-                  transform: "translate(-50%, -50%)",
-                }}
-              >
-                {copied ? "copied" : color.toUpperCase()}
-              </span>
-            </button>
-          </div>
-        );
-      })}
 
       <button
         onClick={(e) => { e.stopPropagation(); close(); }}
@@ -991,10 +948,10 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
       <div className="pointer-events-none relative z-[68] flex h-full w-full items-center justify-center px-6 pb-36 pt-32 sm:pb-32 sm:pt-28">
         <div className="pointer-events-auto flex flex-col items-center gap-5" onClick={(e) => e.stopPropagation()}>
           <div
-            className="overflow-hidden rounded-[4px] bg-paper/10"
+            className="relative overflow-hidden rounded-[4px] bg-paper/10"
             style={{
-              width: imageWidth,
-              height: imageHeight,
+              width: imageCropSize,
+              height: imageCropSize,
               outline: `1px solid ${hexWithAlpha(textColor, 0.2)}`,
               boxShadow: `0 28px 110px ${hexWithAlpha(primaryColor, 0.42)}`,
               viewTransitionName: vt,
@@ -1007,7 +964,12 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
               height={imageHeight}
               loading="eager"
               decoding="async"
-              className="block h-full w-full object-cover"
+              className="absolute left-1/2 top-1/2 block max-w-none"
+              style={{
+                width: imageWidth,
+                height: imageHeight,
+                transform: "translate(-50%, -50%)",
+              }}
             />
           </div>
           <div className="text-center" style={{ color: textColor, textShadow }}>
@@ -1015,7 +977,7 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
               {nameColor(primaryColor)}
             </div>
             <div className="mt-3 font-mono text-[11px] uppercase tracking-[0.18em]" style={{ color: quietTextColor }}>
-              {primaryColor.toUpperCase()} / {imageWidth} x {imageHeight}
+              {primaryColor.toUpperCase()} / {imageCropSize} x {imageCropSize} crop
             </div>
           </div>
         </div>
@@ -1034,10 +996,10 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
               data-palette-color={color}
               aria-label={`Copy ${color.toUpperCase()}`}
               onClick={() => void copyColor(color)}
-              className="inline-flex h-9 items-center gap-2 rounded-full border px-3 font-mono text-[11px] uppercase tracking-[0.12em] shadow-neu transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-paper/70 active:translate-y-0"
+              className="inline-flex h-9 items-center gap-2 rounded-full border px-3 font-mono text-[11px] uppercase tracking-[0.12em] shadow-[0_8px_32px_rgba(0,0,0,0.12)] backdrop-blur-md transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-paper/70 active:translate-y-0"
               style={{
-                background: hexWithAlpha(color, copied ? 0.98 : 0.82),
-                borderColor: hexWithAlpha(readableInk(color), 0.22),
+                background: hexWithAlpha(color, copied ? 0.92 : 0.68),
+                borderColor: hexWithAlpha(readableInk(color), 0.28),
                 color: readableInk(color),
               }}
             >
