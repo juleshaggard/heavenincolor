@@ -52,6 +52,8 @@ describe("sky image manifest", () => {
                 thumbUrl: "sky/thumbs/2026/05/new.jpg",
                 sprite: { key: "2026-W21", index: 1 },
                 averageHex: "#abcdef",
+                cropAverageHex: "#fedcba",
+                cropPalette: ["#111111", "#222222"],
               },
               {
                 id: "20260524T155706Z",
@@ -72,6 +74,8 @@ describe("sky image manifest", () => {
     expect(images[1].thumbUrl).toBe("/sky/thumbs/2026/05/new.jpg");
     expect(images[0].sprite?.url).toBe("/sky/sprites/2026/2026-W21.jpg");
     expect(images[1].sprite?.index).toBe(1);
+    expect(images[1].cropAverageHex).toBe("#fedcba");
+    expect(images[1].cropPalette).toEqual(["#111111", "#222222"]);
     expect(getSkyRetention()?.retainedCount).toBe(2);
   });
 

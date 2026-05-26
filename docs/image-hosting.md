@@ -37,6 +37,8 @@ The current publisher caps `images/` files at 128px wide and `thumbs/` files at 
       "imageUrl": "images/2026/05/20260524T165716Z.jpg",
       "thumbUrl": "thumbs/2026/05/20260524T165716Z.jpg",
       "averageHex": "#9da9b4",
+      "cropAverageHex": "#99a4ae",
+      "cropPalette": ["#7d8791", "#9aa4ae", "#b6bec5", "#c6c9ca", "#d2d2cf"],
       "width": 128,
       "height": 72,
       "bytes": 1415,
@@ -47,6 +49,8 @@ The current publisher caps `images/` files at 128px wide and `thumbs/` files at 
 ```
 
 All relative URLs are resolved under Vite's `BASE_URL`, so the same manifest works locally and on the custom domain.
+
+`averageHex` is the full-frame camera average. `cropAverageHex` and `cropPalette` are computed from the center-square crop used by the archive sprites and color-immersion modal, so the modal colors match the image area a visitor actually sees.
 
 ## Pi Publishing
 

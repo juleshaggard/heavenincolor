@@ -109,10 +109,12 @@ function enqueue<T>(fn: () => Promise<T>): Promise<T> {
   });
 }
 
-export function getManifestPalette(img: SkyImage): Palette | null {
-  if (img.averageHex) {
-    const swatches = img.palette?.length ? img.palette : swatchesFromHex(img.averageHex);
-    return { hex: img.averageHex, swatches, hsl: hexToHsl(img.averageHex) };
+export function getManifestPalette(img: SkyImage, options?: { crop?: boolean }): Palette | null {
+  const hex = options?.crop ? img.cropAverageHex ?? img.averageHex : img.averageHex;
+  if (hex) {
+    const manifestSwatches = options?.crop ? img.cropPalette ?? img.palette : img.palette;
+    const swatches = manifestSwatches?.length ? manifestSwatches : swatchesFromHex(hex);
+    return { hex, swatches, hsl: hexToHsl(hex) };
   }
   return null;
 }

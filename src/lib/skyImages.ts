@@ -6,6 +6,8 @@ export type SkyImage = {
   sprite?: SkySpriteFrame;
   averageHex?: string;
   palette?: string[];
+  cropAverageHex?: string;
+  cropPalette?: string[];
   width?: number;
   height?: number;
   bytes?: number;
@@ -72,6 +74,8 @@ export type RawSkyImage = {
   sprite?: RawSkyImageSprite;
   averageHex?: string;
   palette?: string[];
+  cropAverageHex?: string;
+  cropPalette?: string[];
   width?: number;
   height?: number;
   bytes?: number;
@@ -169,6 +173,8 @@ export async function listSkyImages(force = false): Promise<SkyImage[]> {
           sprite: spriteFrameFor(r, manifest.sprites),
           averageHex: r.averageHex,
           palette: r.palette,
+          cropAverageHex: r.cropAverageHex,
+          cropPalette: r.cropPalette,
           width: r.width,
           height: r.height,
           bytes: r.bytes,

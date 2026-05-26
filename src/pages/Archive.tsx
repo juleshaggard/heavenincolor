@@ -55,14 +55,14 @@ function hexWithAlpha(color: string, alpha: number): string {
 
 function immersionColorsFor(image: SkyImage, palette?: Palette): string[] {
   const seen = new Set<string>();
-  const raw = [palette?.hex, ...(palette?.swatches ?? []), image.averageHex];
+  const raw = [palette?.hex, ...(palette?.swatches ?? []), image.cropAverageHex];
   const colors = raw.flatMap((color) => {
     const normalized = normalizeHex(color);
     if (!normalized || seen.has(normalized)) return [];
     seen.add(normalized);
     return [normalized];
   });
-  return colors.length ? colors : FALLBACK_IMMERSION_COLORS;
+  return colors.length ? colors.slice(0, 5) : FALLBACK_IMMERSION_COLORS;
 }
 
 function meshColorsFor(colors: string[]): string[] {
@@ -307,7 +307,7 @@ export default function Archive() {
   const manifestPalettes = useMemo(() => {
     const next: Record<string, Palette> = {};
     for (const img of ordered) {
-      const palette = getManifestPalette(img);
+      const palette = getManifestPalette(img, { crop: true });
       if (palette) next[img.id] = palette;
     }
     return next;
