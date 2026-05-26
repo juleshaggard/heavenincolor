@@ -644,8 +644,10 @@ function NightToggle({
         >
           <span
             className={cn(
-              "absolute top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full transition-transform",
-              includeNight ? "translate-x-[0.875rem] bg-paper" : "translate-x-0.5 bg-ink-faint",
+              "absolute left-0.5 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full transition-[transform,background-color,box-shadow]",
+              includeNight
+                ? "translate-x-3.5 bg-paper shadow-[0_0_0_1px_hsl(var(--paper)),0_1px_2px_rgba(0,0,0,0.2)]"
+                : "translate-x-0 bg-ink-faint shadow-none",
             )}
           />
         </span>
