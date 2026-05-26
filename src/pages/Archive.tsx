@@ -3,7 +3,7 @@ import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useSkyImages } from "@/hooks/useSkyImages";
 import { SkyThumb } from "@/components/sky/SkyThumb";
 import { Swatches } from "@/components/sky/Swatches";
-import { getPalette, type Palette } from "@/lib/palette";
+import { getManifestPalette, getPalette, type Palette } from "@/lib/palette";
 import { fmtDate, fmtTime, captionFor, nameColor } from "@/lib/format";
 import type { SkyImage } from "@/lib/skyImages";
 import { cn } from "@/lib/utils";
@@ -233,12 +233,25 @@ export default function Archive() {
   }, [recent.length]);
 
   const ordered = useMemo(() => orderImagesByArchiveRows(filtered), [filtered]);
+  const manifestPalettes = useMemo(() => {
+    const next: Record<string, Palette> = {};
+    for (const img of ordered) {
+      const palette = getManifestPalette(img);
+      if (palette) next[img.id] = palette;
+    }
+    return next;
+  }, [ordered]);
+  const displayPalettes = useMemo(
+    () => ({ ...manifestPalettes, ...palettes }),
+    [manifestPalettes, palettes],
+  );
 
-  // background-fetch palettes for visible-ish chunk
+  // Fall back to extraction only for images without manifest-provided colors.
   useEffect(() => {
     let cancel = false;
     (async () => {
       for (const img of ordered.slice(0, 200)) {
+        if (manifestPalettes[img.id]) continue;
         if (palettesRef.current[img.id]) continue;
         const p = await getPalette(img);
         if (cancel) return;
@@ -250,7 +263,7 @@ export default function Archive() {
       }
     })();
     return () => { cancel = true; };
-  }, [ordered]);
+  }, [ordered, manifestPalettes]);
 
   // Animate revealCount from current value up to ordered.length when it changes.
   useEffect(() => {
@@ -358,7 +371,7 @@ export default function Archive() {
                   <TimelineStrip
                     key={vr.key}
                     row={row}
-                    palettes={palettes}
+                    palettes={displayPalettes}
                     openId={open?.id}
                     tileSize={tileSize}
                     slotCount={slotCount}
@@ -389,7 +402,7 @@ export default function Archive() {
         </div>
       </div>
 
-      {open && <Lightbox image={open} palette={palettes[open.id]} onClose={() => setOpen(null)} />}
+      {open && <Lightbox image={open} palette={displayPalettes[open.id]} onClose={() => setOpen(null)} />}
 
       <footer className="px-[4vw] pt-[6vh] pb-[6vh] text-center">
         <BlurFollowText>

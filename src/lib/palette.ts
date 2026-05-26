@@ -109,16 +109,23 @@ function enqueue<T>(fn: () => Promise<T>): Promise<T> {
   });
 }
 
+export function getManifestPalette(img: SkyImage): Palette | null {
+  if (img.averageHex) {
+    const swatches = img.palette?.length ? img.palette : swatchesFromHex(img.averageHex);
+    return { hex: img.averageHex, swatches, hsl: hexToHsl(img.averageHex) };
+  }
+  return null;
+}
+
 export async function getPalette(img: SkyImage): Promise<Palette> {
   const cached = memCache[img.id];
   if (cached) return cached;
 
-  if (img.averageHex) {
-    const swatches = img.palette?.length ? img.palette : swatchesFromHex(img.averageHex);
-    const out: Palette = { hex: img.averageHex, swatches, hsl: hexToHsl(img.averageHex) };
-    memCache[img.id] = out;
+  const manifestPalette = getManifestPalette(img);
+  if (manifestPalette) {
+    memCache[img.id] = manifestPalette;
     persist();
-    return out;
+    return manifestPalette;
   }
 
   const url = img.thumbUrl || img.imageUrl;
