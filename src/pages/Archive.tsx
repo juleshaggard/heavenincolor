@@ -167,6 +167,12 @@ function archiveDayLabel(parts: ArchiveParts): string {
   return `${String(parts.month).padStart(2, "0")}/${String(parts.day).padStart(2, "0")}/${String(parts.year).slice(-2)}`;
 }
 
+function archiveTimeLabel(parts: ArchiveParts): string {
+  const hour = parts.hour % 12 || 12;
+  const period = parts.hour >= 12 ? "PM" : "AM";
+  return `${String(hour).padStart(2, "0")}:${String(parts.minute).padStart(2, "0")} ${period}`;
+}
+
 function archiveSortKey(parts: ArchiveParts): number {
   return parts.year * 10000 + parts.month * 100 + parts.day;
 }
@@ -856,6 +862,7 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
   const wipeRef = useRef<SVGSVGElement | null>(null);
   const wipePathRef = useRef<SVGPathElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
+  const paletteMetaRef = useRef<HTMLDivElement | null>(null);
   const paletteRef = useRef<HTMLDivElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const entryTimelineRef = useRef<gsap.core.Timeline | null>(null);
@@ -870,6 +877,7 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
     const wipe = wipeRef.current;
     const wipePath = wipePathRef.current;
     const content = contentRef.current;
+    const paletteMeta = paletteMetaRef.current;
     const paletteItems = paletteRef.current ? Array.from(paletteRef.current.children) : [];
     const closeButton = closeButtonRef.current;
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -894,7 +902,7 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
       },
     });
     exitTimelineRef.current
-      .to([content, closeButton, ...paletteItems].filter(Boolean), {
+      .to([content, closeButton, paletteMeta, ...paletteItems].filter(Boolean), {
         autoAlpha: 0,
         y: -8,
         duration: 0.18,
@@ -939,6 +947,8 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
   const imageWidth = Math.max(32, image.width ?? 128);
   const imageHeight = Math.max(24, image.height ?? Math.round(imageWidth * 9 / 16));
   const imageCropSize = Math.min(imageWidth, imageHeight);
+  const capturedParts = getArchiveParts(image.capturedAt);
+  const capturedStamp = `${archiveDayLabel(capturedParts)} · ${archiveTimeLabel(capturedParts)}`;
 
   useGSAP(() => {
     isClosingRef.current = false;
@@ -946,6 +956,7 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
     const wipe = wipeRef.current;
     const wipePath = wipePathRef.current;
     const content = contentRef.current;
+    const paletteMeta = paletteMetaRef.current;
     const paletteItems = paletteRef.current ? Array.from(paletteRef.current.children) : [];
     const closeButton = closeButtonRef.current;
     if (!modal || !wipe || !wipePath || !content) return;
@@ -955,7 +966,7 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
       entryTimelineRef.current = null;
       gsap.set(modal, { autoAlpha: 1 });
       gsap.set(wipe, { autoAlpha: 0 });
-      gsap.set([content, closeButton, ...paletteItems].filter(Boolean), { autoAlpha: 1, clearProps: "transform" });
+      gsap.set([content, closeButton, paletteMeta, ...paletteItems].filter(Boolean), { autoAlpha: 1, clearProps: "transform" });
       return;
     }
 
@@ -967,6 +978,7 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
     gsap.set(wipe, { autoAlpha: 1, clearProps: "transform", willChange: "contents" });
     gsap.set(content, { autoAlpha: 0, y: 28, scale: 0.985 });
     gsap.set(closeButton, { autoAlpha: 0, scale: 0.92 });
+    gsap.set(paletteMeta, { autoAlpha: 0, y: 6 });
     gsap.set(paletteItems, { autoAlpha: 0, y: 10 });
 
     const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
@@ -975,7 +987,8 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
       .to(curve, { edgeY: 100, controlY: 100, duration: 0.5, ease: "power2.out", onUpdate: syncCurve })
       .to(content, { autoAlpha: 1, y: 0, scale: 1, duration: 0.7 }, 0.18)
       .to(closeButton, { autoAlpha: 1, scale: 1, duration: 0.36 }, 0.32)
-      .to(paletteItems, { autoAlpha: 1, y: 0, duration: 0.44, stagger: 0.035 }, 0.44)
+      .to(paletteMeta, { autoAlpha: 1, y: 0, duration: 0.36 }, 0.38)
+      .to(paletteItems, { autoAlpha: 1, y: 0, duration: 0.44, stagger: 0.035 }, 0.46)
       .set(wipe, { autoAlpha: 0, clearProps: "willChange" });
 
     return () => {
@@ -1057,32 +1070,43 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
       </div>
 
       <div
-        ref={paletteRef}
-        className="fixed inset-x-4 bottom-5 z-[72] flex flex-wrap items-center justify-center gap-2 sm:bottom-7"
+        className="fixed inset-x-4 bottom-5 z-[72] flex flex-col items-center justify-center gap-2.5 sm:bottom-7"
         onClick={(e) => e.stopPropagation()}
       >
-        {colors.map((color) => {
-          const copied = copiedColor === color;
-          return (
-            <button
-              key={color}
-              type="button"
-              data-palette-color={color}
-              aria-label={`Copy ${color.toUpperCase()}`}
-              onClick={() => void copyColor(color)}
-              className="inline-flex h-9 items-center gap-2 rounded-full border px-3 font-mono text-[11px] uppercase tracking-[0.12em] shadow-[0_8px_32px_rgba(0,0,0,0.12)] backdrop-blur-md transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-paper/70 active:translate-y-0"
-              style={{
-                background: hexWithAlpha(color, copied ? 0.92 : 0.68),
-                borderColor: hexWithAlpha(readableInk(color), 0.28),
-                color: readableInk(color),
-              }}
-            >
-              <span className="h-2 w-2 rounded-full border" style={{ borderColor: hexWithAlpha(readableInk(color), 0.42) }} />
-              <span>{copied ? "copied" : color.toUpperCase()}</span>
-              {copied ? <Check className="h-3.5 w-3.5" strokeWidth={1.75} /> : <Copy className="h-3.5 w-3.5" strokeWidth={1.75} />}
-            </button>
-          );
-        })}
+        <div
+          ref={paletteMetaRef}
+          className="font-mono text-[10px] uppercase tracking-[0.2em] sm:text-[11px]"
+          style={{
+            color: hexWithAlpha(textColor, 0.76),
+            textShadow: `0 1px 18px ${hexWithAlpha(primaryColor, 0.34)}`,
+          }}
+        >
+          {capturedStamp}
+        </div>
+        <div ref={paletteRef} className="flex flex-wrap items-center justify-center gap-2">
+          {colors.map((color) => {
+            const copied = copiedColor === color;
+            return (
+              <button
+                key={color}
+                type="button"
+                data-palette-color={color}
+                aria-label={`Copy ${color.toUpperCase()}`}
+                onClick={() => void copyColor(color)}
+                className="inline-flex h-9 items-center gap-2 rounded-full border px-3 font-mono text-[11px] uppercase tracking-[0.12em] shadow-[0_8px_32px_rgba(0,0,0,0.12)] backdrop-blur-md transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-paper/70 active:translate-y-0"
+                style={{
+                  background: hexWithAlpha(color, copied ? 0.92 : 0.68),
+                  borderColor: hexWithAlpha(readableInk(color), 0.28),
+                  color: readableInk(color),
+                }}
+              >
+                <span className="h-2 w-2 rounded-full border" style={{ borderColor: hexWithAlpha(readableInk(color), 0.42) }} />
+                <span>{copied ? "copied" : color.toUpperCase()}</span>
+                {copied ? <Check className="h-3.5 w-3.5" strokeWidth={1.75} /> : <Copy className="h-3.5 w-3.5" strokeWidth={1.75} />}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
