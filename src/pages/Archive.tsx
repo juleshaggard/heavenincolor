@@ -39,8 +39,8 @@ const ARCHIVE_EMPTY_BACKGROUND = "#e7e7e7";
 const ARCHIVE_DATE_GRID_CLASS =
   "grid grid-cols-[2.35rem_minmax(0,1fr)_2.35rem] gap-x-1 sm:grid-cols-[minmax(3rem,4.75rem)_minmax(0,1fr)_minmax(3rem,4.75rem)] sm:gap-x-3";
 const DAY_SLOT_COUNT = 48;
-const DAY_START_MINUTE = 5 * 60 + 30;
-const NIGHT_START_MINUTE = 20 * 60 + 30;
+const DAY_START_MINUTE = 6 * 60;
+const NIGHT_START_MINUTE = 19 * 60 + 30;
 
 type ArchiveParts = {
   year: number;
