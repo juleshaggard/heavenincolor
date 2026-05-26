@@ -6,7 +6,7 @@ import { getManifestPalette, getPalette, type Palette } from "@/lib/palette";
 import { fmtDate, fmtTime, captionFor, nameColor } from "@/lib/format";
 import type { SkyImage } from "@/lib/skyImages";
 import { cn } from "@/lib/utils";
-import { X, ArrowUpRight, Check, Copy } from "lucide-react";
+import { X, Check, Copy } from "lucide-react";
 import { LOCATION } from "@/hooks/useWeather";
 
 // View Transitions API (Chromium). Falls back gracefully.
@@ -932,16 +932,6 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-[0.16em] sm:text-xs">
           <span>{fmtTime(image.capturedAt)}</span>
           <span style={{ color: quietTextColor }}>{captionFor(image.capturedAt)}</span>
-          <a
-            href={image.imageUrl}
-            target="_blank"
-            rel="noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="pointer-events-auto inline-flex items-center gap-1 transition-opacity hover:opacity-70"
-          >
-            Hosted image
-            <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.75} />
-          </a>
         </div>
       </div>
 
