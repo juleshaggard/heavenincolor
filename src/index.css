@@ -165,8 +165,12 @@ All colors MUST be HSL.
 
   @keyframes archiveDateFadeColor {
     0% { color: hsl(27 100% 50%); }
-    34% { color: hsl(357 96% 48%); }
-    100% { color: hsl(278 82% 48%); }
+    16% { color: hsl(357 96% 48%); }
+    32% { color: hsl(278 82% 48%); }
+    48% { color: hsl(218 96% 53%); }
+    64% { color: hsl(142 90% 40%); }
+    80% { color: hsl(51 100% 50%); }
+    100% { color: hsl(214 88% 54%); }
   }
   .archive-date-fade-color {
     animation: archiveDateFadeColor 2000ms cubic-bezier(0.16, 1, 0.3, 1) both;
