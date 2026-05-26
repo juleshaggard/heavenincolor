@@ -969,6 +969,9 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
             <div className="mt-3 font-mono text-[10px] uppercase tracking-[0.18em] sm:text-[11px]" style={{ color: quietTextColor }}>
               Computed color
             </div>
+            <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] sm:text-[11px]" style={{ color: hexWithAlpha(textColor, 0.58) }}>
+              {fmtDate(image.capturedAt)} / {fmtTime(image.capturedAt)}
+            </div>
           </div>
         </div>
       </div>
