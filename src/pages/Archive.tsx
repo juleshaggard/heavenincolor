@@ -38,7 +38,7 @@ const ARCHIVE_TIME_ZONE = "America/Los_Angeles";
 const ARCHIVE_MIN_DAY_KEY = "2026-04-25";
 const ARCHIVE_EMPTY_BACKGROUND = "#e7e7e7";
 const ARCHIVE_DATE_GRID_CLASS =
-  "grid grid-cols-[2.35rem_minmax(0,1fr)_2.35rem] gap-x-1 sm:grid-cols-[minmax(3rem,4.75rem)_minmax(0,1fr)_minmax(3rem,4.75rem)] sm:gap-x-3";
+  "grid grid-cols-[2rem_minmax(0,1fr)_2rem] gap-x-1 sm:grid-cols-[minmax(3rem,4.75rem)_minmax(0,1fr)_minmax(3rem,4.75rem)] sm:gap-x-3";
 const DAY_SLOT_COUNT = 48;
 
 type ArchiveParts = {
@@ -301,9 +301,9 @@ export default function Archive() {
 
   return (
     <div>
-      <header className="px-[4vw] pt-[6vh] pb-[6vh] text-center">
+      <header className="px-0 pt-14 pb-10 text-center sm:px-[4vw] sm:pt-[6vh] sm:pb-[6vh]">
         <BlurFollowText>
-          <h1 className="font-display leading-[0.95] tracking-[-0.02em] text-[clamp(3rem,9vw,9rem)]">
+          <h1 className="hidden font-display leading-[0.95] tracking-[-0.02em] text-[clamp(3rem,9vw,9rem)] sm:block">
             <span className="tabular-nums">{revealCount.toLocaleString()}</span>
             <span
               aria-hidden
@@ -325,12 +325,33 @@ export default function Archive() {
             <br />
             <span>every 30 minutes</span>
           </h1>
+          <h1 className="mx-auto block max-w-[22rem] font-display text-[clamp(2.85rem,12vw,3.45rem)] leading-[0.9] tracking-[-0.02em] sm:hidden">
+            <span className="tabular-nums">{revealCount.toLocaleString()}</span>
+            <span
+              aria-hidden
+              className="mx-3 inline-block overflow-hidden align-middle"
+              style={{
+                width: "0.62em",
+                height: "0.62em",
+                verticalAlign: "0.08em",
+                borderRadius: "6px",
+                transform: "translateY(2px)",
+              }}
+            >
+              <CircleRevealSequence images={recent} index={seqIdx} />
+            </span>
+            <span>skies</span>
+            <br />
+            <em className="italic">{LOCATION.name}</em>
+            <br />
+            <span>every 30 minutes</span>
+          </h1>
         </BlurFollowText>
       </header>
 
       {/* Daily archive matrix */}
-      <div className="px-0 sm:px-[4vw]">
-        <div ref={parentRef} className="relative">
+      <div className="-mx-6 px-3 sm:mx-0 sm:px-[4vw]">
+        <div ref={parentRef} className="relative rounded-[28px] bg-[#eeeeee] sm:rounded-none sm:bg-transparent">
           <div className={ARCHIVE_DATE_GRID_CLASS}>
             <div style={{ height: totalRowsSize }} />
             <div
@@ -378,7 +399,7 @@ export default function Archive() {
 
       <footer className="px-[4vw] pt-[6vh] pb-[6vh] text-center">
         <BlurFollowText>
-          <h2 className="font-display leading-[0.95] tracking-[-0.02em] text-[clamp(3rem,9vw,9rem)]">
+          <h2 className="font-display leading-[0.95] tracking-[-0.02em] text-[clamp(2.75rem,12vw,9rem)] sm:text-[clamp(3rem,9vw,9rem)]">
             Heaven in Color
           </h2>
         </BlurFollowText>
@@ -524,7 +545,7 @@ function DayLabel({ row, side }: { row: ArchiveDayRow; side: "left" | "right" })
   return (
     <div
       className={cn(
-        "flex h-full flex-col justify-center overflow-hidden font-mono text-[7px] leading-none text-ink-faint tabular-nums sm:text-[9px]",
+        "flex h-full flex-col justify-center overflow-hidden font-mono text-[6.5px] leading-none text-ink-faint tabular-nums sm:text-[9px]",
         side === "left" ? "items-end text-right" : "items-start text-left",
       )}
     >
