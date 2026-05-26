@@ -114,6 +114,7 @@ async function copyText(value: string): Promise<void> {
 const ARCHIVE_TIME_ZONE = "America/Los_Angeles";
 const ARCHIVE_MIN_DAY_KEY = "2026-04-25";
 const ARCHIVE_EMPTY_BACKGROUND = "#e7e7e7";
+const ARCHIVE_GAP_BACKGROUND = "linear-gradient(90deg, #D9D9D9 0%, #ffffff 100%)";
 const ARCHIVE_DATE_GRID_CLASS =
   "grid grid-cols-[2.35rem_minmax(0,1fr)_2.35rem] gap-x-1 sm:grid-cols-[minmax(3rem,4.75rem)_minmax(0,1fr)_minmax(3rem,4.75rem)] sm:gap-x-3";
 const DAY_SLOT_COUNT = 48;
@@ -406,6 +407,7 @@ export default function Archive() {
 
   const parentRef = useRef<HTMLDivElement>(null);
   const timelineMeasureRef = useRef<HTMLDivElement>(null);
+  const [isTimeBarStuck, setIsTimeBarStuck] = useState(false);
   const [timelineW, setTimelineW] = useState(0);
   useEffect(() => {
     const el = timelineMeasureRef.current;
@@ -413,6 +415,20 @@ export default function Archive() {
     const ro = new ResizeObserver(([entry]) => setTimelineW(entry.contentRect.width));
     ro.observe(el);
     return () => ro.disconnect();
+  }, []);
+  useEffect(() => {
+    const update = () => {
+      const top = parentRef.current?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY;
+      const stickyTop = window.matchMedia("(min-width: 640px)").matches ? 20 : 48;
+      setIsTimeBarStuck(top <= stickyTop);
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
   }, []);
   const COL_OVERLAP = 1;
   const rawTileSize = timelineW > 0 ? (timelineW + COL_OVERLAP * (slotCount - 1)) / slotCount : 28;
@@ -470,6 +486,7 @@ export default function Archive() {
               slotIndexes={slotIndexes}
               activeSlotIndex={hoveredSlotIndex}
               slotCount={slotCount}
+              isStuck={isTimeBarStuck}
             />
           </div>
           <div className={ARCHIVE_DATE_GRID_CLASS}>
@@ -641,12 +658,23 @@ function TimelineStrip({
       {row.slots.map((img, slot) => {
         const archiveSlot = slotIndexes[slot] ?? slot;
         if (!img) {
+          if (slot > 0 && !row.slots[slot - 1]) return null;
+          let runLength = 1;
+          while (slot + runLength < row.slots.length && !row.slots[slot + runLength]) {
+            runLength++;
+          }
           return (
             <span
               key={`${row.key}-empty-${archiveSlot}`}
+              data-archive-gap
               aria-hidden
               className="block"
-              style={{ height: tileSize, marginRight: "-1px" }}
+              style={{
+                gridColumn: `span ${runLength}`,
+                height: tileSize,
+                marginRight: "-1px",
+                background: ARCHIVE_GAP_BACKGROUND,
+              }}
             />
           );
         }
@@ -673,21 +701,41 @@ function TimeLabelStrip({
   slotIndexes,
   activeSlotIndex,
   slotCount,
+  isStuck,
 }: {
   slotIndexes: number[];
   activeSlotIndex: number | null;
   slotCount: number;
+  isStuck: boolean;
 }) {
   return (
-    <div className={cn(ARCHIVE_DATE_GRID_CLASS, "-translate-y-3 sm:-translate-y-4")} aria-hidden>
+    <div
+      className={cn(
+        ARCHIVE_DATE_GRID_CLASS,
+        isStuck ? "-translate-y-5" : "-translate-y-8 sm:-translate-y-9",
+      )}
+      aria-hidden
+    >
       <div />
       <div
-        className="grid overflow-visible"
-        style={{ gridTemplateColumns: `repeat(${slotCount}, minmax(0, 1fr))` }}
+        data-archive-time-bar
+        className="relative py-2 sm:py-2.5"
       >
-        {slotIndexes.map((slot, index) => (
-          <TimeLabel key={slot} slot={slot} visible={activeSlotIndex === index} />
-        ))}
+        <div
+          className={cn(
+            "absolute inset-0 bg-paper",
+            activeSlotIndex === null ? "opacity-0 transition-opacity ease-out" : "opacity-100 transition-none",
+          )}
+          style={{ transitionDuration: activeSlotIndex === null ? "2000ms" : undefined }}
+        />
+        <div
+          className="relative grid overflow-visible"
+          style={{ gridTemplateColumns: `repeat(${slotCount}, minmax(0, 1fr))` }}
+        >
+          {slotIndexes.map((slot, index) => (
+            <TimeLabel key={slot} slot={slot} visible={activeSlotIndex === index} />
+          ))}
+        </div>
       </div>
       <div />
     </div>

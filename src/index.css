@@ -161,19 +161,17 @@ All colors MUST be HSL.
 
   .archive-date-visible-color {
     color: hsl(214 88% 54%);
+    filter: blur(0);
   }
 
   @keyframes archiveDateFadeColor {
-    0% { color: hsl(27 100% 50%); }
-    16% { color: hsl(357 96% 48%); }
-    32% { color: hsl(278 82% 48%); }
-    48% { color: hsl(218 96% 53%); }
-    64% { color: hsl(142 90% 40%); }
-    80% { color: hsl(51 100% 50%); }
-    100% { color: hsl(214 88% 54%); }
+    0% { color: hsl(34 100% 76%); filter: blur(1px); }
+    18% { color: hsl(43 100% 75%); filter: blur(2.6px); }
+    100% { color: hsl(54 100% 78%); filter: blur(7px); }
   }
   .archive-date-fade-color {
     animation: archiveDateFadeColor 2000ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    will-change: color, filter;
   }
 
   @keyframes colorImmersionDrift {
