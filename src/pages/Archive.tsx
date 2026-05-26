@@ -212,6 +212,7 @@ export default function Archive() {
 
   // Progressive reveal: count animates up as the grid populates.
   const [revealCount, setRevealCount] = useState(0);
+  const hasRunInitialReveal = useRef(false);
 
   const filtered = useMemo(() => {
     if (!images) return [];
@@ -265,18 +266,25 @@ export default function Archive() {
     return () => { cancel = true; };
   }, [ordered, manifestPalettes]);
 
-  // Animate revealCount from current value up to ordered.length when it changes.
+  // Animate the first archive load only. Filter toggles should resize the matrix immediately.
   useEffect(() => {
     const target = ordered.length;
     if (target === 0) {
       setRevealCount(0);
       return;
     }
+
+    if (hasRunInitialReveal.current) {
+      setRevealCount(target);
+      return;
+    }
+
+    hasRunInitialReveal.current = true;
     let raf = 0;
     const start = performance.now();
     let from = 0;
     setRevealCount((c) => {
-      from = c > target ? 0 : c;
+      from = Math.min(c, target);
       return from;
     });
     const duration = Math.min(2400, 700 + target * 1.4);
@@ -284,13 +292,20 @@ export default function Archive() {
       const t = Math.min(1, (now - start) / duration);
       const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
       setRevealCount(Math.round(from + (target - from) * eased));
-      if (t < 1) raf = requestAnimationFrame(tick);
+      if (t < 1) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        setRevealCount(target);
+      }
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [ordered.length]);
 
-  const visible = useMemo(() => ordered.slice(0, revealCount), [ordered, revealCount]);
+  const visible = useMemo(
+    () => (revealCount >= ordered.length ? ordered : ordered.slice(0, revealCount)),
+    [ordered, revealCount],
+  );
   const slotIndexes = useMemo(() => visibleArchiveSlots(includeNight), [includeNight]);
   const slotCount = slotIndexes.length;
   const dayRows = useMemo(() => buildArchiveDayRows(visible, slotIndexes), [visible, slotIndexes]);
@@ -375,6 +390,7 @@ export default function Archive() {
                     openId={open?.id}
                     tileSize={tileSize}
                     slotCount={slotCount}
+                    slotIndexes={slotIndexes}
                     onOpen={(img, vt) => openWithTransition(img, vt, setOpen)}
                     onHoverChange={setHoveredDayKey}
                     style={{ position: "absolute", top, left: 0, width: "100%", height: tileSize }}
@@ -469,6 +485,7 @@ function TimelineStrip({
   openId,
   tileSize,
   slotCount,
+  slotIndexes,
   onOpen,
   onHoverChange,
   style,
@@ -478,6 +495,7 @@ function TimelineStrip({
   openId?: string;
   tileSize: number;
   slotCount: number;
+  slotIndexes: number[];
   onOpen: (img: SkyImage, vt: string) => void;
   onHoverChange: (key: string | null) => void;
   style: React.CSSProperties;
@@ -503,10 +521,11 @@ function TimelineStrip({
       aria-label={row.label}
     >
       {row.slots.map((img, slot) => {
+        const archiveSlot = slotIndexes[slot] ?? slot;
         if (!img) {
           return (
             <span
-              key={`${row.key}-${slot}`}
+              key={`${row.key}-empty-${archiveSlot}`}
               aria-hidden
               className="block"
               style={{ height: tileSize, marginRight: "-1px" }}
@@ -517,7 +536,7 @@ function TimelineStrip({
         const vt = `sky-${img.id.replace(/[^a-z0-9_-]/gi, "_")}`;
         return (
           <GridTile
-            key={`${row.key}-${slot}-${img.id}`}
+            key={`${row.key}-${archiveSlot}-${img.id}`}
             img={img}
             palette={p}
             vt={vt}
