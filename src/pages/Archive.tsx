@@ -113,13 +113,15 @@ async function copyText(value: string): Promise<void> {
 
 const ARCHIVE_TIME_ZONE = "America/Los_Angeles";
 const ARCHIVE_MIN_DAY_KEY = "2026-04-25";
-const ARCHIVE_EMPTY_BACKGROUND = "#e7e7e7";
-const ARCHIVE_GAP_BACKGROUND = "linear-gradient(90deg, #D9D9D9 0%, #ffffff 100%)";
+const ARCHIVE_EMPTY_BACKGROUND = "linear-gradient(90deg, #D9D9D9 0%, #f4f4f4 100%)";
+const ARCHIVE_GAP_BACKGROUND = ARCHIVE_EMPTY_BACKGROUND;
 const ARCHIVE_DATE_GRID_CLASS =
   "grid grid-cols-[2.35rem_minmax(0,1fr)_2.35rem] gap-x-1 sm:grid-cols-[minmax(3rem,4.75rem)_minmax(0,1fr)_minmax(3rem,4.75rem)] sm:gap-x-3";
 const DAY_SLOT_COUNT = 48;
 const DAY_START_MINUTE = 6 * 60;
 const NIGHT_START_MINUTE = 19 * 60 + 30;
+const MOBILE_DAY_START_MINUTE = 10 * 60 + 30;
+const MOBILE_DAY_END_MINUTE = 15 * 60 + 30;
 
 type ArchiveParts = {
   year: number;
@@ -202,17 +204,23 @@ function archiveDayKeyForDate(date: Date): string {
   return archiveDayKey(getArchiveParts(date));
 }
 
-function archiveIsNight(date: Date): boolean {
-  const parts = getArchiveParts(date);
-  const minute = archiveSlotMinute(parts);
-  return minute < DAY_START_MINUTE || minute >= NIGHT_START_MINUTE;
+function archiveMinuteIsVisible(minute: number, includeNight: boolean, useMobileDayWindow: boolean): boolean {
+  if (includeNight) return true;
+  if (useMobileDayWindow) {
+    return minute >= MOBILE_DAY_START_MINUTE && minute < MOBILE_DAY_END_MINUTE;
+  }
+  return minute >= DAY_START_MINUTE && minute < NIGHT_START_MINUTE;
 }
 
-function visibleArchiveSlots(includeNight: boolean): number[] {
+function archiveImageIsVisible(date: Date, includeNight: boolean, useMobileDayWindow: boolean): boolean {
+  const parts = getArchiveParts(date);
+  return archiveMinuteIsVisible(archiveSlotMinute(parts), includeNight, useMobileDayWindow);
+}
+
+function visibleArchiveSlots(includeNight: boolean, useMobileDayWindow: boolean): number[] {
   return Array.from({ length: DAY_SLOT_COUNT }, (_, slot) => slot).filter((slot) => {
-    if (includeNight) return true;
     const minute = archiveSlotStartMinute(slot);
-    return minute >= DAY_START_MINUTE && minute < NIGHT_START_MINUTE;
+    return archiveMinuteIsVisible(minute, includeNight, useMobileDayWindow);
   });
 }
 
@@ -294,6 +302,7 @@ function buildArchiveDayRows(images: SkyImage[], slotIndexes: number[]): Archive
 export default function Archive() {
   const { images } = useSkyImages();
   const [includeNight, setIncludeNight] = useState(false);
+  const [useMobileDayWindow, setUseMobileDayWindow] = useState(false);
   const [palettes, setPalettes] = useState<Record<string, Palette>>({});
   const palettesRef = useRef<Record<string, Palette>>({});
   const [open, setOpen] = useState<SkyImage | null>(null);
@@ -304,6 +313,15 @@ export default function Archive() {
     palettesRef.current = palettes;
   }, [palettes]);
 
+  useEffect(() => {
+    if (!window.matchMedia) return;
+    const query = window.matchMedia("(max-width: 639px)");
+    const update = () => setUseMobileDayWindow(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
   // Progressive reveal: count animates up as the grid populates.
   const [revealCount, setRevealCount] = useState(0);
   const hasRunInitialReveal = useRef(false);
@@ -312,9 +330,9 @@ export default function Archive() {
     if (!images) return [];
     let out = images;
     out = out.filter((i) => archiveDayKeyForDate(i.capturedAt) >= ARCHIVE_MIN_DAY_KEY);
-    if (!includeNight) out = out.filter((i) => !archiveIsNight(i.capturedAt));
+    out = out.filter((i) => archiveImageIsVisible(i.capturedAt, includeNight, useMobileDayWindow));
     return out;
-  }, [images, includeNight]);
+  }, [images, includeNight, useMobileDayWindow]);
 
   // Last-10 cycling sequence for the inline headline swatch
   const recent = useMemo(() => filtered.slice(-10), [filtered]);
@@ -400,7 +418,10 @@ export default function Archive() {
     () => (revealCount >= ordered.length ? ordered : ordered.slice(0, revealCount)),
     [ordered, revealCount],
   );
-  const slotIndexes = useMemo(() => visibleArchiveSlots(includeNight), [includeNight]);
+  const slotIndexes = useMemo(
+    () => visibleArchiveSlots(includeNight, useMobileDayWindow),
+    [includeNight, useMobileDayWindow],
+  );
   const slotCount = slotIndexes.length;
   const dayRows = useMemo(() => buildArchiveDayRows(visible, slotIndexes), [visible, slotIndexes]);
   useEffect(() => setHoveredSlotIndex(null), [slotCount]);
@@ -494,7 +515,10 @@ export default function Archive() {
             <div
               ref={timelineMeasureRef}
               className="relative overflow-hidden rounded-[24px]"
-              style={{ height: totalRowsSize, background: ARCHIVE_EMPTY_BACKGROUND }}
+              style={{
+                height: totalRowsSize,
+                background: useMobileDayWindow ? "transparent" : ARCHIVE_EMPTY_BACKGROUND,
+              }}
             >
               {virtualRows.map((vr) => {
                 const row = dayRows[vr.index];
@@ -662,6 +686,19 @@ function TimelineStrip({
           let runLength = 1;
           while (slot + runLength < row.slots.length && !row.slots[slot + runLength]) {
             runLength++;
+          }
+          const previousImage = slot > 0 ? row.slots[slot - 1] : null;
+          const nextImage = slot + runLength < row.slots.length ? row.slots[slot + runLength] : null;
+          if (!previousImage || !nextImage) {
+            if (!nextImage) return null;
+            return (
+              <span
+                key={`${row.key}-edge-empty-${archiveSlot}`}
+                aria-hidden
+                className="block"
+                style={{ gridColumn: `span ${runLength}`, height: tileSize, marginRight: "-1px" }}
+              />
+            );
           }
           return (
             <span
