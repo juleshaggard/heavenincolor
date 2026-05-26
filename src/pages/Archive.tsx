@@ -351,7 +351,7 @@ export default function Archive() {
 
       {/* Daily archive matrix */}
       <div className="-mx-6 px-3 sm:mx-0 sm:px-[4vw]">
-        <div ref={parentRef} className="relative rounded-[28px] bg-[#eeeeee] sm:rounded-none sm:bg-transparent">
+        <div ref={parentRef} className="relative">
           <div className={ARCHIVE_DATE_GRID_CLASS}>
             <div style={{ height: totalRowsSize }} />
             <div
