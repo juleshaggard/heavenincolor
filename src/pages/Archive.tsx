@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
@@ -86,8 +86,8 @@ function meshGradientFor(colors: string[]): string {
   ].join(", ");
 }
 
-function curveSwipePath(bend = 18): string {
-  return `M 0 0 H 100 V 100 C 76 ${100 + bend} 28 ${100 - bend} 0 100 Z`;
+function curveSwipePath(edgeY = 100, controlY = edgeY): string {
+  return `M 0 100 V ${edgeY} Q 50 ${controlY} 100 ${edgeY} V 100 Z`;
 }
 
 async function copyText(value: string): Promise<void> {
@@ -858,11 +858,59 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
   const contentRef = useRef<HTMLDivElement | null>(null);
   const paletteRef = useRef<HTMLDivElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const entryTimelineRef = useRef<gsap.core.Timeline | null>(null);
+  const exitTimelineRef = useRef<gsap.core.Timeline | null>(null);
+  const isClosingRef = useRef(false);
+
+  const close = useCallback(() => {
+    if (isClosingRef.current) return;
+    isClosingRef.current = true;
+
+    const modal = modalRef.current;
+    const wipe = wipeRef.current;
+    const wipePath = wipePathRef.current;
+    const content = contentRef.current;
+    const paletteItems = paletteRef.current ? Array.from(paletteRef.current.children) : [];
+    const closeButton = closeButtonRef.current;
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!modal || !wipe || !wipePath || prefersReducedMotion) {
+      onClose();
+      return;
+    }
+
+    entryTimelineRef.current?.kill();
+    exitTimelineRef.current?.kill();
+
+    const curve = { edgeY: 100, controlY: 100 };
+    const syncCurve = () => wipePath.setAttribute("d", curveSwipePath(curve.edgeY, curve.controlY));
+    syncCurve();
+
+    gsap.set(wipe, { autoAlpha: 1, clearProps: "transform", willChange: "contents" });
+
+    exitTimelineRef.current = gsap.timeline({
+      onComplete: () => {
+        exitTimelineRef.current = null;
+        onClose();
+      },
+    });
+    exitTimelineRef.current
+      .to([content, closeButton, ...paletteItems].filter(Boolean), {
+        autoAlpha: 0,
+        y: -8,
+        duration: 0.18,
+        stagger: 0.01,
+        ease: "power2.out",
+      }, 0)
+      .to(curve, { edgeY: 50, controlY: 0, duration: 0.34, ease: "power2.in", onUpdate: syncCurve }, 0)
+      .to(curve, { edgeY: 0, controlY: 0, duration: 0.42, ease: "power2.out", onUpdate: syncCurve })
+      .set(wipe, { clearProps: "willChange" });
+  }, [onClose]);
+
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [close]);
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -873,14 +921,6 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
       if (copyTimerRef.current) window.clearTimeout(copyTimerRef.current);
     };
   }, []);
-  const close = () => {
-    const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
-    if (typeof doc.startViewTransition === "function") {
-      doc.startViewTransition(() => onClose());
-    } else {
-      onClose();
-    }
-  };
   const copyColor = async (color: string) => {
     setCopiedColor(color);
     if (copyTimerRef.current) window.clearTimeout(copyTimerRef.current);
@@ -901,6 +941,7 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
   const imageCropSize = Math.min(imageWidth, imageHeight);
 
   useGSAP(() => {
+    isClosingRef.current = false;
     const modal = modalRef.current;
     const wipe = wipeRef.current;
     const wipePath = wipePathRef.current;
@@ -911,29 +952,35 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
 
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReducedMotion) {
+      entryTimelineRef.current = null;
       gsap.set(modal, { autoAlpha: 1 });
       gsap.set(wipe, { autoAlpha: 0 });
       gsap.set([content, closeButton, ...paletteItems].filter(Boolean), { autoAlpha: 1, clearProps: "transform" });
       return;
     }
 
-    const curve = { bend: 22 };
-    const syncCurve = () => wipePath.setAttribute("d", curveSwipePath(curve.bend));
+    const curve = { edgeY: 0, controlY: 0 };
+    const syncCurve = () => wipePath.setAttribute("d", curveSwipePath(curve.edgeY, curve.controlY));
     syncCurve();
 
     gsap.set(modal, { autoAlpha: 1 });
-    gsap.set(wipe, { autoAlpha: 1, yPercent: 0, willChange: "transform" });
+    gsap.set(wipe, { autoAlpha: 1, clearProps: "transform", willChange: "contents" });
     gsap.set(content, { autoAlpha: 0, y: 28, scale: 0.985 });
     gsap.set(closeButton, { autoAlpha: 0, scale: 0.92 });
     gsap.set(paletteItems, { autoAlpha: 0, y: 10 });
 
     const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
-    tl.to(curve, { bend: -12, duration: 0.86, ease: "power3.inOut", onUpdate: syncCurve }, 0)
-      .to(wipe, { yPercent: -118, duration: 0.94, ease: "power3.inOut" }, 0)
+    entryTimelineRef.current = tl;
+    tl.to(curve, { edgeY: 50, controlY: 0, duration: 0.34, ease: "power2.in", onUpdate: syncCurve }, 0)
+      .to(curve, { edgeY: 100, controlY: 100, duration: 0.5, ease: "power2.out", onUpdate: syncCurve })
       .to(content, { autoAlpha: 1, y: 0, scale: 1, duration: 0.7 }, 0.18)
       .to(closeButton, { autoAlpha: 1, scale: 1, duration: 0.36 }, 0.32)
       .to(paletteItems, { autoAlpha: 1, y: 0, duration: 0.44, stagger: 0.035 }, 0.44)
-      .set(wipe, { autoAlpha: 0, clearProps: "transform,willChange" });
+      .set(wipe, { autoAlpha: 0, clearProps: "willChange" });
+
+    return () => {
+      if (entryTimelineRef.current === tl) entryTimelineRef.current = null;
+    };
   }, { scope: modalRef, dependencies: [image.id], revertOnUpdate: true });
 
   return (
