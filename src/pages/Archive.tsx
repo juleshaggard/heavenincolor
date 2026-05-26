@@ -706,7 +706,7 @@ function TimeLabel({ slot, visible }: { slot: number; visible: boolean }) {
       <span
         data-archive-time-label
         className={cn(
-          "absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap font-mono text-[7px] leading-none tabular-nums sm:text-[9px]",
+          "absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap font-mono text-[6.5px] leading-none tabular-nums sm:text-[7.5px] md:text-[8.25px] lg:text-[8.5px]",
           visible ? "archive-date-visible-color" : "archive-date-fade-color",
         )}
       >
@@ -745,7 +745,7 @@ function DayLabel({ row, side, visible }: { row: ArchiveDayRow; side: "left" | "
   return (
     <div
       className={cn(
-        "flex h-full flex-col justify-center overflow-hidden font-mono text-[7px] leading-none tabular-nums sm:text-[9px]",
+        "flex h-full flex-col justify-center overflow-hidden font-mono text-[6.5px] leading-none tabular-nums sm:text-[7.5px] md:text-[8.25px] lg:text-[8.5px]",
         visible ? "archive-date-visible-color" : "archive-date-fade-color",
         side === "left" ? "items-end text-right" : "items-start text-left",
       )}
