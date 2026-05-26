@@ -173,6 +173,14 @@ function archiveTimeLabel(parts: ArchiveParts): string {
   return `${String(hour).padStart(2, "0")}:${String(parts.minute).padStart(2, "0")} ${period}`;
 }
 
+function archiveSlotTimeLabel(slot: number): string {
+  const minute = archiveSlotStartMinute(slot);
+  const hour24 = Math.floor(minute / 60);
+  const hour = hour24 % 12 || 12;
+  const period = hour24 >= 12 ? "PM" : "AM";
+  return `${hour}:${String(minute % 60).padStart(2, "0")} ${period}`;
+}
+
 function archiveSortKey(parts: ArchiveParts): number {
   return parts.year * 10000 + parts.month * 100 + parts.day;
 }
@@ -289,6 +297,7 @@ export default function Archive() {
   const palettesRef = useRef<Record<string, Palette>>({});
   const [open, setOpen] = useState<SkyImage | null>(null);
   const [hoveredDayKey, setHoveredDayKey] = useState<string | null>(null);
+  const [hoveredSlotIndex, setHoveredSlotIndex] = useState<number | null>(null);
 
   useEffect(() => {
     palettesRef.current = palettes;
@@ -393,6 +402,7 @@ export default function Archive() {
   const slotIndexes = useMemo(() => visibleArchiveSlots(includeNight), [includeNight]);
   const slotCount = slotIndexes.length;
   const dayRows = useMemo(() => buildArchiveDayRows(visible, slotIndexes), [visible, slotIndexes]);
+  useEffect(() => setHoveredSlotIndex(null), [slotCount]);
 
   const parentRef = useRef<HTMLDivElement>(null);
   const timelineMeasureRef = useRef<HTMLDivElement>(null);
@@ -455,6 +465,13 @@ export default function Archive() {
       {/* Daily archive matrix */}
       <div className="px-0 sm:px-[4vw]">
         <div ref={parentRef} className="relative">
+          <div className="pointer-events-none sticky top-12 z-40 h-0 sm:top-5">
+            <TimeLabelStrip
+              slotIndexes={slotIndexes}
+              activeSlotIndex={hoveredSlotIndex}
+              slotCount={slotCount}
+            />
+          </div>
           <div className={ARCHIVE_DATE_GRID_CLASS}>
             <div style={{ height: totalRowsSize }} />
             <div
@@ -477,6 +494,7 @@ export default function Archive() {
                     slotIndexes={slotIndexes}
                     onOpen={(img, vt) => openWithTransition(img, vt, setOpen)}
                     onHoverChange={setHoveredDayKey}
+                    onSlotHoverChange={setHoveredSlotIndex}
                     style={{ position: "absolute", top, left: 0, width: "100%", height: tileSize }}
                   />
                 );
@@ -572,6 +590,7 @@ function TimelineStrip({
   slotIndexes,
   onOpen,
   onHoverChange,
+  onSlotHoverChange,
   style,
 }: {
   row: ArchiveDayRow;
@@ -582,18 +601,33 @@ function TimelineStrip({
   slotIndexes: number[];
   onOpen: (img: SkyImage, vt: string) => void;
   onHoverChange: (key: string | null) => void;
+  onSlotHoverChange: (slot: number | null) => void;
   style: React.CSSProperties;
 }) {
+  const updateHoveredSlot = (event: React.PointerEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = Math.max(0, Math.min(rect.width - 0.01, event.clientX - rect.left));
+    onSlotHoverChange(Math.floor((x / rect.width) * slotCount));
+  };
+
   return (
     <div
       data-archive-day-row={row.key}
       className="grid"
-      onPointerEnter={() => onHoverChange(row.key)}
-      onPointerLeave={() => onHoverChange(null)}
+      onPointerEnter={(event) => {
+        onHoverChange(row.key);
+        updateHoveredSlot(event);
+      }}
+      onPointerMove={updateHoveredSlot}
+      onPointerLeave={() => {
+        onHoverChange(null);
+        onSlotHoverChange(null);
+      }}
       onFocus={() => onHoverChange(row.key)}
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
           onHoverChange(null);
+          onSlotHoverChange(null);
         }
       }}
       style={{
@@ -631,6 +665,53 @@ function TimelineStrip({
           />
         );
       })}
+    </div>
+  );
+}
+
+function TimeLabelStrip({
+  slotIndexes,
+  activeSlotIndex,
+  slotCount,
+}: {
+  slotIndexes: number[];
+  activeSlotIndex: number | null;
+  slotCount: number;
+}) {
+  return (
+    <div className={cn(ARCHIVE_DATE_GRID_CLASS, "-translate-y-3 sm:-translate-y-4")} aria-hidden>
+      <div />
+      <div
+        className="grid overflow-visible"
+        style={{ gridTemplateColumns: `repeat(${slotCount}, minmax(0, 1fr))` }}
+      >
+        {slotIndexes.map((slot, index) => (
+          <TimeLabel key={slot} slot={slot} visible={activeSlotIndex === index} />
+        ))}
+      </div>
+      <div />
+    </div>
+  );
+}
+
+function TimeLabel({ slot, visible }: { slot: number; visible: boolean }) {
+  return (
+    <div
+      className={cn(
+        "relative h-4 overflow-visible",
+        visible ? "opacity-100 transition-none" : "opacity-0 transition-opacity ease-out",
+      )}
+      style={{ transitionDuration: visible ? undefined : "2000ms" }}
+    >
+      <span
+        data-archive-time-label
+        className={cn(
+          "absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap font-mono text-[7px] leading-none tabular-nums sm:text-[9px]",
+          visible ? "archive-date-visible-color" : "archive-date-fade-color",
+        )}
+      >
+        {archiveSlotTimeLabel(slot)}
+      </span>
     </div>
   );
 }
