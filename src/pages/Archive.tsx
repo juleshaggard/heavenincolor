@@ -604,6 +604,7 @@ function GridTile({
         image={img}
         width={Math.ceil(tileSize * (typeof window !== "undefined" ? Math.min(2, window.devicePixelRatio || 1) : 1))}
         className="block h-full w-full"
+        preferSprite
       />
       {p && (
         <div

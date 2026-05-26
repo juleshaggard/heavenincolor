@@ -3,6 +3,7 @@ export type SkyImage = {
   capturedAt: Date;
   imageUrl: string;
   thumbUrl: string;
+  sprite?: SkySpriteFrame;
   averageHex?: string;
   palette?: string[];
   width?: number;
@@ -25,7 +26,42 @@ export type SkyManifest = {
   version: 1;
   generatedAt: string;
   retention?: SkyManifestRetention;
+  sprites?: RawSkySprites;
   images: RawSkyImage[];
+};
+
+export type SkySpriteFrame = {
+  url: string;
+  key: string;
+  index: number;
+  tileSize: number;
+  columns: number;
+  rows: number;
+  sheetWidth: number;
+  sheetHeight: number;
+};
+
+export type RawSkySprites = {
+  tileSize?: number;
+  columns?: number;
+  weeks?: RawSkySpriteWeek[];
+};
+
+export type RawSkySpriteWeek = {
+  key: string;
+  url: string;
+  tileSize?: number;
+  columns?: number;
+  rows?: number;
+  width?: number;
+  height?: number;
+  count?: number;
+  bytes?: number;
+};
+
+export type RawSkyImageSprite = {
+  key: string;
+  index: number;
 };
 
 export type RawSkyImage = {
@@ -33,6 +69,7 @@ export type RawSkyImage = {
   capturedAt?: string;
   imageUrl: string;
   thumbUrl?: string;
+  sprite?: RawSkyImageSprite;
   averageHex?: string;
   palette?: string[];
   width?: number;
@@ -93,6 +130,28 @@ async function fetchManifest(): Promise<SkyManifest> {
   return data;
 }
 
+function spriteFrameFor(raw: RawSkyImage, sprites?: RawSkySprites): SkySpriteFrame | undefined {
+  if (!raw.sprite?.key || typeof raw.sprite.index !== "number" || !sprites?.weeks?.length) {
+    return undefined;
+  }
+  const week = sprites.weeks.find((item) => item.key === raw.sprite?.key);
+  if (!week) return undefined;
+
+  const tileSize = week.tileSize ?? sprites.tileSize ?? 64;
+  const columns = week.columns ?? sprites.columns ?? 16;
+  const rows = week.rows ?? Math.max(1, Math.ceil((week.count ?? raw.sprite.index + 1) / columns));
+  return {
+    url: resolveSkyAssetUrl(week.url),
+    key: week.key,
+    index: raw.sprite.index,
+    tileSize,
+    columns,
+    rows,
+    sheetWidth: week.width ?? columns * tileSize,
+    sheetHeight: week.height ?? rows * tileSize,
+  };
+}
+
 export async function listSkyImages(force = false): Promise<SkyImage[]> {
   if (cache && !force) return cache;
   if (inflight) return inflight;
@@ -107,6 +166,7 @@ export async function listSkyImages(force = false): Promise<SkyImage[]> {
           capturedAt: parseCapturedAt(r.id, r.capturedAt),
           imageUrl: resolveSkyAssetUrl(r.imageUrl),
           thumbUrl: resolveSkyAssetUrl(r.thumbUrl ?? r.imageUrl),
+          sprite: spriteFrameFor(r, manifest.sprites),
           averageHex: r.averageHex,
           palette: r.palette,
           width: r.width,

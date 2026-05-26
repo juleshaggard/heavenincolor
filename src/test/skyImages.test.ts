@@ -30,16 +30,33 @@ describe("sky image manifest", () => {
               sourceCount: 2,
               prunedCount: 0,
             },
+            sprites: {
+              tileSize: 64,
+              columns: 16,
+              weeks: [
+                {
+                  key: "2026-W21",
+                  url: "sky/sprites/2026/2026-W21.jpg",
+                  rows: 1,
+                  width: 1024,
+                  height: 64,
+                  count: 2,
+                  bytes: 2048,
+                },
+              ],
+            },
             images: [
               {
                 id: "20260524T165716Z",
                 imageUrl: "sky/images/2026/05/new.jpg",
                 thumbUrl: "sky/thumbs/2026/05/new.jpg",
+                sprite: { key: "2026-W21", index: 1 },
                 averageHex: "#abcdef",
               },
               {
                 id: "20260524T155706Z",
                 imageUrl: "sky/images/2026/05/old.jpg",
+                sprite: { key: "2026-W21", index: 0 },
                 averageHex: "#123456",
               },
             ],
@@ -53,6 +70,8 @@ describe("sky image manifest", () => {
     expect(images.map((image) => image.id)).toEqual(["20260524T155706Z", "20260524T165716Z"]);
     expect(images[0].thumbUrl).toBe("/sky/images/2026/05/old.jpg");
     expect(images[1].thumbUrl).toBe("/sky/thumbs/2026/05/new.jpg");
+    expect(images[0].sprite?.url).toBe("/sky/sprites/2026/2026-W21.jpg");
+    expect(images[1].sprite?.index).toBe(1);
     expect(getSkyRetention()?.retainedCount).toBe(2);
   });
 
