@@ -169,6 +169,17 @@ All colors MUST be HSL.
     animation: archiveDateFadeColor 2000ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
+  @keyframes colorImmersionDrift {
+    0% { transform: scale(1.02) translate3d(-1.5%, -1%, 0); filter: saturate(1.02); }
+    100% { transform: scale(1.08) translate3d(1.5%, 1%, 0); filter: saturate(1.18); }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .color-immersion-wash {
+      animation: colorImmersionDrift 24s ease-in-out infinite alternate;
+    }
+  }
+
   ::selection {
     background: hsl(var(--sky-h) var(--sky-s) var(--sky-l) / 0.45);
     color: hsl(var(--ink));

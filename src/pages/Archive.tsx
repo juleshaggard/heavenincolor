@@ -2,12 +2,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useSkyImages } from "@/hooks/useSkyImages";
 import { SkyThumb } from "@/components/sky/SkyThumb";
-import { Swatches } from "@/components/sky/Swatches";
 import { getManifestPalette, getPalette, type Palette } from "@/lib/palette";
 import { fmtDate, fmtTime, captionFor, nameColor } from "@/lib/format";
 import type { SkyImage } from "@/lib/skyImages";
 import { cn } from "@/lib/utils";
-import { X, ArrowUpRight } from "lucide-react";
+import { X, ArrowUpRight, Check, Copy } from "lucide-react";
 import { LOCATION } from "@/hooks/useWeather";
 
 // View Transitions API (Chromium). Falls back gracefully.
@@ -31,6 +30,77 @@ function readableInk(hex: string): string {
   const [r, g, b] = m.map((h) => parseInt(h, 16));
   const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
   return lum > 0.55 ? "#0a0a0a" : "#ffffff";
+}
+
+const FALLBACK_IMMERSION_COLORS = ["#202734", "#536577", "#8ea1b1", "#d7d6cc", "#f1ebe0"];
+const MESH_POINTS = [
+  { x: 16, y: 20, size: "clamp(5rem, 16vw, 13rem)" },
+  { x: 81, y: 17, size: "clamp(4.5rem, 14vw, 12rem)" },
+  { x: 66, y: 51, size: "clamp(5.5rem, 18vw, 15rem)" },
+  { x: 21, y: 78, size: "clamp(5rem, 15vw, 12rem)" },
+  { x: 84, y: 77, size: "clamp(4.5rem, 13vw, 11rem)" },
+];
+
+function normalizeHex(color?: string): string | null {
+  const clean = color?.replace("#", "").trim();
+  if (!clean || !/^[0-9a-f]{6}$/i.test(clean)) return null;
+  return `#${clean.toLowerCase()}`;
+}
+
+function hexWithAlpha(color: string, alpha: number): string {
+  const clean = (normalizeHex(color) ?? "#000000").slice(1);
+  const value = Math.round(Math.max(0, Math.min(1, alpha)) * 255).toString(16).padStart(2, "0");
+  return `#${clean}${value}`;
+}
+
+function immersionColorsFor(image: SkyImage, palette?: Palette): string[] {
+  const seen = new Set<string>();
+  const raw = [palette?.hex, ...(palette?.swatches ?? []), image.averageHex];
+  const colors = raw.flatMap((color) => {
+    const normalized = normalizeHex(color);
+    if (!normalized || seen.has(normalized)) return [];
+    seen.add(normalized);
+    return [normalized];
+  });
+  return colors.length ? colors : FALLBACK_IMMERSION_COLORS;
+}
+
+function meshColorsFor(colors: string[]): string[] {
+  const source = colors.length ? colors : FALLBACK_IMMERSION_COLORS;
+  return MESH_POINTS.map((_, index) => source[index % source.length]);
+}
+
+function meshGradientFor(colors: string[]): string {
+  const [a, b, c, d, e] = meshColorsFor(colors);
+  return [
+    `radial-gradient(circle at 16% 20%, ${hexWithAlpha(a, 0.96)} 0%, ${hexWithAlpha(a, 0.74)} 15%, transparent 40%)`,
+    `radial-gradient(circle at 81% 17%, ${hexWithAlpha(b, 0.92)} 0%, ${hexWithAlpha(b, 0.7)} 14%, transparent 39%)`,
+    `radial-gradient(circle at 66% 51%, ${hexWithAlpha(c, 0.96)} 0%, ${hexWithAlpha(c, 0.7)} 18%, transparent 46%)`,
+    `radial-gradient(circle at 21% 78%, ${hexWithAlpha(d, 0.95)} 0%, ${hexWithAlpha(d, 0.68)} 15%, transparent 42%)`,
+    `radial-gradient(circle at 84% 77%, ${hexWithAlpha(e, 0.95)} 0%, ${hexWithAlpha(e, 0.68)} 14%, transparent 39%)`,
+    `linear-gradient(135deg, ${hexWithAlpha(a, 0.92)}, ${hexWithAlpha(c, 0.8)} 48%, ${hexWithAlpha(e, 0.9)})`,
+  ].join(", ");
+}
+
+async function copyText(value: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(value);
+      return;
+    } catch {
+      // Fall through for browsers that expose clipboard but reject the write.
+    }
+  }
+  const textarea = document.createElement("textarea");
+  textarea.value = value;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+  const copied = document.execCommand("copy");
+  document.body.removeChild(textarea);
+  if (!copied) throw new Error("Clipboard copy failed");
 }
 
 const ARCHIVE_TIME_ZONE = "America/Los_Angeles";
@@ -772,6 +842,8 @@ function BlurFollowText({ children }: { children: React.ReactNode }) {
 }
 
 function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Palette; onClose: () => void }) {
+  const [copiedColor, setCopiedColor] = useState<string | null>(null);
+  const copyTimerRef = useRef<number | null>(null);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -782,6 +854,11 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = prev; };
   }, []);
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) window.clearTimeout(copyTimerRef.current);
+    };
+  }, []);
   const close = () => {
     const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
     if (typeof doc.startViewTransition === "function") {
@@ -790,69 +867,186 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
       onClose();
     }
   };
+  const copyColor = async (color: string) => {
+    try {
+      await copyText(color.toUpperCase());
+    } catch {
+      return;
+    }
+    setCopiedColor(color);
+    if (copyTimerRef.current) window.clearTimeout(copyTimerRef.current);
+    copyTimerRef.current = window.setTimeout(() => setCopiedColor(null), 1400);
+  };
   const vt = `sky-${image.id.replace(/[^a-z0-9_-]/gi, "_")}`;
+  const colors = immersionColorsFor(image, palette);
+  const meshColors = meshColorsFor(colors);
+  const primaryColor = colors[0];
+  const textColor = readableInk(primaryColor);
+  const quietTextColor = hexWithAlpha(textColor, 0.72);
+  const imageWidth = Math.max(32, image.width ?? 128);
+  const imageHeight = Math.max(24, image.height ?? Math.round(imageWidth * 9 / 16));
+  const textShadow = textColor === "#ffffff"
+    ? "0 1px 24px rgba(0,0,0,0.35)"
+    : "0 1px 24px rgba(255,255,255,0.28)";
+
   return (
     <div
-      className="fixed inset-0 z-[60] flex h-screen w-screen items-stretch bg-background/98 backdrop-blur-md animate-fade-in"
+      data-color-immersion-modal
+      className="fixed inset-0 z-[60] h-screen w-screen overflow-hidden animate-fade-in"
       onClick={close}
+      style={{ backgroundColor: meshColors[0] }}
     >
-      {/* close button — fixed top-right, above everything */}
+      <div
+        className="color-immersion-wash absolute -inset-[8%]"
+        style={{ backgroundImage: meshGradientFor(colors) }}
+      />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 46%, transparent 0%, transparent 36%, rgba(0,0,0,0.12) 100%)",
+        }}
+      />
+
+      {meshColors.map((color, index) => {
+        const point = MESH_POINTS[index];
+        const copied = copiedColor === color;
+        return (
+          <div
+            key={`${color}-${index}`}
+            className="absolute z-[62]"
+            style={{ left: `${point.x}%`, top: `${point.y}%`, transform: "translate(-50%, -50%)" }}
+          >
+            <button
+              type="button"
+              data-palette-mesh-point={color}
+              aria-label={`Copy ${color.toUpperCase()}`}
+              title={color.toUpperCase()}
+              onClick={(e) => {
+                e.stopPropagation();
+                void copyColor(color);
+              }}
+              className="group relative rounded-full transition-transform duration-300 ease-out hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-paper/70 active:scale-95"
+              style={{
+                width: point.size,
+                height: point.size,
+                background: `radial-gradient(circle at 34% 32%, ${hexWithAlpha("#ffffff", 0.48)} 0%, ${hexWithAlpha(color, 0.88)} 42%, ${hexWithAlpha(color, 0.18)} 72%, transparent 100%)`,
+              }}
+            >
+              <span
+                aria-hidden
+                className={cn(
+                  "pointer-events-none absolute left-1/2 top-1/2 rounded-full px-2 py-1 font-mono text-[10px] uppercase tracking-[0.14em] opacity-0 shadow-neu transition-opacity duration-200",
+                  copied ? "opacity-100" : "group-hover:opacity-100",
+                )}
+                style={{
+                  background: hexWithAlpha(color, 0.9),
+                  color: readableInk(color),
+                  transform: "translate(-50%, -50%)",
+                }}
+              >
+                {copied ? "copied" : color.toUpperCase()}
+              </span>
+            </button>
+          </div>
+        );
+      })}
+
       <button
         onClick={(e) => { e.stopPropagation(); close(); }}
         aria-label="Close"
-        className="fixed right-5 top-5 z-[70] grid h-11 w-11 place-items-center rounded-full bg-paper/90 text-ink shadow-neu backdrop-blur-md transition-all hover:scale-105 hover:bg-paper active:shadow-neu-pressed"
+        className="fixed right-5 top-5 z-[80] grid h-11 w-11 place-items-center rounded-full border transition-transform hover:scale-105 active:scale-95"
+        style={{
+          color: textColor,
+          borderColor: hexWithAlpha(textColor, 0.24),
+          background: hexWithAlpha(textColor, 0.08),
+        }}
       >
         <X className="h-5 w-5" strokeWidth={1.5} />
       </button>
 
       <div
-        className="relative grid h-full w-full gap-0 grid-rows-[auto_1fr] md:grid-rows-1 md:grid-cols-[1fr_3fr]"
-        onClick={(e) => e.stopPropagation()}
+        className="pointer-events-none fixed left-5 right-20 top-5 z-[72] max-w-[34rem] sm:left-7 sm:top-7"
+        style={{ color: textColor, textShadow }}
       >
-        <aside className="flex h-full min-h-0 flex-col gap-6 overflow-y-auto border-b border-hairline bg-paper p-8 text-[13px] md:border-b-0 md:border-r">
-          <div>
-            <div className="text-ink-dim">Date</div>
-            <div className="font-display text-3xl leading-tight text-ink">{fmtDate(image.capturedAt)}</div>
-          </div>
-          <div className="flex justify-between text-ink-dim">
-            <span>{fmtTime(image.capturedAt)}</span>
-            <span>{captionFor(image.capturedAt)}</span>
-          </div>
-          {palette && (
-            <div className="space-y-3">
-              <Swatches swatches={palette.swatches} size="lg" />
-              <div className="space-y-1">
-                {palette.swatches.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => navigator.clipboard?.writeText(c)}
-                    className="flex w-full items-center justify-between rounded-sm px-1 py-1 text-[13px] text-ink-dim hover:bg-secondary"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="h-2.5 w-2.5 rounded-sm" style={{ background: c }} />
-                      {c.toUpperCase()}
-                    </span>
-                    <span className="text-ink-faint">Copy</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+        <div className="font-display text-[clamp(2rem,5vw,5rem)] leading-[0.9]">
+          {fmtDate(image.capturedAt)}
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-[0.16em] sm:text-xs">
+          <span>{fmtTime(image.capturedAt)}</span>
+          <span style={{ color: quietTextColor }}>{captionFor(image.capturedAt)}</span>
           <a
             href={image.imageUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center justify-center gap-2 self-start rounded-full bg-ink px-5 py-2.5 text-[13px] text-paper transition-colors hover:bg-ink-dim"
+            onClick={(e) => e.stopPropagation()}
+            className="pointer-events-auto inline-flex items-center gap-1 transition-opacity hover:opacity-70"
           >
-            Open hosted image
-            <ArrowUpRight className="h-4 w-4" strokeWidth={1.75} />
+            Hosted image
+            <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.75} />
           </a>
-        </aside>
-        <div className="relative h-full w-full overflow-hidden bg-background">
-          <div className="absolute inset-0" style={{ viewTransitionName: vt }}>
-            <SkyThumb image={image} width={320} className="h-full w-full" />
+        </div>
+      </div>
+
+      <div className="pointer-events-none relative z-[68] flex h-full w-full items-center justify-center px-6 pb-36 pt-32 sm:pb-32 sm:pt-28">
+        <div className="pointer-events-auto flex flex-col items-center gap-5" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="overflow-hidden rounded-[4px] bg-paper/10"
+            style={{
+              width: imageWidth,
+              height: imageHeight,
+              outline: `1px solid ${hexWithAlpha(textColor, 0.2)}`,
+              boxShadow: `0 28px 110px ${hexWithAlpha(primaryColor, 0.42)}`,
+              viewTransitionName: vt,
+            }}
+          >
+            <img
+              src={image.imageUrl}
+              alt={`${fmtDate(image.capturedAt)} ${fmtTime(image.capturedAt)} sky`}
+              width={imageWidth}
+              height={imageHeight}
+              loading="eager"
+              decoding="async"
+              className="block h-full w-full object-cover"
+            />
+          </div>
+          <div className="text-center" style={{ color: textColor, textShadow }}>
+            <div className="font-display text-[clamp(2.5rem,7vw,7rem)] italic leading-[0.85]">
+              {nameColor(primaryColor)}
+            </div>
+            <div className="mt-3 font-mono text-[11px] uppercase tracking-[0.18em]" style={{ color: quietTextColor }}>
+              {primaryColor.toUpperCase()} / {imageWidth} x {imageHeight}
+            </div>
           </div>
         </div>
+      </div>
+
+      <div
+        className="fixed inset-x-4 bottom-5 z-[72] flex flex-wrap items-center justify-center gap-2 sm:bottom-7"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {colors.map((color) => {
+          const copied = copiedColor === color;
+          return (
+            <button
+              key={color}
+              type="button"
+              data-palette-color={color}
+              aria-label={`Copy ${color.toUpperCase()}`}
+              onClick={() => void copyColor(color)}
+              className="inline-flex h-9 items-center gap-2 rounded-full border px-3 font-mono text-[11px] uppercase tracking-[0.12em] shadow-neu transition-transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-paper/70 active:translate-y-0"
+              style={{
+                background: hexWithAlpha(color, copied ? 0.98 : 0.82),
+                borderColor: hexWithAlpha(readableInk(color), 0.22),
+                color: readableInk(color),
+              }}
+            >
+              <span className="h-2 w-2 rounded-full border" style={{ borderColor: hexWithAlpha(readableInk(color), 0.42) }} />
+              <span>{copied ? "copied" : color.toUpperCase()}</span>
+              {copied ? <Check className="h-3.5 w-3.5" strokeWidth={1.75} /> : <Copy className="h-3.5 w-3.5" strokeWidth={1.75} />}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
