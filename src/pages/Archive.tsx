@@ -626,6 +626,7 @@ function NightToggle({
     <div className="pointer-events-none fixed left-4 right-4 top-5 z-50 text-[12px] sm:left-6 sm:right-auto sm:text-[13px]">
       <button
         type="button"
+        aria-label={includeNight ? "Night on" : "Night off"}
         aria-pressed={includeNight}
         onClick={() => setIncludeNight(!includeNight)}
         className={cn(
@@ -633,7 +634,7 @@ function NightToggle({
           includeNight ? "text-ink" : "text-ink-faint hover:text-ink",
         )}
       >
-        <span>Night</span>
+        <span>{includeNight ? "Night on" : "Night off"}</span>
         <span
           aria-hidden
           className={cn(
