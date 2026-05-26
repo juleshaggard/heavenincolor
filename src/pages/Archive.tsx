@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useSkyImages } from "@/hooks/useSkyImages";
 import { SkyThumb } from "@/components/sky/SkyThumb";
@@ -8,6 +10,8 @@ import type { SkyImage } from "@/lib/skyImages";
 import { cn } from "@/lib/utils";
 import { X, Check, Copy } from "lucide-react";
 import { LOCATION } from "@/hooks/useWeather";
+
+gsap.registerPlugin(useGSAP);
 
 // View Transitions API (Chromium). Falls back gracefully.
 function openWithTransition(
@@ -80,6 +84,10 @@ function meshGradientFor(colors: string[]): string {
     `radial-gradient(circle at 84% 77%, ${hexWithAlpha(e, 0.95)} 0%, ${hexWithAlpha(e, 0.68)} 14%, transparent 39%)`,
     `linear-gradient(135deg, ${hexWithAlpha(a, 0.92)}, ${hexWithAlpha(c, 0.8)} 48%, ${hexWithAlpha(e, 0.9)})`,
   ].join(", ");
+}
+
+function curveSwipePath(bend = 18): string {
+  return `M 0 0 H 100 V 100 C 76 ${100 + bend} 28 ${100 - bend} 0 100 Z`;
 }
 
 async function copyText(value: string): Promise<void> {
@@ -844,6 +852,12 @@ function BlurFollowText({ children }: { children: React.ReactNode }) {
 function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Palette; onClose: () => void }) {
   const [copiedColor, setCopiedColor] = useState<string | null>(null);
   const copyTimerRef = useRef<number | null>(null);
+  const modalRef = useRef<HTMLDivElement | null>(null);
+  const wipeRef = useRef<SVGSVGElement | null>(null);
+  const wipePathRef = useRef<SVGPathElement | null>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const paletteRef = useRef<HTMLDivElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -890,13 +904,59 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
     ? "0 1px 24px rgba(0,0,0,0.35)"
     : "0 1px 24px rgba(255,255,255,0.28)";
 
+  useGSAP(() => {
+    const modal = modalRef.current;
+    const wipe = wipeRef.current;
+    const wipePath = wipePathRef.current;
+    const content = contentRef.current;
+    const paletteItems = paletteRef.current ? Array.from(paletteRef.current.children) : [];
+    const closeButton = closeButtonRef.current;
+    if (!modal || !wipe || !wipePath || !content) return;
+
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) {
+      gsap.set(modal, { autoAlpha: 1 });
+      gsap.set(wipe, { autoAlpha: 0 });
+      gsap.set([content, closeButton, ...paletteItems].filter(Boolean), { autoAlpha: 1, clearProps: "transform" });
+      return;
+    }
+
+    const curve = { bend: 22 };
+    const syncCurve = () => wipePath.setAttribute("d", curveSwipePath(curve.bend));
+    syncCurve();
+
+    gsap.set(modal, { autoAlpha: 1 });
+    gsap.set(wipe, { autoAlpha: 1, yPercent: 0, willChange: "transform" });
+    gsap.set(content, { autoAlpha: 0, y: 28, scale: 0.985 });
+    gsap.set(closeButton, { autoAlpha: 0, scale: 0.92 });
+    gsap.set(paletteItems, { autoAlpha: 0, y: 10 });
+
+    const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
+    tl.to(curve, { bend: -12, duration: 0.86, ease: "power3.inOut", onUpdate: syncCurve }, 0)
+      .to(wipe, { yPercent: -118, duration: 0.94, ease: "power3.inOut" }, 0)
+      .to(content, { autoAlpha: 1, y: 0, scale: 1, duration: 0.7 }, 0.18)
+      .to(closeButton, { autoAlpha: 1, scale: 1, duration: 0.36 }, 0.32)
+      .to(paletteItems, { autoAlpha: 1, y: 0, duration: 0.44, stagger: 0.035 }, 0.44)
+      .set(wipe, { autoAlpha: 0, clearProps: "transform,willChange" });
+  }, { scope: modalRef, dependencies: [image.id], revertOnUpdate: true });
+
   return (
     <div
+      ref={modalRef}
       data-color-immersion-modal
-      className="fixed inset-0 z-[60] h-screen w-screen overflow-hidden animate-fade-in"
+      className="fixed inset-0 z-[60] h-screen w-screen overflow-hidden opacity-0"
       onClick={close}
       style={{ backgroundColor: meshColors[0] }}
     >
+      <svg
+        ref={wipeRef}
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-[90] h-full w-full"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+      >
+        <path ref={wipePathRef} d={curveSwipePath()} fill="hsl(var(--paper))" />
+      </svg>
       <div
         className="color-immersion-wash absolute -inset-[8%]"
         style={{ backgroundImage: meshGradientFor(colors) }}
@@ -910,6 +970,7 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
       />
 
       <button
+        ref={closeButtonRef}
         onClick={(e) => { e.stopPropagation(); close(); }}
         aria-label="Close"
         className="fixed right-5 top-5 z-[80] grid h-11 w-11 place-items-center rounded-full border transition-transform hover:scale-105 active:scale-95"
@@ -923,7 +984,7 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
       </button>
 
       <div className="pointer-events-none relative z-[68] flex h-full w-full items-center justify-center px-6 pb-36 pt-32 sm:pb-32 sm:pt-28">
-        <div className="pointer-events-auto flex flex-col items-center gap-5" onClick={(e) => e.stopPropagation()}>
+        <div ref={contentRef} className="pointer-events-auto flex flex-col items-center gap-5" onClick={(e) => e.stopPropagation()}>
           <div
             className="relative overflow-hidden rounded-[4px] bg-paper/10"
             style={{
@@ -964,6 +1025,7 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
       </div>
 
       <div
+        ref={paletteRef}
         className="fixed inset-x-4 bottom-5 z-[72] flex flex-wrap items-center justify-center gap-2 sm:bottom-7"
         onClick={(e) => e.stopPropagation()}
       >
