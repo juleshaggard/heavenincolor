@@ -3,7 +3,7 @@ import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useSkyImages } from "@/hooks/useSkyImages";
 import { SkyThumb } from "@/components/sky/SkyThumb";
 import { getManifestPalette, getPalette, type Palette } from "@/lib/palette";
-import { fmtDate, fmtTime, captionFor, nameColor } from "@/lib/format";
+import { fmtDate, fmtTime, nameColor } from "@/lib/format";
 import type { SkyImage } from "@/lib/skyImages";
 import { cn } from "@/lib/utils";
 import { X, Check, Copy } from "lucide-react";
@@ -921,19 +921,6 @@ function Lightbox({ image, palette, onClose }: { image: SkyImage; palette?: Pale
       >
         <X className="h-5 w-5" strokeWidth={1.5} />
       </button>
-
-      <div
-        className="pointer-events-none fixed left-5 right-20 top-5 z-[72] max-w-[34rem] sm:left-7 sm:top-7"
-        style={{ color: textColor, textShadow }}
-      >
-        <div className="font-display text-[clamp(2rem,5vw,5rem)] leading-[0.9]">
-          {fmtDate(image.capturedAt)}
-        </div>
-        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-[0.16em] sm:text-xs">
-          <span>{fmtTime(image.capturedAt)}</span>
-          <span style={{ color: quietTextColor }}>{captionFor(image.capturedAt)}</span>
-        </div>
-      </div>
 
       <div className="pointer-events-none relative z-[68] flex h-full w-full items-center justify-center px-6 pb-36 pt-32 sm:pb-32 sm:pt-28">
         <div className="pointer-events-auto flex flex-col items-center gap-5" onClick={(e) => e.stopPropagation()}>
