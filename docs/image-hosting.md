@@ -50,7 +50,7 @@ The current publisher caps `images/` files at 128px wide and `thumbs/` files at 
 
 All relative URLs are resolved under Vite's `BASE_URL`, so the same manifest works locally and on the custom domain.
 
-`averageHex` is the full-frame camera average. `cropAverageHex` and `cropPalette` are computed from the center-square crop used by the archive sprites and color-immersion modal, so the modal colors match the image area a visitor actually sees.
+`averageHex` is the full-frame camera average. `cropAverageHex` and `cropPalette` are computed from the center-square crop used by the archive sprites and color-immersion modal, so the modal colors match the image area a visitor actually sees. The crop palette keeps dominant sky colors while reserving room for bright and warm highlights, such as sun glare and white cloud edges, so small luminous details are not averaged into grey.
 
 ## Pi Publishing
 

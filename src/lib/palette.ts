@@ -8,7 +8,7 @@ export type Palette = {
   hsl: [number, number, number]; // dominant in HSL
 };
 
-const KEY = "sky:palette:v1";
+const KEY = "sky:palette:v2";
 let memCache: Record<string, Palette> = {};
 try {
   memCache = JSON.parse(localStorage.getItem(KEY) ?? "{}");

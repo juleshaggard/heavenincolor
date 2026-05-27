@@ -3,9 +3,11 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useSkyImages } from "@/hooks/useSkyImages";
+import { useArchiveViewMode } from "@/components/sky/ArchiveViewMode";
 import { SkyThumb } from "@/components/sky/SkyThumb";
 import { getManifestPalette, getPalette, type Palette } from "@/lib/palette";
 import { fmtDate, fmtTime, nameColor } from "@/lib/format";
+import { curveSwipePath } from "@/lib/modalMotion";
 import type { SkyImage } from "@/lib/skyImages";
 import { cn } from "@/lib/utils";
 import { X, Check, Copy } from "lucide-react";
@@ -57,9 +59,32 @@ function hexWithAlpha(color: string, alpha: number): string {
   return `#${clean}${value}`;
 }
 
+function hexLuminance(color: string): number {
+  const clean = normalizeHex(color);
+  if (!clean) return -1;
+  const [r, g, b] = clean
+    .slice(1)
+    .match(/.{2}/g)!
+    .map((channel) => parseInt(channel, 16));
+  return r * 0.299 + g * 0.587 + b * 0.114;
+}
+
+function secondBrightestPaletteColor(palette: Palette): string {
+  const colors = [...palette.swatches, palette.hex]
+    .flatMap((color) => {
+      const normalized = normalizeHex(color);
+      return normalized ? [normalized] : [];
+    })
+    .sort((a, b) => hexLuminance(b) - hexLuminance(a));
+  return colors[1] ?? colors[0] ?? palette.hex;
+}
+
 function immersionColorsFor(image: SkyImage, palette?: Palette): string[] {
   const seen = new Set<string>();
-  const raw = [palette?.hex, ...(palette?.swatches ?? []), image.cropAverageHex];
+  const manifestSwatches = palette?.swatches ?? [];
+  const raw = manifestSwatches.length >= 5
+    ? manifestSwatches
+    : [...manifestSwatches, palette?.hex, image.cropAverageHex, image.averageHex];
   const colors = raw.flatMap((color) => {
     const normalized = normalizeHex(color);
     if (!normalized || seen.has(normalized)) return [];
@@ -84,10 +109,6 @@ function meshGradientFor(colors: string[]): string {
     `radial-gradient(circle at 84% 77%, ${hexWithAlpha(e, 0.95)} 0%, ${hexWithAlpha(e, 0.68)} 14%, transparent 39%)`,
     `linear-gradient(135deg, ${hexWithAlpha(a, 0.92)}, ${hexWithAlpha(c, 0.8)} 48%, ${hexWithAlpha(e, 0.9)})`,
   ].join(", ");
-}
-
-function curveSwipePath(edgeY = 100, controlY = edgeY): string {
-  return `M 0 100 V ${edgeY} Q 50 ${controlY} 100 ${edgeY} V 100 Z`;
 }
 
 async function copyText(value: string): Promise<void> {
@@ -116,7 +137,9 @@ const ARCHIVE_MIN_DAY_KEY = "2026-04-25";
 const ARCHIVE_EMPTY_BACKGROUND = "linear-gradient(90deg, #D9D9D9 0%, #f4f4f4 100%)";
 const ARCHIVE_GAP_BACKGROUND = ARCHIVE_EMPTY_BACKGROUND;
 const ARCHIVE_DATE_GRID_CLASS =
-  "grid grid-cols-[2.35rem_minmax(0,1fr)_2.35rem] gap-x-1 sm:grid-cols-[minmax(3rem,4.75rem)_minmax(0,1fr)_minmax(3rem,4.75rem)] sm:gap-x-3";
+  "grid grid-cols-[minmax(0,1fr)] sm:grid-cols-[minmax(3rem,4.75rem)_minmax(0,1fr)_minmax(3rem,4.75rem)] sm:gap-x-3";
+const ARCHIVE_LABEL_GRID_CLASS =
+  "hidden sm:grid sm:grid-cols-[minmax(3rem,4.75rem)_minmax(0,1fr)_minmax(3rem,4.75rem)] sm:gap-x-3";
 const DAY_SLOT_COUNT = 48;
 const DAY_START_MINUTE = 6 * 60;
 const NIGHT_START_MINUTE = 19 * 60 + 30;
@@ -301,6 +324,8 @@ function buildArchiveDayRows(images: SkyImage[], slotIndexes: number[]): Archive
 
 export default function Archive() {
   const { images } = useSkyImages();
+  const { archiveViewMode } = useArchiveViewMode();
+  const paletteMode = archiveViewMode === "palette";
   const [includeNight, setIncludeNight] = useState(false);
   const [useMobileDayWindow, setUseMobileDayWindow] = useState(false);
   const [palettes, setPalettes] = useState<Record<string, Palette>>({});
@@ -474,7 +499,7 @@ export default function Archive() {
     <div>
       <header className="px-[4vw] pt-[6vh] pb-[6vh] text-center">
         <BlurFollowText>
-          <h1 className="font-display leading-[0.95] tracking-[-0.02em] text-[clamp(3rem,9vw,9rem)]">
+          <h1 className="font-display leading-[1.02] tracking-[-0.02em] text-[clamp(3rem,9vw,9rem)]">
             <span className="tabular-nums">{revealCount.toLocaleString()}</span>
             <span
               aria-hidden
@@ -500,9 +525,9 @@ export default function Archive() {
       </header>
 
       {/* Daily archive matrix */}
-      <div className="px-0 sm:px-[4vw]">
+      <div className="px-2 sm:px-[4vw]">
         <div ref={parentRef} className="relative">
-          <div className="pointer-events-none sticky top-12 z-40 h-0 sm:top-5">
+          <div className="pointer-events-none sticky top-12 z-40 hidden h-0 sm:block sm:top-5">
             <TimeLabelStrip
               slotIndexes={slotIndexes}
               activeSlotIndex={hoveredSlotIndex}
@@ -511,7 +536,7 @@ export default function Archive() {
             />
           </div>
           <div className={ARCHIVE_DATE_GRID_CLASS}>
-            <div style={{ height: totalRowsSize }} />
+            <div className="hidden sm:block" style={{ height: totalRowsSize }} />
             <div
               ref={timelineMeasureRef}
               className="relative overflow-hidden rounded-[24px]"
@@ -536,14 +561,16 @@ export default function Archive() {
                     onOpen={(img, vt) => openWithTransition(img, vt, setOpen)}
                     onHoverChange={setHoveredDayKey}
                     onSlotHoverChange={setHoveredSlotIndex}
+                    fillTrailingEdgeGap={useMobileDayWindow && vr.index === 0}
+                    paletteMode={paletteMode}
                     style={{ position: "absolute", top, left: 0, width: "100%", height: tileSize }}
                   />
                 );
               })}
             </div>
-            <div style={{ height: totalRowsSize }} />
+            <div className="hidden sm:block" style={{ height: totalRowsSize }} />
           </div>
-          <div className="pointer-events-none absolute inset-x-0 top-0" style={{ height: totalRowsSize }}>
+          <div className="pointer-events-none absolute inset-x-0 top-0 hidden sm:block" style={{ height: totalRowsSize }}>
             {virtualRows.map((vr) => {
               const row = dayRows[vr.index];
               if (!row) return null;
@@ -565,7 +592,7 @@ export default function Archive() {
 
       <footer className="px-[4vw] pt-[6vh] pb-[6vh] text-center">
         <BlurFollowText>
-          <h2 className="font-display leading-[0.95] tracking-[-0.02em] text-[clamp(3rem,9vw,9rem)]">
+          <h2 className="font-display leading-[1.02] tracking-[-0.02em] text-[clamp(3rem,9vw,9rem)]">
             Heaven in Color
           </h2>
         </BlurFollowText>
@@ -632,6 +659,8 @@ function TimelineStrip({
   onOpen,
   onHoverChange,
   onSlotHoverChange,
+  fillTrailingEdgeGap,
+  paletteMode,
   style,
 }: {
   row: ArchiveDayRow;
@@ -643,6 +672,8 @@ function TimelineStrip({
   onOpen: (img: SkyImage, vt: string) => void;
   onHoverChange: (key: string | null) => void;
   onSlotHoverChange: (slot: number | null) => void;
+  fillTrailingEdgeGap?: boolean;
+  paletteMode: boolean;
   style: React.CSSProperties;
 }) {
   const updateHoveredSlot = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -690,6 +721,22 @@ function TimelineStrip({
           const previousImage = slot > 0 ? row.slots[slot - 1] : null;
           const nextImage = slot + runLength < row.slots.length ? row.slots[slot + runLength] : null;
           if (!previousImage || !nextImage) {
+            if (!nextImage && previousImage && fillTrailingEdgeGap) {
+              return (
+                <span
+                  key={`${row.key}-edge-empty-${archiveSlot}`}
+                  data-archive-gap
+                  aria-hidden
+                  className="block"
+                  style={{
+                    gridColumn: `span ${runLength}`,
+                    height: tileSize,
+                    marginRight: "-1px",
+                    background: ARCHIVE_GAP_BACKGROUND,
+                  }}
+                />
+              );
+            }
             if (!nextImage) return null;
             return (
               <span
@@ -726,6 +773,7 @@ function TimelineStrip({
             tileSize={tileSize}
             cols={slotCount}
             isOpen={openId === img.id}
+            paletteMode={paletteMode}
             onOpen={() => onOpen(img, vt)}
           />
         );
@@ -748,7 +796,7 @@ function TimeLabelStrip({
   return (
     <div
       className={cn(
-        ARCHIVE_DATE_GRID_CLASS,
+        ARCHIVE_LABEL_GRID_CLASS,
         isStuck ? "-translate-y-5" : "-translate-y-8 sm:-translate-y-9",
       )}
       aria-hidden
@@ -813,7 +861,7 @@ function DayLabelStrip({
   return (
     <div
       className={cn(
-        ARCHIVE_DATE_GRID_CLASS,
+        ARCHIVE_LABEL_GRID_CLASS,
         visible ? "opacity-100 transition-none" : "opacity-0 transition-opacity ease-out",
       )}
       style={{ ...style, transitionDuration: visible ? undefined : "2000ms" }}
@@ -841,7 +889,7 @@ function DayLabel({ row, side, visible }: { row: ArchiveDayRow; side: "left" | "
 }
 
 function GridTile({
-  img, palette: p, vt, tileSize, cols, isOpen, onOpen,
+  img, palette: p, vt, tileSize, cols, isOpen, paletteMode, onOpen,
 }: {
   img: SkyImage;
   palette?: Palette;
@@ -849,10 +897,12 @@ function GridTile({
   tileSize: number;
   cols: number;
   isOpen: boolean;
+  paletteMode: boolean;
   onOpen: () => void;
 }) {
   const [origin, setOrigin] = useState<{ x: number; y: number }>({ x: 50, y: 100 });
   const [hovered, setHovered] = useState(false);
+  const hoverColor = p ? secondBrightestPaletteColor(p) : undefined;
 
   const handleEnter = (e: React.PointerEvent<HTMLButtonElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
@@ -879,20 +929,23 @@ function GridTile({
       style={{
         height: tileSize,
         marginRight: "-1px",
+        background: paletteMode ? hoverColor : undefined,
         viewTransitionName: isOpen ? vt : undefined,
       }}
     >
-      <SkyThumb
-        image={img}
-        width={Math.ceil(tileSize * (typeof window !== "undefined" ? Math.min(2, window.devicePixelRatio || 1) : 1))}
-        className="block h-full w-full"
-        preferSprite
-      />
-      {p && (
+      {(!paletteMode || !p) && (
+        <SkyThumb
+          image={img}
+          width={Math.ceil(tileSize * (typeof window !== "undefined" ? Math.min(2, window.devicePixelRatio || 1) : 1))}
+          className="block h-full w-full"
+          preferSprite
+        />
+      )}
+      {p && !paletteMode && (
         <div
-          className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 transition-[clip-path,opacity] ease-out"
+          className="pointer-events-none absolute inset-0 hidden flex-col justify-between p-3 transition-[clip-path,opacity] ease-out sm:flex"
           style={{
-            background: p.hex,
+            background: hoverColor,
             opacity: hovered ? 1 : 0,
             clipPath: hovered
               ? `circle(160% at ${origin.x}% ${origin.y}%)`
@@ -902,21 +955,40 @@ function GridTile({
         >
           {cols <= 11 && (
             <>
-              <div className="text-[12px]" style={{ color: readableInk(p.hex) }}>
+              <div className="text-[12px]" style={{ color: readableInk(hoverColor ?? p.hex) }}>
                 {fmtTime(img.capturedAt)}
                 <span className="mx-1.5 opacity-60">·</span>
                 {img.capturedAt.toLocaleDateString(undefined, { month: "short", day: "2-digit" })}
               </div>
-              <div style={{ color: readableInk(p.hex) }}>
+              <div style={{ color: readableInk(hoverColor ?? p.hex) }}>
                 <div className="font-display italic text-2xl leading-none">
-                  {nameColor(p.hex)}
+                  {nameColor(hoverColor ?? p.hex)}
                 </div>
                 <div className="mt-1 text-[11px] opacity-80">
-                  {p.hex.toUpperCase()}
+                  {(hoverColor ?? p.hex).toUpperCase()}
                 </div>
               </div>
             </>
           )}
+        </div>
+      )}
+      {p && paletteMode && (
+        <div
+          className="pointer-events-none absolute inset-0 hidden transition-[clip-path,opacity] ease-out sm:block"
+          style={{
+            opacity: hovered ? 1 : 0,
+            clipPath: hovered
+              ? `circle(160% at ${origin.x}% ${origin.y}%)`
+              : `circle(0% at ${origin.x}% ${origin.y}%)`,
+            transitionDuration: hovered ? "500ms" : "2000ms",
+          }}
+        >
+          <SkyThumb
+            image={img}
+            width={Math.ceil(tileSize * (typeof window !== "undefined" ? Math.min(2, window.devicePixelRatio || 1) : 1))}
+            className="block h-full w-full"
+            preferSprite
+          />
         </div>
       )}
     </button>
@@ -1003,16 +1075,20 @@ function BlurFollowText({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const hoverMask = `radial-gradient(ellipse 68% 420% at ${pos.x}% ${pos.y}%, #000 0%, rgba(0,0,0,0.95) 42%, rgba(0,0,0,0) 84%)`;
+
   return (
-    <span ref={ref} className="relative inline-block">
+    <span ref={ref} className="relative inline-block select-none">
       {/* base: light blue text */}
       <span style={{ color: "hsl(0 0% 92%)" }}>{children}</span>
-      {/* yellow blur masked inside the text, trailing the cursor */}
+      {/* real blue text revealed by a tall mask, so serif descenders render cleanly */}
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-clip-text text-transparent"
+        className="pointer-events-none absolute inset-0"
         style={{
-          backgroundImage: `radial-gradient(ellipse 60% 200% at ${pos.x}% ${pos.y}%, hsl(210 60% 80%) 0%, hsl(210 55% 85%) 35%, hsl(210 60% 85% / 0) 75%)`,
+          color: "hsl(210 60% 80%)",
+          WebkitMaskImage: hoverMask,
+          maskImage: hoverMask,
         }}
       >
         {children}
