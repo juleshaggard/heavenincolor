@@ -33,6 +33,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install sprite tooling
+        run: python3 -m pip install --user Pillow==12.2.0
+
+      - name: Build archive sprites
+        run: python3 scripts/build_sprites.py public/sky
+
       - name: Test
         run: npm test
 
