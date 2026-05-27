@@ -542,7 +542,7 @@ export default function Archive() {
               className="relative overflow-hidden rounded-[24px]"
               style={{
                 height: totalRowsSize,
-                background: useMobileDayWindow ? "transparent" : ARCHIVE_EMPTY_BACKGROUND,
+                background: "transparent",
               }}
             >
               {virtualRows.map((vr) => {
@@ -561,7 +561,6 @@ export default function Archive() {
                     onOpen={(img, vt) => openWithTransition(img, vt, setOpen)}
                     onHoverChange={setHoveredDayKey}
                     onSlotHoverChange={setHoveredSlotIndex}
-                    fillTrailingEdgeGap={useMobileDayWindow && vr.index === 0}
                     paletteMode={paletteMode}
                     style={{ position: "absolute", top, left: 0, width: "100%", height: tileSize }}
                   />
@@ -659,7 +658,6 @@ function TimelineStrip({
   onOpen,
   onHoverChange,
   onSlotHoverChange,
-  fillTrailingEdgeGap,
   paletteMode,
   style,
 }: {
@@ -672,10 +670,24 @@ function TimelineStrip({
   onOpen: (img: SkyImage, vt: string) => void;
   onHoverChange: (key: string | null) => void;
   onSlotHoverChange: (slot: number | null) => void;
-  fillTrailingEdgeGap?: boolean;
   paletteMode: boolean;
   style: React.CSSProperties;
 }) {
+  let lastFilledSlot = -1;
+  for (let index = row.slots.length - 1; index >= 0; index--) {
+    if (row.slots[index]) {
+      lastFilledSlot = index;
+      break;
+    }
+  }
+  const hasTrailingFade = lastFilledSlot >= 0 && lastFilledSlot < row.slots.length - 1;
+  const fadeSlots = Math.min(7, Math.max(4, Math.round(slotCount * 0.14)));
+  const fadeStartPct = hasTrailingFade ? Math.max(0, ((lastFilledSlot + 1 - fadeSlots) / slotCount) * 100) : 0;
+  const fadeEndPct = hasTrailingFade ? ((lastFilledSlot + 1) / slotCount) * 100 : 100;
+  const trailingFadeMask = hasTrailingFade
+    ? `linear-gradient(90deg, #000 0%, #000 ${fadeStartPct}%, rgba(0,0,0,0) ${fadeEndPct}%, rgba(0,0,0,0) 100%)`
+    : undefined;
+
   const updateHoveredSlot = (event: React.PointerEvent<HTMLDivElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
     const x = Math.max(0, Math.min(rect.width - 0.01, event.clientX - rect.left));
@@ -707,6 +719,8 @@ function TimelineStrip({
         gridTemplateColumns: `repeat(${slotCount}, minmax(0, 1fr))`,
         gap: "0px",
         marginRight: "-1px",
+        WebkitMaskImage: trailingFadeMask,
+        maskImage: trailingFadeMask,
       }}
       aria-label={row.label}
     >
@@ -721,22 +735,6 @@ function TimelineStrip({
           const previousImage = slot > 0 ? row.slots[slot - 1] : null;
           const nextImage = slot + runLength < row.slots.length ? row.slots[slot + runLength] : null;
           if (!previousImage || !nextImage) {
-            if (!nextImage && previousImage && fillTrailingEdgeGap) {
-              return (
-                <span
-                  key={`${row.key}-edge-empty-${archiveSlot}`}
-                  data-archive-gap
-                  aria-hidden
-                  className="block"
-                  style={{
-                    gridColumn: `span ${runLength}`,
-                    height: tileSize,
-                    marginRight: "-1px",
-                    background: ARCHIVE_GAP_BACKGROUND,
-                  }}
-                />
-              );
-            }
             if (!nextImage) return null;
             return (
               <span
