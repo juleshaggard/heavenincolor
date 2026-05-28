@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
@@ -14,6 +15,12 @@ import { X, Check, Copy } from "lucide-react";
 import { LOCATION } from "@/hooks/useWeather";
 
 gsap.registerPlugin(useGSAP);
+
+type BrowserViewTransition = {
+  ready: Promise<void>;
+  finished: Promise<void>;
+  skipTransition: () => void;
+};
 
 // View Transitions API (Chromium). Falls back gracefully.
 function openWithTransition(
@@ -134,7 +141,7 @@ async function copyText(value: string): Promise<void> {
 
 const ARCHIVE_TIME_ZONE = "America/Los_Angeles";
 const ARCHIVE_MIN_DAY_KEY = "2026-04-25";
-const ARCHIVE_EMPTY_BACKGROUND = "linear-gradient(90deg, #D9D9D9 0%, #f4f4f4 100%)";
+const ARCHIVE_EMPTY_BACKGROUND = "linear-gradient(90deg, hsl(var(--archive-gap-start)) 0%, hsl(var(--archive-gap-end)) 100%)";
 const ARCHIVE_GAP_BACKGROUND = ARCHIVE_EMPTY_BACKGROUND;
 const ARCHIVE_DATE_GRID_CLASS =
   "grid grid-cols-[minmax(0,1fr)] sm:grid-cols-[minmax(3rem,4.75rem)_minmax(0,1fr)_minmax(3rem,4.75rem)] sm:gap-x-3";
@@ -348,12 +355,171 @@ export default function Archive() {
   const { archiveViewMode } = useArchiveViewMode();
   const paletteMode = archiveViewMode === "palette";
   const [includeNight, setIncludeNight] = useState(false);
+  const [nightTransitioning, setNightTransitioning] = useState(false);
   const [useMobileDayWindow, setUseMobileDayWindow] = useState(false);
   const [palettes, setPalettes] = useState<Record<string, Palette>>({});
   const palettesRef = useRef<Record<string, Palette>>({});
   const [open, setOpen] = useState<SkyImage | null>(null);
   const [hoveredDayKey, setHoveredDayKey] = useState<string | null>(null);
   const [hoveredSlotIndex, setHoveredSlotIndex] = useState<number | null>(null);
+  const nightTransitionOrbRef = useRef<HTMLDivElement | null>(null);
+  const nightTransitionTimelineRef = useRef<gsap.core.Timeline | null>(null);
+  const nightRevealAnimationRef = useRef<Animation | null>(null);
+  const nightTransitionFrameRef = useRef<number | null>(null);
+
+  const applyNightTheme = useCallback((enabled: boolean) => {
+    const root = document.documentElement;
+    root.classList.toggle("dark", enabled);
+    root.style.colorScheme = enabled ? "dark" : "light";
+  }, []);
+
+  useEffect(() => {
+    applyNightTheme(includeNight);
+    return () => {
+      document.documentElement.classList.remove("dark");
+      document.documentElement.style.colorScheme = "light";
+    };
+  }, [applyNightTheme, includeNight]);
+
+  const toggleNightMode = useCallback((next: boolean, event: React.MouseEvent<HTMLButtonElement>) => {
+    const orb = nightTransitionOrbRef.current;
+    const button = event.currentTarget;
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const doc = document as Document & { startViewTransition?: (callback: () => void) => BrowserViewTransition };
+
+    nightTransitionTimelineRef.current?.kill();
+    nightRevealAnimationRef.current?.cancel();
+    if (nightTransitionFrameRef.current !== null) {
+      window.cancelAnimationFrame(nightTransitionFrameRef.current);
+      nightTransitionFrameRef.current = null;
+    }
+
+    if (!orb || prefersReducedMotion) {
+      applyNightTheme(next);
+      setIncludeNight(next);
+      setNightTransitioning(false);
+      return;
+    }
+
+    const rect = button.getBoundingClientRect();
+    const originX = rect.left + rect.width / 2;
+    const originY = rect.top + rect.height / 2;
+    const farthestX = Math.max(originX, window.innerWidth - originX);
+    const farthestY = Math.max(originY, window.innerHeight - originY);
+    const maxRadius = Math.hypot(farthestX, farthestY) + 96;
+    const clipOrigin = `${originX}px ${originY}px`;
+    const startClip = `circle(0px at ${clipOrigin})`;
+    const endClip = `circle(${maxRadius}px at ${clipOrigin})`;
+
+    setNightTransitioning(true);
+
+    const buttonTimeline = gsap.timeline({ defaults: { ease: "power4.out" } });
+    nightTransitionTimelineRef.current = buttonTimeline;
+    buttonTimeline
+      .to(button, { scale: 0.965, duration: 0.1, overwrite: "auto" }, 0)
+      .to(button, { scale: 1, duration: 0.36, ease: "power3.out", overwrite: "auto" }, 0.1);
+
+    if (doc.startViewTransition) {
+      const root = document.documentElement;
+      root.classList.add("night-view-transition");
+
+      nightTransitionFrameRef.current = window.requestAnimationFrame(() => {
+        nightTransitionFrameRef.current = null;
+
+        let transition: BrowserViewTransition;
+        try {
+          transition = doc.startViewTransition(() => {
+            flushSync(() => {
+              applyNightTheme(next);
+              setIncludeNight(next);
+            });
+          });
+        } catch {
+          applyNightTheme(next);
+          setIncludeNight(next);
+          root.classList.remove("night-view-transition");
+          nightTransitionTimelineRef.current = null;
+          setNightTransitioning(false);
+          return;
+        }
+
+        void transition.ready
+          .then(() => {
+            const reveal = root.animate(
+              [
+                { clipPath: startClip },
+                { clipPath: endClip },
+              ],
+              {
+                duration: 640,
+                easing: "cubic-bezier(0.65, 0, 0.35, 1)",
+                fill: "both",
+                pseudoElement: "::view-transition-new(root)",
+              } as KeyframeAnimationOptions & { pseudoElement: string },
+            );
+            nightRevealAnimationRef.current = reveal;
+            return Promise.allSettled([reveal.finished, transition.finished]);
+          })
+          .catch(() => {
+            applyNightTheme(next);
+            setIncludeNight(next);
+          })
+          .finally(() => {
+            root.classList.remove("night-view-transition");
+            nightRevealAnimationRef.current = null;
+            nightTransitionTimelineRef.current = null;
+            setNightTransitioning(false);
+          });
+      });
+
+      return;
+    }
+
+    const targetSurface = next ? "hsl(220 18% 7%)" : "hsl(0 0% 99%)";
+    gsap.set(orb, {
+      x: 0,
+      y: 0,
+      scale: 1,
+      autoAlpha: 1,
+      clipPath: startClip,
+      WebkitClipPath: startClip,
+      background: targetSurface,
+      willChange: "clip-path, opacity",
+    });
+
+    const tl = gsap.timeline({
+      defaults: { ease: "power4.out" },
+      onComplete: () => {
+        nightTransitionTimelineRef.current = null;
+        setNightTransitioning(false);
+        gsap.set(orb, { clearProps: "clipPath,WebkitClipPath,background,visibility,opacity,willChange" });
+      },
+    });
+
+    nightTransitionTimelineRef.current = tl;
+    tl.addLabel("press", 0)
+      .to(orb, {
+        clipPath: endClip,
+        WebkitClipPath: endClip,
+        duration: 0.72,
+        ease: "power3.inOut",
+      }, "press")
+      .add(() => {
+        applyNightTheme(next);
+        setIncludeNight(next);
+      }, "press+=0.7")
+      .to(orb, { autoAlpha: 0, duration: 0.24, ease: "power2.out" }, "press+=0.74");
+  }, [applyNightTheme]);
+
+  useEffect(() => {
+    return () => {
+      nightTransitionTimelineRef.current?.kill();
+      nightRevealAnimationRef.current?.cancel();
+      if (nightTransitionFrameRef.current !== null) {
+        window.cancelAnimationFrame(nightTransitionFrameRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     palettesRef.current = palettes;
@@ -524,6 +690,11 @@ export default function Archive() {
 
   return (
     <div>
+      <div
+        ref={nightTransitionOrbRef}
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-[45] opacity-0"
+      />
       <header className="px-[4vw] pt-[6vh] pb-[6vh] text-center">
         <BlurFollowText>
           <h1 className="font-display leading-[1.02] tracking-[-0.02em] text-[clamp(3rem,9vw,9rem)]">
@@ -545,8 +716,6 @@ export default function Archive() {
             <br />
             <span>captured over </span>
             <em className="italic">{LOCATION.name}</em>
-            <br />
-            <span>every 30 minutes</span>
           </h1>
         </BlurFollowText>
       </header>
@@ -625,7 +794,7 @@ export default function Archive() {
       </footer>
 
       {/* Corner controls — editorial style */}
-      <NightToggle includeNight={includeNight} setIncludeNight={setIncludeNight} />
+      <NightToggle includeNight={includeNight} disabled={nightTransitioning} onToggle={toggleNightMode} />
     </div>
   );
 }
@@ -1026,10 +1195,12 @@ function GridTile({
 
 function NightToggle({
   includeNight,
-  setIncludeNight,
+  disabled,
+  onToggle,
 }: {
   includeNight: boolean;
-  setIncludeNight: (value: boolean) => void;
+  disabled?: boolean;
+  onToggle: (value: boolean, event: React.MouseEvent<HTMLButtonElement>) => void;
 }) {
   return (
     <div className="pointer-events-none fixed left-4 right-4 top-5 z-50 text-[12px] sm:left-6 sm:right-auto sm:text-[13px]">
@@ -1037,9 +1208,11 @@ function NightToggle({
         type="button"
         aria-label={includeNight ? "Night on" : "Night off"}
         aria-pressed={includeNight}
-        onClick={() => setIncludeNight(!includeNight)}
+        aria-disabled={disabled}
+        disabled={disabled}
+        onClick={(event) => onToggle(!includeNight, event)}
         className={cn(
-          "pointer-events-auto inline-flex items-center gap-2 rounded-full border border-transparent px-1 py-1 text-ink transition-colors",
+          "pointer-events-auto inline-flex origin-center items-center gap-2 rounded-full border border-transparent px-1 py-1 text-ink transition-colors disabled:cursor-default",
           includeNight ? "text-ink" : "text-ink-faint hover:text-ink",
         )}
       >
@@ -1109,13 +1282,13 @@ function BlurFollowText({ children }: { children: React.ReactNode }) {
   return (
     <span ref={ref} className="relative inline-block select-none">
       {/* base: light blue text */}
-      <span style={{ color: "hsl(0 0% 92%)" }}>{children}</span>
+      <span style={{ color: "hsl(var(--archive-headline-base))" }}>{children}</span>
       {/* real blue text revealed by a tall mask, so serif descenders render cleanly */}
       <span
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
-          color: "hsl(210 60% 80%)",
+          color: "hsl(var(--archive-headline-hover))",
           WebkitMaskImage: hoverMask,
           maskImage: hoverMask,
         }}

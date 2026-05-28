@@ -45,6 +45,15 @@ All colors MUST be HSL.
     --paper: 0 0% 99%;
     --paper-soft: 0 0% 97%;
     --rose: 0 0% 92%;
+    --archive-gap-start: 0 0% 85%;
+    --archive-gap-end: 0 0% 97%;
+    --archive-headline-base: 0 0% 92%;
+    --archive-headline-hover: 210 60% 80%;
+    --archive-label-visible: 214 88% 54%;
+    --archive-label-fade-start: 34 100% 76%;
+    --archive-label-fade-mid: 43 100% 75%;
+    --archive-label-fade-end: 54 100% 78%;
+    --about-wash: linear-gradient(180deg, hsl(var(--paper)) 0%, hsl(210 44% 94%) 42%, hsl(39 38% 96%) 100%);
 
     /* Sky-driven ambient tint, updated at runtime from the latest frame */
     --sky-h: 28;
@@ -71,33 +80,49 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 220 18% 6%;
+    --foreground: 216 28% 91%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 219 16% 8%;
+    --card-foreground: 216 28% 91%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 219 16% 8%;
+    --popover-foreground: 216 28% 91%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 214 36% 88%;
+    --primary-foreground: 220 18% 7%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 218 15% 13%;
+    --secondary-foreground: 216 28% 91%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 218 15% 13%;
+    --muted-foreground: 216 14% 57%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 214 22% 17%;
+    --accent-foreground: 216 28% 91%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 2 52% 42%;
+    --destructive-foreground: 216 28% 91%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 217 14% 19%;
+    --hairline: 218 13% 23%;
+    --input: 217 14% 19%;
+    --ring: 214 40% 72%;
+    --ink: 216 28% 91%;
+    --ink-dim: 216 15% 70%;
+    --ink-faint: 216 10% 49%;
+    --paper: 220 18% 7%;
+    --paper-soft: 219 16% 10%;
+    --rose: 218 13% 15%;
+    --archive-gap-start: 217 10% 24%;
+    --archive-gap-end: 220 18% 7%;
+    --archive-headline-base: 216 19% 18%;
+    --archive-headline-hover: 211 58% 72%;
+    --archive-label-visible: 210 74% 68%;
+    --archive-label-fade-start: 34 92% 72%;
+    --archive-label-fade-mid: 42 90% 74%;
+    --archive-label-fade-end: 50 92% 78%;
+    --about-wash: linear-gradient(180deg, hsl(220 18% 7%) 0%, hsl(215 22% 11%) 46%, hsl(219 16% 8%) 100%);
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -118,6 +143,7 @@ All colors MUST be HSL.
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
+    transition: background-color 700ms cubic-bezier(0.16, 1, 0.3, 1), color 700ms cubic-bezier(0.16, 1, 0.3, 1);
   }
   .font-display {
     font-family: 'Instrument Serif', Georgia, serif;
@@ -160,14 +186,14 @@ All colors MUST be HSL.
   .aurora { animation: auroraShift 22s ease-in-out infinite; }
 
   .archive-date-visible-color {
-    color: hsl(214 88% 54%);
+    color: hsl(var(--archive-label-visible));
     filter: blur(0);
   }
 
   @keyframes archiveDateFadeColor {
-    0% { color: hsl(34 100% 76%); filter: blur(1px); }
-    18% { color: hsl(43 100% 75%); filter: blur(2.6px); }
-    100% { color: hsl(54 100% 78%); filter: blur(7px); }
+    0% { color: hsl(var(--archive-label-fade-start)); filter: blur(1px); }
+    18% { color: hsl(var(--archive-label-fade-mid)); filter: blur(2.6px); }
+    100% { color: hsl(var(--archive-label-fade-end)); filter: blur(7px); }
   }
   .archive-date-fade-color {
     animation: archiveDateFadeColor 2000ms cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -206,5 +232,26 @@ All colors MUST be HSL.
   ::view-transition-group(*) {
     animation-duration: 420ms;
     animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  html.night-view-transition::view-transition-old(root),
+  html.night-view-transition::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+
+  html.night-view-transition,
+  html.night-view-transition body,
+  html.night-view-transition body * {
+    transition-property: none !important;
+  }
+
+  html.night-view-transition::view-transition-old(root) {
+    z-index: 1;
+  }
+
+  html.night-view-transition::view-transition-new(root) {
+    z-index: 2;
+    will-change: clip-path;
   }
 }

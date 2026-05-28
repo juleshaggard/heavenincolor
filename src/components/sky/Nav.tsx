@@ -186,8 +186,7 @@ function AboutModal({ onClose }: { onClose: () => void }) {
       className="fixed inset-0 z-[60] h-screen w-screen overflow-y-auto opacity-0"
       onClick={close}
       style={{
-        background:
-          "linear-gradient(180deg, hsl(var(--paper)) 0%, hsl(210 44% 94%) 42%, hsl(39 38% 96%) 100%)",
+        background: "var(--about-wash)",
       }}
     >
       <svg
@@ -262,7 +261,7 @@ function AboutModal({ onClose }: { onClose: () => void }) {
             rel="noreferrer"
             className="inline-flex h-10 items-center gap-2 rounded-full border border-ink/18 bg-paper/55 px-4 text-[13px] text-ink backdrop-blur-md transition-colors hover:border-ink/35 hover:bg-paper/85"
           >
-            By Haggard Design
+            By Haggard and Associates LLC
             <ExternalLink className="h-3.5 w-3.5" strokeWidth={1.75} />
           </a>
         </div>
