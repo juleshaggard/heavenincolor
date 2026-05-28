@@ -158,6 +158,7 @@ type ArchiveDayRow = {
   key: string;
   label: string;
   sortKey: number;
+  latestArchiveSlot: number;
   slots: Array<SkyImage | null>;
   images: SkyImage[];
 };
@@ -282,7 +283,22 @@ function orderImagesByArchiveRows(images: SkyImage[]): SkyImage[] {
   });
 }
 
-function buildArchiveDayRows(images: SkyImage[], slotIndexes: number[]): ArchiveDayRow[] {
+function latestArchiveSlotByDay(images: SkyImage[]): Map<string, number> {
+  const latest = new Map<string, number>();
+  for (const img of images) {
+    const parts = getArchiveParts(img.capturedAt);
+    const key = archiveDayKey(parts);
+    const slot = archiveSlotIndex(parts);
+    latest.set(key, Math.max(latest.get(key) ?? -1, slot));
+  }
+  return latest;
+}
+
+function buildArchiveDayRows(
+  images: SkyImage[],
+  slotIndexes: number[],
+  latestSlotByDay: Map<string, number>,
+): ArchiveDayRow[] {
   const rows = new Map<string, ArchiveDayRow>();
   const visibleSlotByArchiveSlot = new Map(slotIndexes.map((slot, index) => [slot, index]));
 
@@ -295,6 +311,7 @@ function buildArchiveDayRows(images: SkyImage[], slotIndexes: number[]): Archive
         key,
         label: archiveDayLabel(parts),
         sortKey: archiveSortKey(parts),
+        latestArchiveSlot: latestSlotByDay.get(key) ?? -1,
         slots: Array.from({ length: slotIndexes.length }, () => null),
         images: [],
       };
@@ -318,7 +335,11 @@ function buildArchiveDayRows(images: SkyImage[], slotIndexes: number[]): Archive
   }
 
   return [...rows.values()]
-    .map((row) => ({ ...row, slots: fillInteriorDaySlots(row.slots) }))
+    .map((row) => ({
+      ...row,
+      latestArchiveSlot: latestSlotByDay.get(row.key) ?? row.latestArchiveSlot,
+      slots: fillInteriorDaySlots(row.slots),
+    }))
     .sort((a, b) => b.sortKey - a.sortKey);
 }
 
@@ -351,13 +372,16 @@ export default function Archive() {
   const [revealCount, setRevealCount] = useState(0);
   const hasRunInitialReveal = useRef(false);
 
-  const filtered = useMemo(() => {
+  const archiveImages = useMemo(() => {
     if (!images) return [];
-    let out = images;
-    out = out.filter((i) => archiveDayKeyForDate(i.capturedAt) >= ARCHIVE_MIN_DAY_KEY);
-    out = out.filter((i) => archiveImageIsVisible(i.capturedAt, includeNight, useMobileDayWindow));
-    return out;
-  }, [images, includeNight, useMobileDayWindow]);
+    return images.filter((i) => archiveDayKeyForDate(i.capturedAt) >= ARCHIVE_MIN_DAY_KEY);
+  }, [images]);
+
+  const latestSlotByDay = useMemo(() => latestArchiveSlotByDay(archiveImages), [archiveImages]);
+
+  const filtered = useMemo(() => {
+    return archiveImages.filter((i) => archiveImageIsVisible(i.capturedAt, includeNight, useMobileDayWindow));
+  }, [archiveImages, includeNight, useMobileDayWindow]);
 
   // Last-10 cycling sequence for the inline headline swatch
   const recent = useMemo(() => filtered.slice(-10), [filtered]);
@@ -448,7 +472,10 @@ export default function Archive() {
     [includeNight, useMobileDayWindow],
   );
   const slotCount = slotIndexes.length;
-  const dayRows = useMemo(() => buildArchiveDayRows(visible, slotIndexes), [visible, slotIndexes]);
+  const dayRows = useMemo(
+    () => buildArchiveDayRows(visible, slotIndexes, latestSlotByDay),
+    [visible, slotIndexes, latestSlotByDay],
+  );
   useEffect(() => setHoveredSlotIndex(null), [slotCount]);
 
   const parentRef = useRef<HTMLDivElement>(null);
@@ -680,7 +707,11 @@ function TimelineStrip({
       break;
     }
   }
-  const hasTrailingFade = lastFilledSlot >= 0 && lastFilledSlot < row.slots.length - 1;
+  const lastVisibleArchiveSlot = slotIndexes[slotIndexes.length - 1] ?? -1;
+  const hasTrailingFade =
+    lastFilledSlot >= 0 &&
+    lastFilledSlot < row.slots.length - 1 &&
+    row.latestArchiveSlot < lastVisibleArchiveSlot;
   const fadeSlots = Math.min(7, Math.max(4, Math.round(slotCount * 0.14)));
   const fadeStartPct = hasTrailingFade ? Math.max(0, ((lastFilledSlot + 1 - fadeSlots) / slotCount) * 100) : 0;
   const fadeEndPct = hasTrailingFade ? ((lastFilledSlot + 1) / slotCount) * 100 : 100;
