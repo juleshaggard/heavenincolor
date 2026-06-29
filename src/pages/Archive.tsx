@@ -220,7 +220,7 @@ function archiveSortKey(parts: ArchiveParts): number {
 }
 
 function archiveSlotIndex(parts: ArchiveParts): number {
-  return Math.max(0, Math.min(DAY_SLOT_COUNT - 1, parts.hour * 2 + (parts.minute >= 30 ? 1 : 0)));
+  return Math.max(0, Math.min(DAY_SLOT_COUNT - 1, Math.round(archiveSlotMinute(parts) / 30)));
 }
 
 function archiveSlotStartMinute(slot: number): number {
@@ -245,7 +245,7 @@ function archiveMinuteIsVisible(minute: number, includeNight: boolean, useMobile
 
 function archiveImageIsVisible(date: Date, includeNight: boolean, useMobileDayWindow: boolean): boolean {
   const parts = getArchiveParts(date);
-  return archiveMinuteIsVisible(archiveSlotMinute(parts), includeNight, useMobileDayWindow);
+  return archiveMinuteIsVisible(archiveSlotStartMinute(archiveSlotIndex(parts)), includeNight, useMobileDayWindow);
 }
 
 function visibleArchiveSlots(includeNight: boolean, useMobileDayWindow: boolean): number[] {
