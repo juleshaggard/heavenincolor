@@ -1,16 +1,16 @@
 {
   "version": 1,
-  "generatedAt": "2026-07-26T23:38:31.219328Z",
+  "generatedAt": "2026-07-27T00:39:08.344381Z",
   "retention": {
     "capBytes": 943718400,
-    "retainedBytes": 7648474,
-    "derivativeBytes": 6915253,
-    "spriteBytes": 733221,
-    "retainedCount": 4406,
-    "sourceCount": 4633,
+    "retainedBytes": 7653056,
+    "derivativeBytes": 6918572,
+    "spriteBytes": 734484,
+    "retainedCount": 4408,
+    "sourceCount": 4635,
     "prunedCount": 0,
     "oldestCapturedAt": "2026-04-25T03:40:27Z",
-    "newestCapturedAt": "2026-07-26T23:37:59Z",
+    "newestCapturedAt": "2026-07-27T00:38:37Z",
     "excludedBeforeCount": 227,
     "minCapturedAt": "2026-04-25T03:11:00Z"
   },
@@ -91513,6 +91513,51 @@
         "key": "2026-W30",
         "index": 329
       }
+    },
+    {
+      "id": "20260727T000833Z",
+      "capturedAt": "2026-07-27T00:08:33Z",
+      "imageUrl": "images/2026/07/20260727T000833Z.jpg",
+      "thumbUrl": "thumbs/2026/07/20260727T000833Z.jpg",
+      "averageHex": "#b1becc",
+      "cropAverageHex": "#a6b4c4",
+      "cropPalette": [
+        "#97a9be",
+        "#a1b2c2",
+        "#abb8c5",
+        "#b6bfca",
+        "#c1c8d1"
+      ],
+      "width": 128,
+      "height": 72,
+      "bytes": 984,
+      "thumbBytes": 680,
+      "sprite": {
+        "key": "2026-W31",
+        "index": 0
+      }
+    },
+    {
+      "id": "20260727T003837Z",
+      "capturedAt": "2026-07-27T00:38:37Z",
+      "imageUrl": "images/2026/07/20260727T003837Z.jpg",
+      "thumbUrl": "thumbs/2026/07/20260727T003837Z.jpg",
+      "averageHex": "#b4c5d5",
+      "cropAverageHex": "#aabccd",
+      "cropPalette": [
+        "#9cb2c8",
+        "#adbdcd",
+        "#b6c4d3",
+        "#cad4de"
+      ],
+      "width": 128,
+      "height": 72,
+      "bytes": 973,
+      "thumbBytes": 682,
+      "sprite": {
+        "key": "2026-W31",
+        "index": 1
+      }
     }
   ],
   "sprites": {
@@ -91672,6 +91717,17 @@
         "height": 1344,
         "count": 330,
         "bytes": 62525
+      },
+      {
+        "key": "2026-W31",
+        "url": "sprites/2026/2026-W31.jpg",
+        "tileSize": 64,
+        "columns": 16,
+        "rows": 1,
+        "width": 1024,
+        "height": 64,
+        "count": 2,
+        "bytes": 1263
       }
     ]
   }
