@@ -1,16 +1,16 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-05T21:33:43.545636Z",
+  "generatedAt": "2026-08-05T22:34:22.947153Z",
   "retention": {
     "capBytes": 943718400,
-    "retainedBytes": 8413325,
-    "derivativeBytes": 7614227,
-    "spriteBytes": 799098,
-    "retainedCount": 4873,
-    "sourceCount": 5100,
+    "retainedBytes": 8417215,
+    "derivativeBytes": 7617737,
+    "spriteBytes": 799478,
+    "retainedCount": 4875,
+    "sourceCount": 5102,
     "prunedCount": 0,
     "oldestCapturedAt": "2026-04-25T03:40:27Z",
-    "newestCapturedAt": "2026-08-05T21:33:10Z",
+    "newestCapturedAt": "2026-08-05T22:33:50Z",
     "excludedBeforeCount": 227,
     "minCapturedAt": "2026-04-25T03:11:00Z"
   },
@@ -101309,6 +101309,52 @@
         "key": "2026-W32",
         "index": 136
       }
+    },
+    {
+      "id": "20260805T220345Z",
+      "capturedAt": "2026-08-05T22:03:45Z",
+      "imageUrl": "images/2026/08/20260805T220345Z.jpg",
+      "thumbUrl": "thumbs/2026/08/20260805T220345Z.jpg",
+      "averageHex": "#a0a8ad",
+      "cropAverageHex": "#979fa3",
+      "cropPalette": [
+        "#7d8c99",
+        "#9b9ea0",
+        "#d1cfc3",
+        "#f6f0dd",
+        "#fdfcf0"
+      ],
+      "width": 128,
+      "height": 72,
+      "bytes": 1076,
+      "thumbBytes": 733,
+      "sprite": {
+        "key": "2026-W32",
+        "index": 137
+      }
+    },
+    {
+      "id": "20260805T223350Z",
+      "capturedAt": "2026-08-05T22:33:50Z",
+      "imageUrl": "images/2026/08/20260805T223350Z.jpg",
+      "thumbUrl": "thumbs/2026/08/20260805T223350Z.jpg",
+      "averageHex": "#9fa9b1",
+      "cropAverageHex": "#929da6",
+      "cropPalette": [
+        "#7d8fa0",
+        "#8b98a5",
+        "#a5a8ab",
+        "#bfbfb8",
+        "#d9d6c8"
+      ],
+      "width": 128,
+      "height": 72,
+      "bytes": 998,
+      "thumbBytes": 703,
+      "sprite": {
+        "key": "2026-W32",
+        "index": 138
+      }
     }
   ],
   "sprites": {
@@ -101488,8 +101534,8 @@
         "rows": 9,
         "width": 1024,
         "height": 576,
-        "count": 137,
-        "bytes": 19760
+        "count": 139,
+        "bytes": 20140
       }
     ]
   }
