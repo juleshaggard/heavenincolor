@@ -12,7 +12,7 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -77,3 +77,9 @@ jobs:
         if: steps.deployment.outcome == 'failure'
         id: deployment_retry
         uses: actions/deploy-pages@v5
+        continue-on-error: true
+
+      - name: Note GitHub Pages deploy failure
+        if: steps.deployment.outcome == 'failure' && steps.deployment_retry.outcome == 'failure'
+        run: |
+          echo "::warning::GitHub Pages did not accept this deploy after a retry. Build and artifact upload passed; the next sky media update will try again."
