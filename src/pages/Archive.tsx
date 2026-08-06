@@ -118,6 +118,11 @@ function meshGradientFor(colors: string[]): string {
   ].join(", ");
 }
 
+function archiveTileRenderWidth(tileSize: number): number {
+  const dpr = typeof window !== "undefined" ? Math.min(2, window.devicePixelRatio || 1) : 1;
+  return Math.ceil(tileSize * dpr);
+}
+
 async function copyText(value: string): Promise<void> {
   if (navigator.clipboard?.writeText) {
     try {
@@ -919,6 +924,7 @@ function TimelineStrip({
         gridTemplateColumns: `repeat(${slotCount}, minmax(0, 1fr))`,
         gap: "0px",
         marginRight: "-1px",
+        background: ARCHIVE_GAP_BACKGROUND,
         WebkitMaskImage: trailingFadeMask,
         maskImage: trailingFadeMask,
       }}
@@ -935,13 +941,16 @@ function TimelineStrip({
           const previousImage = slot > 0 ? row.slots[slot - 1] : null;
           const nextImage = slot + runLength < row.slots.length ? row.slots[slot + runLength] : null;
           if (!previousImage || !nextImage) {
-            if (!nextImage) return null;
+            const edgeImage = previousImage ?? nextImage;
+            if (!edgeImage) return null;
             return (
-              <span
+              <ArchiveSlotFill
                 key={`${row.key}-edge-empty-${archiveSlot}`}
-                aria-hidden
-                className="block"
-                style={{ gridColumn: `span ${runLength}`, height: tileSize, marginRight: "-1px" }}
+                image={edgeImage}
+                palette={palettes[edgeImage.id]}
+                tileSize={tileSize}
+                runLength={runLength}
+                paletteMode={paletteMode}
               />
             );
           }
@@ -1086,6 +1095,48 @@ function DayLabel({ row, side, visible }: { row: ArchiveDayRow; side: "left" | "
   );
 }
 
+function ArchiveSlotFill({
+  image,
+  palette,
+  tileSize,
+  runLength,
+  paletteMode,
+}: {
+  image: SkyImage;
+  palette?: Palette;
+  tileSize: number;
+  runLength: number;
+  paletteMode: boolean;
+}) {
+  const color = palette?.hex ?? normalizeHex(image.cropAverageHex) ?? normalizeHex(image.averageHex);
+
+  return (
+    <div
+      data-archive-edge-fill
+      aria-hidden
+      className="grid overflow-hidden"
+      style={{
+        gridColumn: `span ${runLength}`,
+        gridTemplateColumns: `repeat(${runLength}, minmax(0, 1fr))`,
+        height: tileSize,
+        marginRight: "-1px",
+        background: paletteMode && color ? color : ARCHIVE_GAP_BACKGROUND,
+      }}
+    >
+      {!paletteMode &&
+        Array.from({ length: runLength }, (_, index) => (
+          <SkyThumb
+            key={`${image.id}-${index}`}
+            image={image}
+            width={archiveTileRenderWidth(tileSize)}
+            className="block h-full w-full"
+            preferSprite
+          />
+        ))}
+    </div>
+  );
+}
+
 function GridTile({
   img, palette: p, vt, tileSize, cols, isOpen, paletteMode, onOpen,
 }: {
@@ -1134,7 +1185,7 @@ function GridTile({
       {(!paletteMode || !p) && (
         <SkyThumb
           image={img}
-          width={Math.ceil(tileSize * (typeof window !== "undefined" ? Math.min(2, window.devicePixelRatio || 1) : 1))}
+          width={archiveTileRenderWidth(tileSize)}
           className="block h-full w-full"
           preferSprite
         />
@@ -1183,7 +1234,7 @@ function GridTile({
         >
           <SkyThumb
             image={img}
-            width={Math.ceil(tileSize * (typeof window !== "undefined" ? Math.min(2, window.devicePixelRatio || 1) : 1))}
+            width={archiveTileRenderWidth(tileSize)}
             className="block h-full w-full"
             preferSprite
           />
