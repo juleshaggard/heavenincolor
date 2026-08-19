@@ -1,16 +1,16 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-19T08:03:36.082259Z",
+  "generatedAt": "2026-08-19T08:34:15.484176Z",
   "retention": {
     "capBytes": 943718400,
-    "retainedBytes": 9476044,
-    "derivativeBytes": 8579587,
-    "spriteBytes": 896457,
-    "retainedCount": 5505,
-    "sourceCount": 5732,
+    "retainedBytes": 9477218,
+    "derivativeBytes": 8580755,
+    "spriteBytes": 896463,
+    "retainedCount": 5506,
+    "sourceCount": 5733,
     "prunedCount": 0,
     "oldestCapturedAt": "2026-04-25T03:40:27Z",
-    "newestCapturedAt": "2026-08-19T08:02:58Z",
+    "newestCapturedAt": "2026-08-19T08:33:38Z",
     "excludedBeforeCount": 227,
     "minCapturedAt": "2026-04-25T03:11:00Z"
   },
@@ -114272,6 +114272,25 @@
         "key": "2026-W34",
         "index": 109
       }
+    },
+    {
+      "id": "20260819T083338Z",
+      "capturedAt": "2026-08-19T08:33:38Z",
+      "imageUrl": "images/2026/08/20260819T083338Z.jpg",
+      "thumbUrl": "thumbs/2026/08/20260819T083338Z.jpg",
+      "averageHex": "#160f09",
+      "cropAverageHex": "#171008",
+      "cropPalette": [
+        "#150e08"
+      ],
+      "width": 128,
+      "height": 72,
+      "bytes": 620,
+      "thumbBytes": 548,
+      "sprite": {
+        "key": "2026-W34",
+        "index": 110
+      }
     }
   ],
   "sprites": {
@@ -114473,8 +114492,8 @@
         "rows": 7,
         "width": 1024,
         "height": 448,
-        "count": 110,
-        "bytes": 13473
+        "count": 111,
+        "bytes": 13479
       }
     ]
   }
