@@ -1,16 +1,16 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-05T16:26:42.744020Z",
+  "generatedAt": "2026-10-05T17:27:38.407011Z",
   "retention": {
     "capBytes": 943718400,
-    "retainedBytes": 13070589,
-    "derivativeBytes": 11866858,
-    "spriteBytes": 1203731,
-    "retainedCount": 7720,
-    "sourceCount": 7947,
+    "retainedBytes": 13074408,
+    "derivativeBytes": 11869998,
+    "spriteBytes": 1204410,
+    "retainedCount": 7722,
+    "sourceCount": 7949,
     "prunedCount": 0,
     "oldestCapturedAt": "2026-04-25T03:40:27Z",
-    "newestCapturedAt": "2026-10-05T16:25:53Z",
+    "newestCapturedAt": "2026-10-05T17:26:49Z",
     "excludedBeforeCount": 227,
     "minCapturedAt": "2026-04-25T03:11:00Z"
   },
@@ -159787,6 +159787,52 @@
         "key": "2026-W41",
         "index": 31
       }
+    },
+    {
+      "id": "20261005T165645Z",
+      "capturedAt": "2026-10-05T16:56:45Z",
+      "imageUrl": "images/2026/10/20261005T165645Z.jpg",
+      "thumbUrl": "thumbs/2026/10/20261005T165645Z.jpg",
+      "averageHex": "#bdc6d2",
+      "cropAverageHex": "#b8c2ce",
+      "cropPalette": [
+        "#abbac9",
+        "#b7c1cd",
+        "#c1c8d1",
+        "#cdd2da",
+        "#dedfe5"
+      ],
+      "width": 128,
+      "height": 72,
+      "bytes": 898,
+      "thumbBytes": 657,
+      "sprite": {
+        "key": "2026-W41",
+        "index": 32
+      }
+    },
+    {
+      "id": "20261005T172649Z",
+      "capturedAt": "2026-10-05T17:26:49Z",
+      "imageUrl": "images/2026/10/20261005T172649Z.jpg",
+      "thumbUrl": "thumbs/2026/10/20261005T172649Z.jpg",
+      "averageHex": "#bcc5d1",
+      "cropAverageHex": "#b8c1cd",
+      "cropPalette": [
+        "#a7b7c7",
+        "#b3bec9",
+        "#c1c8d2",
+        "#ced2db",
+        "#dee0e7"
+      ],
+      "width": 128,
+      "height": 72,
+      "bytes": 916,
+      "thumbBytes": 669,
+      "sprite": {
+        "key": "2026-W41",
+        "index": 33
+      }
     }
   ],
   "sprites": {
@@ -160062,11 +160108,11 @@
         "url": "sprites/2026/2026-W41.jpg",
         "tileSize": 64,
         "columns": 16,
-        "rows": 2,
+        "rows": 3,
         "width": 1024,
-        "height": 128,
-        "count": 32,
-        "bytes": 3133
+        "height": 192,
+        "count": 34,
+        "bytes": 3812
       }
     ]
   }
